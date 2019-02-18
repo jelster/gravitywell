@@ -120,31 +120,68 @@
             gameWorldContainer.height = world_height;
             theGame.worldContainer = gameWorldContainer;
 
-            var shipSprite = PIXI.Sprite.from('textures/ship.png');
-            shipSprite.width = 32;
-            shipSprite.height = 32;
-            shipSprite.anchor.set(0.5);
-            shipSprite.name = 'ship';
+            var ship = {
+                sprite: PIXI.Sprite.from('textures/ship.png'),
+                container: new PIXI.Container(),
+                rotationVelocity: 1.0/10.0,
+                maxAcceleration: 0.2,
+                velocity: BABYLON.Vector3.Zero(),
+                acceleration: BABYLON.Vector3.Zero(),
+                onRotateLeft: function() {
+                    this.rotation -= this.rotationVelocity;
+                },
+                onRotateRight: function() {
+                    this.rotation += this.rotationVelocity;
+                },
+                onAccelerate: function() {
+                    console.log(this);
+                    var dx = Math.cos(this.rotation) * this.maxAcceleration;
+                    var dy = Math.sin(this.rotation) * this.maxAcceleration;
+                    // always accelerate in the direction that the craft is currently pointing
+                    this.velocity.x += dx;
+                    this.velocity.y += dy;
+                    console.log(this.velocity);
+                    //this.acceleration.normalize();
+                },
+                onUpdate: function() {
+                    
+                    this.sprite.position.x += this.velocity.x;
+                    this.sprite.position.y += this.velocity.y;
+                    this.sprite.position.z = 0;
+                    this.sprite.rotation = this.rotation;
+                }
+                
+            };
+            ship.rotation = ship.sprite.rotation;
+            ship.position = ship.sprite.position;
 
-            var shipSpriteContainer = new PIXI.Container();
-            shipSpriteContainer.addChild(shipSprite);
-            shipSprite.position.set(world_width/2, world_height/2);
-            theGame.shipContainer = shipSpriteContainer;
+            ship.sprite.width = 32;
+            ship.sprite.height = 32;
+            ship.sprite.anchor.set(0.5);
+            ship.sprite.name = 'ship';
+            ship.container.addChild(ship.sprite);
+            ship.sprite.position.set(world_width/2, world_height/2);
+            theGame.ship = ship;
 
             theGame.scene.onBeforeRenderObservable.add(() => {
                 if (theGame.inputMap["w"] || theGame.inputMap["ArrowUp"]) {
-                    shipSprite.position.y -= 1
+                    theGame.ship.onAccelerate();
                 }
                 if (theGame.inputMap["a"] || theGame.inputMap["ArrowLeft"]) {
-                    shipSprite.rotation -= 0.1
+                    theGame.ship.onRotateLeft();
                 }
-                if (theGame.inputMap["s"] || theGame.inputMap["ArrowDown"]) {
-                    shipSprite.position.y += 1
-                }
+                // if (theGame.inputMap["s"] || theGame.inputMap["ArrowDown"]) {
+                //     theGame.ship.position.y += 1
+                // }
                 if (theGame.inputMap["d"] || theGame.inputMap["ArrowRight"]) {
-                    shipSprite.rotation += 0.1
+                    theGame.ship.onRotateRight();
                 }
+
+                theGame.ship.onUpdate();
+
             });
+
+            
            
             console.log(theGame);
 
@@ -153,9 +190,10 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             var gravWellGame = initializeGravWell();
-            
+
             // Register a render loop to repeatedly render the scene
             gravWellGame.engine.runRenderLoop(function () {
+       
                 gravWellGame.pixiRenderer.reset();
                 gravWellGame.pixiRenderer.render(gravWellGame.worldContainer);
 
@@ -164,7 +202,7 @@
                 gravWellGame.engine.wipeCaches(true);
 
                 gravWellGame.pixiRenderer.reset();
-                gravWellGame.pixiRenderer.render(gravWellGame.shipContainer);
+                gravWellGame.pixiRenderer.render(gravWellGame.ship.container);
             });
             // Watch for browser/canvas resize events
             window.addEventListener("resize", function () {
