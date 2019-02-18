@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Babylon Template</title>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.6/pixi.min.js"></script>
+</head>
+
+<body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas> //touch-action="none" for best results from PEP
+    <script>
+
+        function initializePixiApp(babylon_engine) {
+            var renderer = new PIXI.WebGLRenderer({
+                context: babylon_engine._gl,
+                view: babylon_engine.getRenderingCanvas(),
+                width: babylon_engine.getRenderWidth(),
+                height: babylon_engine.getRenderHeight(),
+                roundPixels: true,
+                clearBeforeRender: false,
+                autoStart: false
+            });
+            return renderer;
+            // PIXI.loader.add('ship', 'textures/ship.png').load((loader, resources) => {
+
+            //     const bunny = new PIXI.shipSprite(resources.ship.texture);
+
+            //     // Setup the position of the bunny
+            //     bunny.x = app.renderer.width / 2;
+            //     bunny.y = app.renderer.height / 2;
+
+            //     // Rotate around the center
+            //     bunny.anchor.x = 0.5;
+            //     bunny.anchor.y = 0.5;
+
+            //     // Add the bunny to the scene we are building
+            //     app.gameWorldContainer.addChild(bunny);
+
+            //     // Listen for frame updates
+            //     app.ticker.add(() => {
+            //         // each frame we spin the bunny around a bit
+            //         bunny.rotation += 0.01;
+            //     });
+            // });
+        }
+        function createScene(gravWellGame) {
+            var scene = new BABYLON.Scene(gravWellGame.engine);
+            camera = new BABYLON.UniversalCamera("Camera",
+                new BABYLON.Vector3(
+                    gravWellGame.world_width / 2, 
+                    gravWellGame.world_height / 2,
+                    -gravWellGame.world_height *2), scene);
+            camera.setTarget(BABYLON.Vector3.Zero());
+            
+            return scene;
+        }
+
+        function registerInputActions(scene) {
+            var inputMap = {};
+            scene.actionManager = new BABYLON.ActionManager(scene);
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+            }));
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+            }));
+            return inputMap;
+        }
+
+        function initializeGravWell() {
+            const world_width = 1200;
+            const world_height = 1200;
+            var theGame = {
+                world_width: world_width,
+                world_height: world_height
+            };
+
+            var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+            theGame.engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine 
+            theGame.scene = createScene(theGame); //Call the createScene function
+            theGame.inputMap = registerInputActions(theGame.scene);
+
+            theGame.pixiRenderer = initializePixiApp(theGame.engine);
+            
+        
+            var backgroundSprite = PIXI.Sprite.from('textures/corona_lf.png');
+            backgroundSprite.width = world_width;
+            backgroundSprite.height = world_height;
+            backgroundSprite.anchor.set(0);
+            backgroundSprite.position.set(0, 0);
+            backgroundSprite.name = 'background';
+
+            var gameWorldContainer = new PIXI.Container();
+            gameWorldContainer.addChild(backgroundSprite);
+            gameWorldContainer.width = world_width;
+            gameWorldContainer.height = world_height;
+            theGame.worldContainer = gameWorldContainer;
+
+            var shipSprite = PIXI.Sprite.from('textures/ship.png');
+            shipSprite.width = 32;
+            shipSprite.height = 32;
+            shipSprite.anchor.set(0.5);
+            shipSprite.name = 'ship';
+
+            var shipSpriteContainer = new PIXI.Container();
+            shipSpriteContainer.addChild(shipSprite);
+            shipSprite.position.set(world_width/2, world_height/2);
+            theGame.shipContainer = shipSpriteContainer;
+
+            theGame.scene.onBeforeRenderObservable.add(() => {
+                if (theGame.inputMap["w"] || theGame.inputMap["ArrowUp"]) {
+                    shipSprite.position.y -= 1
+                }
+                if (theGame.inputMap["a"] || theGame.inputMap["ArrowLeft"]) {
+                    shipSprite.rotation -= 0.1
+                }
+                if (theGame.inputMap["s"] || theGame.inputMap["ArrowDown"]) {
+                    shipSprite.position.y += 1
+                }
+                if (theGame.inputMap["d"] || theGame.inputMap["ArrowRight"]) {
+                    shipSprite.rotation += 0.1
+                }
+            });
+           
+            console.log(theGame);
+
+            return theGame;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var gravWellGame = initializeGravWell();
+            
+     
+
+ 
+
+            // Register a render loop to repeatedly render the scene
+            gravWellGame.engine.runRenderLoop(function () {
+                gravWellGame.pixiRenderer.reset();
+                gravWellGame.pixiRenderer.render(gravWellGame.worldContainer);
+
+                gravWellGame.scene.autoClear = false;
+                gravWellGame.scene.render();
+                gravWellGame.engine.wipeCaches(true);
+
+                gravWellGame.pixiRenderer.reset();
+                gravWellGame.pixiRenderer.render(gravWellGame.shipContainer);
+            });
+            // Watch for browser/canvas resize events
+            window.addEventListener("resize", function () {
+                gravWellGame.engine.resize();
+
+
+            });
+
+        });
+    </script>
+    <!-- <script>
+    /*
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+        var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+       
+        var createScene = function () {
+
+            // Create the scene space
+            var scene = new BABYLON.Scene(engine);
+
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.UniversalCamera("Camera", new BABYLON.Vector3(5, -5, -10), scene);
+            //camera.attachControl(canvas, true);
+            var skybox = new BABYLON.Texture("/textures/corona_lf.png", scene);
+            //scene.createDefaultSkybox(skybox, false);
+            // Add lights to the scene
+            //var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            //var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+            // Add and manipulate meshes in the scene
+            //var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter:2}, scene);
+            var shipSpriteManagerShips = new BABYLON.shipSpriteManager("shipsManager", "textures/ship.png", 1, 120, scene);
+
+            var ship = new BABYLON.shipSprite("ship", shipSpriteManagerShips);
+            ship.position = new BABYLON.Vector3(5,-5,0);
+            ship.size = 0.25;
+
+            return scene;
+        };
+        
+
+        var scene = createScene(); //Call the createScene function
+
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () { 
+                scene.render();
+        });
+
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () { 
+                engine.resize();
+        });
+        */
+    </script> -->
+
+</body>
+
+</html>
