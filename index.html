@@ -72,7 +72,7 @@
                 new BABYLON.Vector3(
                     gravWellGame.world_width / 2, 
                     gravWellGame.world_height / 2,
-                    -gravWellGame.world_height *2), scene);
+                    -gravWellGame.world_height * 2 ), scene);
             camera.setTarget(BABYLON.Vector3.Zero());
             
             return scene;
@@ -91,21 +91,22 @@
         }
 
         function initializeGravWell() {
-            const world_width = 1200;
-            const world_height = 1200;
+            var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+            canvas.width = "100%";
+            canvas.height = "100%";
+            const world_width = canvas.clientWidth;
+            const world_height = canvas.clientHeight;
             var theGame = {
                 world_width: world_width,
                 world_height: world_height
             };
 
-            var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
             theGame.engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine 
             theGame.scene = createScene(theGame); //Call the createScene function
             theGame.inputMap = registerInputActions(theGame.scene);
 
             theGame.pixiRenderer = initializePixiApp(theGame.engine);
             
-        
             var backgroundSprite = PIXI.Sprite.from('textures/corona_lf.png');
             backgroundSprite.width = world_width;
             backgroundSprite.height = world_height;
@@ -153,10 +154,6 @@
         document.addEventListener("DOMContentLoaded", function () {
             var gravWellGame = initializeGravWell();
             
-     
-
- 
-
             // Register a render loop to repeatedly render the scene
             gravWellGame.engine.runRenderLoop(function () {
                 gravWellGame.pixiRenderer.reset();
@@ -171,7 +168,8 @@
             });
             // Watch for browser/canvas resize events
             window.addEventListener("resize", function () {
-                gravWellGame.engine.resize();
+         //       gravWellGame.engine.resize();
+   
 
 
             });
