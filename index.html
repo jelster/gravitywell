@@ -123,8 +123,8 @@
             var ship = {
                 sprite: PIXI.Sprite.from('textures/ship.png'),
                 container: new PIXI.Container(),
-                rotationVelocity: 1.0/10.0,
-                maxAcceleration: 0.2,
+                rotationVelocity: 0.889/10.0,
+                maxAcceleration: 0.1,
                 velocity: BABYLON.Vector3.Zero(),
                 acceleration: BABYLON.Vector3.Zero(),
                 onRotateLeft: function() {
@@ -134,13 +134,13 @@
                     this.rotation += this.rotationVelocity;
                 },
                 onAccelerate: function() {
-                    console.log(this);
+                   // console.log(this);
                     var dx = Math.cos(this.rotation) * this.maxAcceleration;
                     var dy = Math.sin(this.rotation) * this.maxAcceleration;
                     // always accelerate in the direction that the craft is currently pointing
                     this.velocity.x += dx;
                     this.velocity.y += dy;
-                    console.log(this.velocity);
+ 
                     //this.acceleration.normalize();
                 },
                 onUpdate: function() {
@@ -155,8 +155,8 @@
             ship.rotation = ship.sprite.rotation;
             ship.position = ship.sprite.position;
 
-            ship.sprite.width = 32;
-            ship.sprite.height = 32;
+            ship.sprite.width = 28;
+            ship.sprite.height = 28;
             ship.sprite.anchor.set(0.5);
             ship.sprite.name = 'ship';
             ship.container.addChild(ship.sprite);
@@ -183,7 +183,7 @@
 
             
            
-            console.log(theGame);
+           
 
             return theGame;
         }
@@ -193,7 +193,7 @@
 
             // Register a render loop to repeatedly render the scene
             gravWellGame.engine.runRenderLoop(function () {
-       
+                
                 gravWellGame.pixiRenderer.reset();
                 gravWellGame.pixiRenderer.render(gravWellGame.worldContainer);
 
