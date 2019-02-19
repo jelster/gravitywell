@@ -147,7 +147,18 @@
                     
                     this.sprite.position.x += this.velocity.x;
                     this.sprite.position.y += this.velocity.y;
-                    this.sprite.position.z = 0;
+                    if (this.sprite.position.x > theGame.world_width) {
+                        this.sprite.position.x = 0;
+                    }
+                    if (this.sprite.position.x < 0) {
+                        this.sprite.position.x = theGame.world_width;
+                    }
+                    if (this.sprite.position.y > theGame.world_height) {
+                        this.sprite.position.y = 0;
+                    }
+                    if (this.sprite.position.y < 0) {
+                        this.sprite.position.y = theGame.world_height;
+                    }
                     this.sprite.rotation = this.rotation;
                 }
                 
