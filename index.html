@@ -23,230 +23,17 @@
     </style>
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.6/pixi.min.js"></script>
+ 
+    <script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
+
+    <script src="game.js"></script>
+    <script src="gravwell.ship.js"></script>
 </head>
 
 <body>
 
-    <canvas id="renderCanvas" touch-action="none"></canvas> //touch-action="none" for best results from PEP
-    <script>
-
-        function initializePixiApp(babylon_engine) {
-            var renderer = new PIXI.WebGLRenderer({
-                context: babylon_engine._gl,
-                view: babylon_engine.getRenderingCanvas(),
-                width: babylon_engine.getRenderWidth(),
-                height: babylon_engine.getRenderHeight(),
-                roundPixels: true,
-                clearBeforeRender: false,
-                autoStart: false
-            });
-            return renderer;
-            // PIXI.loader.add('ship', 'textures/ship.png').load((loader, resources) => {
-
-            //     const bunny = new PIXI.shipSprite(resources.ship.texture);
-
-            //     // Setup the position of the bunny
-            //     bunny.x = app.renderer.width / 2;
-            //     bunny.y = app.renderer.height / 2;
-
-            //     // Rotate around the center
-            //     bunny.anchor.x = 0.5;
-            //     bunny.anchor.y = 0.5;
-
-            //     // Add the bunny to the scene we are building
-            //     app.gameWorldContainer.addChild(bunny);
-
-            //     // Listen for frame updates
-            //     app.ticker.add(() => {
-            //         // each frame we spin the bunny around a bit
-            //         bunny.rotation += 0.01;
-            //     });
-            // });
-        }
-        function createScene(gravWellGame) {
-            var scene = new BABYLON.Scene(gravWellGame.engine);
-            camera = new BABYLON.UniversalCamera("Camera",
-                new BABYLON.Vector3(
-                    gravWellGame.world_width / 2,
-                    gravWellGame.world_height / 2,
-                    -gravWellGame.world_height * 2), scene);
-            camera.setTarget(BABYLON.Vector3.Zero());
-
-            return scene;
-        }
-
-        function registerInputActions(theGame) {
-            var scene = theGame.scene;
-            theGame.inputMap ={};
-            scene.onKeyboardObservable.add((kbInfo) => {
-                
-                switch (kbInfo.type) {
-                case BABYLON.KeyboardEventTypes.KEYDOWN:
-                case BABYLON.KeyboardEventTypes.KEYUP:
-                console.log(kbInfo);
-                theGame.inputMap[kbInfo.event.key] = kbInfo.type == BABYLON.KeyboardEventTypes.KEYDOWN;
-                break;
-            }
-            });
-            
-            // scene.actionManager = new BABYLON.ActionManager(scene);
-            // scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
-            //     inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-            // }));
-            // scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
-            //     inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-            // }));
- 
-        }
-        function initializeShip(theGame) {
-            var ship = {
-                sprite: PIXI.Sprite.from('textures/ship.png'),
-                container: new PIXI.Container(),
-                rotationVelocity: 0.889 / 10.0,
-                maxAcceleration: 0.1,
-                velocity: BABYLON.Vector3.Zero(),
-                acceleration: BABYLON.Vector3.Zero(),
-                onRotateLeft: function () {
-                    this.rotation -= this.rotationVelocity;
-                },
-                onRotateRight: function () {
-                    this.rotation += this.rotationVelocity;
-                },
-                onAccelerate: function () {
-                    // console.log(this);
-                    var dx = Math.cos(this.rotation) * this.maxAcceleration;
-                    var dy = Math.sin(this.rotation) * this.maxAcceleration;
-                    // always accelerate in the direction that the craft is currently pointing
-                    this.velocity.x += dx;
-                    this.velocity.y += dy;
-
-                    //this.acceleration.normalize();
-                },
-                onUpdate: function () {
-
-                    this.sprite.position.x += this.velocity.x;
-                    this.sprite.position.y += this.velocity.y;
-                    if (this.sprite.position.x > theGame.world_width) {
-                        this.sprite.position.x = 0;
-                    }
-                    if (this.sprite.position.x < 0) {
-                        this.sprite.position.x = theGame.world_width;
-                    }
-                    if (this.sprite.position.y > theGame.world_height) {
-                        this.sprite.position.y = 0;
-                    }
-                    if (this.sprite.position.y < 0) {
-                        this.sprite.position.y = theGame.world_height;
-                    }
-                    this.sprite.rotation = this.rotation;
-                }
-            };
-            ship.rotation = ship.sprite.rotation;
-            ship.position = ship.sprite.position;
-
-            ship.sprite.width = 28;
-            ship.sprite.height = 28;
-            ship.sprite.anchor.set(0.5);
-            ship.sprite.name = 'ship';
-            ship.container.addChild(ship.sprite);
-            ship.sprite.position.set(theGame.world_width / 2, theGame.world_height / 2);
-            theGame.ship = ship;
-        }
-
-function createStar(theGame) {
-    var star = {
-        radius: 128,
-        mass: 10000000,
-        velocity: BABYLON.Vector3.Zero(),
-    };
-    theGame.star = star;
-}
-        function handleKeyboardInput(theGame) {
-            var inputMap = theGame.inputMap, ship = theGame.ship;
-            if (inputMap["w"] || inputMap["ArrowUp"]) {
-                ship.onAccelerate();
-            }
-            if (inputMap["a"] || inputMap["ArrowLeft"]) {
-                ship.onRotateLeft();
-            }
-            if (inputMap["d"] || inputMap["ArrowRight"]) {
-                ship.onRotateRight();
-            }
-        }
-        function initializeGravWell() {
-            var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
-            canvas.width = "100%";
-            canvas.height = "100%";
-            const world_width = canvas.clientWidth;
-            const world_height = canvas.clientHeight;
-            var theGame = {
-                world_width: world_width,
-                world_height: world_height
-            };
-
-            theGame.engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine 
-            theGame.scene = createScene(theGame); //Call the createScene function
-            registerInputActions(theGame);
-
-            theGame.pixiRenderer = initializePixiApp(theGame.engine);
-
-            var backgroundSprite = PIXI.Sprite.from('textures/corona_lf.png');
-            backgroundSprite.width = world_width;
-            backgroundSprite.height = world_height;
-            backgroundSprite.anchor.set(0);
-            backgroundSprite.position.set(0, 0);
-            backgroundSprite.name = 'background';
-
-            var gameWorldContainer = new PIXI.Container();
-            gameWorldContainer.addChild(backgroundSprite);
-            gameWorldContainer.width = world_width;
-            gameWorldContainer.height = world_height;
-            theGame.worldContainer = gameWorldContainer;
-
-            initializeShip(theGame);
-
-            theGame.scene.onBeforeStepObservable.add(() => {
-                
-            });
-
-            theGame.scene.onBeforeRenderObservable.add(() => {
-               
-                theGame.ship.onUpdate();
-                handleKeyboardInput(theGame);
-            });
-
-            return theGame;
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            var gravWellGame = initializeGravWell();
-
-            // Register a render loop to repeatedly render the scene
-            gravWellGame.engine.runRenderLoop(function () {
-
-                gravWellGame.pixiRenderer.reset();
-                gravWellGame.pixiRenderer.render(gravWellGame.worldContainer);
-
-                gravWellGame.scene.autoClear = false;
-                gravWellGame.scene.render();
-                gravWellGame.engine.wipeCaches(true);
-
-                gravWellGame.pixiRenderer.reset();
-                gravWellGame.pixiRenderer.render(gravWellGame.ship.container);
-            });
-            // Watch for browser/canvas resize events
-            window.addEventListener("resize", function () {
-                //       gravWellGame.engine.resize();
-
-
-
-            });
-
-        });
-    </script>
+    <canvas id="renderCanvas"></canvas> //touch-action="none" for best results from PEP
+   
     <!-- <script>
     /*
         var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
@@ -292,7 +79,6 @@ function createStar(theGame) {
         });
         */
     </script> -->
-
 </body>
 
 </html>
