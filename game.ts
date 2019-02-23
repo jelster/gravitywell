@@ -26,10 +26,17 @@ class Game {
     }
 
     private createCamera(): void {
-        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(0, 1000, 0), this._scene);
-        this._camera.setTarget(BABYLON.Vector3.Zero());
+        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(0, 100, 0), this._scene);
+        this._camera.setTarget(new BABYLON.Vector3(0,0,0.0));
         this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
      //   this._camera.attachControl(this._canvas, true);
+        this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
+        var ratio = this._camera.viewport.width/this._camera.viewport.height;
+        var fieldSize = 1600;
+       this._camera.orthoTop = fieldSize/(2*ratio);
+       this._camera.orthoBottom = -fieldSize/(2*ratio);
+       this._camera.orthoLeft = -fieldSize/2;
+       this._camera.orthoRight = fieldSize/2;
         this._scene.activeCamera = this._camera;
     }
 
@@ -44,8 +51,9 @@ class Game {
     }
 
     private createLight(): void {
-        this._light = new BABYLON.PointLight("light1", new BABYLON.Vector3(0, 128, 0), this._scene);
+        this._light = new BABYLON.PointLight("light1", new BABYLON.Vector3(0, 256, 0), this._scene);
         this._light.diffuse = BABYLON.Color3.Red();
+        this._light.specular = BABYLON.Color3.Yellow();
         this._light.intensity = 1;
     }
 
@@ -61,16 +69,17 @@ class Game {
     }
 
     private createStar(): void {
-        this._star = BABYLON.MeshBuilder.CreateSphere('star', { segments: 16, diameter: 128 }, this._scene);
+        this._star = BABYLON.MeshBuilder.CreateSphere('star', { segments: 16, diameter: 160 }, this._scene);
         let sphMat = new BABYLON.StandardMaterial("starMat", this._scene);
         sphMat.emissiveColor = BABYLON.Color3.Yellow();
         this._star.material = sphMat;
-        this._star.metadata = { mass: 10 };        
+        this._star.metadata = { mass: 100, radius: 80 };        
     }
 
     private createPlanet(): void {
-        this._planet = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 64 }, this._scene);
-        this._planet.position = new BABYLON.Vector3(100, 0, 300);
+        this._planet = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, this._scene);
+        this._planet.position = new BABYLON.Vector3(-400, 0, -200);
+        this._planet.metadata = { parentStar: this._star, mass: 25, radius: 48 };
     }
 
     private createShip(): void {
@@ -109,23 +118,31 @@ class Game {
         
     }
 
-    private applyGravitationalForceToShip() : void {
-        let dCenter = BABYLON.Vector3.Distance(this._ship.position, this._star.position);
-        if (dCenter < 64) {
-            return;
-        }
+    private applyGravitationalForceToShip(gravSource : BABYLON.Mesh) : void {
+        let dCenter = BABYLON.Vector3.Distance(this._ship.position, gravSource.position),
+            sRad = gravSource.metadata.radius || 10;
+        if (dCenter <= sRad) { return; }
+
         let G = 6.67259*(10^-11),
          r = dCenter^2,
-         dir = this._star.position.subtract(this._ship.position).normalize(),
+         dir = gravSource.position.subtract(this._ship.position).normalize(),
          m1 = 1, 
-         m2 = this._star.metadata.mass;
+         m2 = gravSource.metadata.mass || 1;
          
-        let f = -(G*(m1*m2))/(r);
+        let f = -(G*(m1*m2))/(r*dCenter); // r^3 propagation, like electrical fields
          
         this._ship.velocity.x += (dir.x*f);
         this._ship.velocity.z += (dir.z *f);
     }
 
+    private movePlanetInOrbit(alpha : number) {
+        let pPos = this._planet.position,
+            sPos = this._planet.metadata.parentStar.position,
+            rOrbit = BABYLON.Vector3.Distance(pPos, sPos); // TODO: refactor into planet class
+        
+        this._planet.position = new BABYLON.Vector3(rOrbit * Math.sin(alpha), 0, rOrbit * Math.cos(alpha));
+        
+    }
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
 
@@ -146,13 +163,18 @@ class Game {
                     break;
             }
         });
-
+        
+        var alpha = 0;
         //deterministic steps for update loop
-        this._scene.onBeforeStepObservable.add(() => {            
+        this._scene.onBeforeStepObservable.add(() => {
+            this.movePlanetInOrbit(alpha);
             this.handleKeyboardInput();
-            this.applyGravitationalForceToShip();
+            this.applyGravitationalForceToShip(this._star);
+            this.applyGravitationalForceToShip(this._planet);
             this._ship.onUpdate();
-            this.updateShipPositionOverflow();         
+            this.updateShipPositionOverflow();   
+            
+            alpha += 0.001;
         });
     }
 

@@ -24,14 +24,15 @@ class Ship {
     }
 
     constructor(scene : BABYLON.Scene) {
-        this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 28, diameterTop: 0, diameterBottom: 28 }, scene);
+        this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 24, diameterTop: 0, diameterBottom: 24 }, scene);
 
         this.mesh.rotation.x = Math.PI/2;
+        //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
-        this.position = new BABYLON.Vector3(128, 0, -128);
+        this.position = new BABYLON.Vector3(-750, 0, -128);
         this.maxAcceleration = 0.1;
         this.maxAngularVelocity = (2*Math.PI)/60;
-        this.velocity = new BABYLON.Vector3(6.53, 0, 6.53);
+        this.velocity = new BABYLON.Vector3(1, 0, 1);
       
     }
 
