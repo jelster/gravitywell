@@ -7,7 +7,7 @@ class Game {
     private _scene: BABYLON.Scene;
     private _camera: BABYLON.FreeCamera;
     private _followCam: BABYLON.FollowCamera;
-    private _light: BABYLON.Light;
+    private _light: BABYLON.PointLight;
     private _backgroundTexture: BABYLON.Texture;
     private _floor: BABYLON.Mesh;
     private _skybox: BABYLON.Mesh;
@@ -15,6 +15,12 @@ class Game {
     private _planet: BABYLON.Mesh;
     private _ship: Ship;
     private _inputMap: object;
+    
+    public readonly gameWorldSizeX : number;
+    public readonly gameWorldSizeY : number;
+
+    public readonly gameWorldCellsX : number;
+    public readonly gameWorldCellsY : number
 
     constructor(canvasElement: string) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
@@ -23,21 +29,25 @@ class Game {
             lockstepMaxSteps: 4
         });
         this._inputMap = {};
+        this.gameWorldSizeX = 3200;
+        this.gameWorldSizeY = 3200;
+        this.gameWorldCellsX = 2;
+        this.gameWorldCellsY = 2;
     }
 
     private createCamera(): void {
-        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(800, 100, 800), this._scene);
 
+        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(this.gameWorldSizeX/4, 100, this.gameWorldSizeY/4), this._scene);
         this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
         var ratio = this._camera.viewport.width / this._camera.viewport.height;
-        var fieldSize = 1600;
+        var fieldSize = this.gameWorldSizeX / this.gameWorldCellsX;
         this._camera.orthoTop = fieldSize / (2 * ratio);
         this._camera.orthoBottom = -fieldSize / (2 * ratio);
         this._camera.orthoLeft = -fieldSize / 2;
         this._camera.orthoRight = fieldSize / 2;
-        this._camera.setTarget(new BABYLON.Vector3(800, 0, 800));
+        this._camera.setTarget(new BABYLON.Vector3(this.gameWorldSizeX/4, 0, this.gameWorldSizeY/4));
         this._scene.activeCamera = this._camera;
     }
 
@@ -67,8 +77,8 @@ class Game {
         this._light = new BABYLON.PointLight("light1", new BABYLON.Vector3(0, 0, 0), this._scene);
         this._light.diffuse = BABYLON.Color3.Red();
         this._light.specular = BABYLON.Color3.Yellow();
-        this._light.range = 1200;
-        this._light.intensity = 1;
+        this._light.range = 1600;
+        this._light.intensity = 10;
     }
 
     private createBackground(): void {
@@ -92,19 +102,22 @@ class Game {
 
         this._star.material = sphMat;
         this._star.metadata = { mass: 100, radius: 80 };
+        this._star.position.x = -800;
+        this._star.position.z = -800;
+        this._light.position = this._star.position;
 
     }
 
-    private createPlanet(): void {
-        this._planet = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, this._scene);
-        this._planet.position = new BABYLON.Vector3(-500, 0, -500);
-        this._planet.metadata = { parentStar: this._star, mass: 25, radius: 48 };
+    private createPlanet(parentStar : BABYLON.Mesh): void {
+        this._planet = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, this._scene);        
+        this._planet.metadata = { parentStar: parentStar, mass: 25, radius: 48 };
+        this._planet.position = new BABYLON.Vector3(parentStar.position.x - 480, 0, parentStar.position.z + 480);
     }
 
     private createShip(): void {
         this._ship = new Ship(this._scene);
-        this._ship.position.x = 1500;
-        this._ship.position.z = 1500;
+        this._ship.position.x = -1200;
+        this._ship.position.z = -1000;
     }
 
     private handleKeyboardInput(): void {
@@ -161,7 +174,7 @@ class Game {
             sPos = this._planet.metadata.parentStar.position,
             rOrbit = BABYLON.Vector3.Distance(pPos, sPos); // TODO: refactor into planet class
 
-        this._planet.position = new BABYLON.Vector3(rOrbit * Math.sin(alpha), 0, rOrbit * Math.cos(alpha));
+        this._planet.position = new BABYLON.Vector3(sPos.x + rOrbit * Math.sin(alpha), 0, sPos.z + rOrbit * Math.cos(alpha));
 
     }
 
@@ -183,7 +196,7 @@ class Game {
         this.createLight();
         //   this.createBackground();
         this.createStar();
-        this.createPlanet();
+        this.createPlanet(this._star);
         this.createShip();
         //  this.createFollowCamera();
 
