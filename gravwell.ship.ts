@@ -33,6 +33,9 @@ class Ship {
         this.maxAcceleration = 0.1;
         this.maxAngularVelocity = (2*Math.PI)/60;
         this.velocity = new BABYLON.Vector3(1, 0, 1);
+
+        this.mesh.material = new BABYLON.StandardMaterial("shipMat", scene);
+        
       
     }
 
