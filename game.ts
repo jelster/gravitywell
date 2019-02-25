@@ -190,7 +190,7 @@ class Game {
         this.createLight();
         //   this.createBackground();
         for (let i = 0; i < this.numberOfStars; i++) {
-            let starPos = new BABYLON.Vector3(i * 1600 + 800, 0, i*1600 + 800);
+            let starPos = new BABYLON.Vector3(i * 1600 - 800, 0, i*1600 - 800);
             this.createStar(starPos);         
         }
 
@@ -241,7 +241,7 @@ class Game {
 
 window.addEventListener('DOMContentLoaded', () => {
     // TODO: load game data from TBD
-    let starCount = 4;
+    let starCount = 2;
     // Create the game using the 'renderCanvas'.
     let game = new Game('renderCanvas', starCount);
     // Create the scene.
