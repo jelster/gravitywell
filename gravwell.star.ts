@@ -34,7 +34,7 @@ class Planet implements IGravityContributor {
         this._parentStar = parentStar;
         this._mesh = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, scene);
 
-        this.mass = 25;
+        this.mass = parentStar.mass * 0.2;
         this.radius = 48;
         this.position = new BABYLON.Vector3(parentStar.position.x - 10*this.radius, 0, parentStar.position.z + 10*this.radius);
     }
@@ -76,7 +76,7 @@ class Star implements IGravityContributor {
         sphMat.specularColor = BABYLON.Color3.Yellow();
 
         this._mesh.material = sphMat;
-        this.mass = 100;
+        this.mass = 500000000;
         this.radius = 80;
         this._mesh.position = initialPos;
 

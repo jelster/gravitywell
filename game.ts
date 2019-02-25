@@ -2,6 +2,10 @@
 ///<reference path="gravwell.ship.ts" />
 ///<reference path="gravwell.star.ts" />
 
+enum GravityMode {
+    DistanceSquared = 1,
+    DistanceCubed = 2
+}
 class Game {
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
@@ -27,6 +31,8 @@ class Game {
     public readonly gameWorldCellsY: number;
     public readonly numberOfStars: number;
 
+    public GravityWellMode: GravityMode;
+
     constructor(canvasElement: string, numStars: number) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new BABYLON.Engine(this._canvas, true, {
@@ -42,6 +48,7 @@ class Game {
         this.gameWorldCellsX = 2;
         this.gameWorldCellsY = 2;
         this.numberOfStars = numStars;
+        this.GravityWellMode = GravityMode.DistanceSquared;
     }
 
     private createCamera(): void {
@@ -158,13 +165,16 @@ class Game {
             sRad = gravSource.radius || 10;
         if (dCenter <= sRad) { return; }
 
-        let G = 6.67259 * (10 ^ -11),
+        let G = 6.67259e-11,
             r = dCenter ^ 2,
-            dir = gravSource.position.subtract(this._ship.position).normalize(),
-            m1 = 1,
+            dir = this._ship.position.subtract(gravSource.position).normalize(),
+            m1 = 100,
             m2 = gravSource.mass || 1;
 
-        let f = -(G * (m1 * m2)) / (r * dCenter); // r^3 propagation, like electrical fields
+            if (this.GravityWellMode === GravityMode.DistanceCubed) {
+                r = r * dCenter; // r^3 propagation, like electrical fields
+            }
+        let f = -(G * (m1 * m2)) / (r); 
 
         this._ship.velocity.x += (dir.x * f);
         this._ship.velocity.z += (dir.z * f);
