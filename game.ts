@@ -1,5 +1,6 @@
 ///<reference path="babylon.d.ts" />
 ///<reference path="gravwell.ship.ts" />
+///<reference path="gravwell.star.ts" />
 
 class Game {
     private _canvas: HTMLCanvasElement;
@@ -11,33 +12,41 @@ class Game {
     private _backgroundTexture: BABYLON.Texture;
     private _floor: BABYLON.Mesh;
     private _skybox: BABYLON.Mesh;
-    private _star: BABYLON.Mesh;
-    private _planet: BABYLON.Mesh;
+
     private _ship: Ship;
     private _inputMap: object;
-    
-    public readonly gameWorldSizeX : number;
-    public readonly gameWorldSizeY : number;
 
-    public readonly gameWorldCellsX : number;
-    public readonly gameWorldCellsY : number
+    private _stars: Array<Star>;
+    private _planets: Array<Planet>;
+    private _gravityWells: Array<IGravityContributor>;
 
-    constructor(canvasElement: string) {
+    public readonly gameWorldSizeX: number;
+    public readonly gameWorldSizeY: number;
+
+    public readonly gameWorldCellsX: number;
+    public readonly gameWorldCellsY: number;
+    public readonly numberOfStars: number;
+
+    constructor(canvasElement: string, numStars: number) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new BABYLON.Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         });
         this._inputMap = {};
+        this._planets =[];
+        this._stars = [];
+        this._gravityWells = [];
         this.gameWorldSizeX = 3200;
         this.gameWorldSizeY = 3200;
         this.gameWorldCellsX = 2;
         this.gameWorldCellsY = 2;
+        this.numberOfStars = numStars;
     }
 
     private createCamera(): void {
 
-        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(this.gameWorldSizeX/4, 100, this.gameWorldSizeY/4), this._scene);
+        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(this.gameWorldSizeX / 4, 100, this.gameWorldSizeY / 4), this._scene);
         this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
@@ -47,7 +56,7 @@ class Game {
         this._camera.orthoBottom = -fieldSize / (2 * ratio);
         this._camera.orthoLeft = -fieldSize / 2;
         this._camera.orthoRight = fieldSize / 2;
-        this._camera.setTarget(new BABYLON.Vector3(this.gameWorldSizeX/4, 0, this.gameWorldSizeY/4));
+        this._camera.setTarget(new BABYLON.Vector3(this.gameWorldSizeX / 4, 0, this.gameWorldSizeY / 4));
         this._scene.activeCamera = this._camera;
     }
 
@@ -93,25 +102,17 @@ class Game {
         this._floor.material = backMat;
     }
 
-    private createStar(): void {
-        this._star = BABYLON.MeshBuilder.CreateSphere('star', { segments: 16, diameter: 160 }, this._scene);
-        let sphMat = new BABYLON.StandardMaterial("starMat", this._scene);
-        sphMat.emissiveColor = BABYLON.Color3.Yellow();
-        sphMat.diffuseColor = BABYLON.Color3.Yellow();
-        sphMat.specularColor = BABYLON.Color3.Yellow();
-
-        this._star.material = sphMat;
-        this._star.metadata = { mass: 100, radius: 80 };
-        this._star.position.x = -800;
-        this._star.position.z = -800;
-        this._light.position = this._star.position;
-
+    private createStar(pos): void {
+        let star = new Star(this._scene, pos);
+        this._stars.push(star);
+        this._gravityWells.push(star);
+        this.createPlanet(star);
     }
 
-    private createPlanet(parentStar : BABYLON.Mesh): void {
-        this._planet = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, this._scene);        
-        this._planet.metadata = { parentStar: parentStar, mass: 25, radius: 48 };
-        this._planet.position = new BABYLON.Vector3(parentStar.position.x - 480, 0, parentStar.position.z + 480);
+    private createPlanet(parentStar: Star): void {
+        let planet = new Planet(this._scene, parentStar)
+        this._planets.push(planet);
+        this._gravityWells.push(planet);
     }
 
     private createShip(): void {
@@ -152,16 +153,16 @@ class Game {
 
     }
 
-    private applyGravitationalForceToShip(gravSource: BABYLON.Mesh): void {
+    private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
         let dCenter = BABYLON.Vector3.Distance(this._ship.position, gravSource.position),
-            sRad = gravSource.metadata.radius || 10;
+            sRad = gravSource.radius || 10;
         if (dCenter <= sRad) { return; }
 
         let G = 6.67259 * (10 ^ -11),
             r = dCenter ^ 2,
             dir = gravSource.position.subtract(this._ship.position).normalize(),
             m1 = 1,
-            m2 = gravSource.metadata.mass || 1;
+            m2 = gravSource.mass || 1;
 
         let f = -(G * (m1 * m2)) / (r * dCenter); // r^3 propagation, like electrical fields
 
@@ -169,14 +170,7 @@ class Game {
         this._ship.velocity.z += (dir.z * f);
     }
 
-    private movePlanetInOrbit(alpha: number) {
-        let pPos = this._planet.position,
-            sPos = this._planet.metadata.parentStar.position,
-            rOrbit = BABYLON.Vector3.Distance(pPos, sPos); // TODO: refactor into planet class
 
-        this._planet.position = new BABYLON.Vector3(sPos.x + rOrbit * Math.sin(alpha), 0, sPos.z + rOrbit * Math.cos(alpha));
-
-    }
 
     private moveCameraToShipSector() {
         let activeCam = this._scene.activeCamera,
@@ -195,8 +189,11 @@ class Game {
         this.createCamera();
         this.createLight();
         //   this.createBackground();
-        this.createStar();
-        this.createPlanet(this._star);
+        for (let i = 0; i < this.numberOfStars; i++) {
+            let starPos = new BABYLON.Vector3(i * 1600 + 800, 0, i*1600 + 800);
+            this.createStar(starPos);         
+        }
+
         this.createShip();
         //  this.createFollowCamera();
 
@@ -213,10 +210,14 @@ class Game {
         var alpha = 0;
         //deterministic steps for update loop
         this._scene.onBeforeStepObservable.add(() => {
-            this.movePlanetInOrbit(alpha);
+            this._planets.forEach(planet => {
+                planet.movePlanetInOrbit(alpha);
+            });
+            this._gravityWells.forEach(gravWell => {
+                this.applyGravitationalForceToShip(gravWell);
+            });
 
-            this.applyGravitationalForceToShip(this._star);
-            this.applyGravitationalForceToShip(this._planet);
+
             this._ship.onUpdate();
             this.updateShipPositionOverflow();
             this.moveCameraToShipSector();
@@ -239,8 +240,10 @@ class Game {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // TODO: load game data from TBD
+    let starCount = 4;
     // Create the game using the 'renderCanvas'.
-    let game = new Game('renderCanvas');
+    let game = new Game('renderCanvas', starCount);
     // Create the scene.
     game.createScene();
     // Start render loop.
