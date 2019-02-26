@@ -76,7 +76,7 @@ class Star implements IGravityContributor {
         sphMat.specularColor = BABYLON.Color3.Yellow();
 
         this._mesh.material = sphMat;
-        this.mass = 500000000;
+        this.mass = 7.5e8;
         this.radius = 80;
         this._mesh.position = initialPos;
 

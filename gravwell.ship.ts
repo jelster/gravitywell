@@ -29,10 +29,9 @@ class Ship {
         this.mesh.rotation.x = Math.PI/2;
         //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
-        this.position = new BABYLON.Vector3(-750, 0, -128);
         this.maxAcceleration = 0.1;
         this.maxAngularVelocity = (2*Math.PI)/60;
-        this.velocity = new BABYLON.Vector3(1, 0, 1);
+        this.velocity = new BABYLON.Vector3(.01, 0, 1);
 
         this.mesh.material = new BABYLON.StandardMaterial("shipMat", scene);
         

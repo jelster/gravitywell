@@ -6,6 +6,11 @@ enum GravityMode {
     DistanceSquared = 1,
     DistanceCubed = 2
 }
+
+class Point {
+    public x : number;
+    public y : number;
+}
 class Game {
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
@@ -23,7 +28,7 @@ class Game {
     private _stars: Array<Star>;
     private _planets: Array<Planet>;
     private _gravityWells: Array<IGravityContributor>;
-
+    private readonly _starMap: Array<Point>;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
 
@@ -33,27 +38,42 @@ class Game {
 
     public GravityWellMode: GravityMode;
 
-    constructor(canvasElement: string, numStars: number) {
+    public get gameWorldCellSizeX(): number {
+        return Math.floor(this.gameWorldSizeX / this.gameWorldCellsX);
+    }
+    public get gameWorldCellSizeY(): number {
+        return Math.floor(this.gameWorldSizeY / this.gameWorldCellsY);
+    }
+
+    constructor(canvasElement: string, numStars: number = null) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new BABYLON.Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         });
         this._inputMap = {};
-        this._planets =[];
+        this._planets = [];
         this._stars = [];
         this._gravityWells = [];
-        this.gameWorldSizeX = 3200;
-        this.gameWorldSizeY = 3200;
-        this.gameWorldCellsX = 2;
-        this.gameWorldCellsY = 2;
-        this.numberOfStars = numStars;
+        this.gameWorldSizeX = 4800;
+        this.gameWorldSizeY = 4800;
+        this.gameWorldCellsX = 3;
+        this.gameWorldCellsY = 3;
+        
+        this._starMap = [
+            {x: -1600, y: -1600},
+            {x: 0, y: -1600},
+            {x: 1600, y: -1600},
+            {x: -1600, y: 0},
+            {x: 0, y: 1600},
+            {x: 1600, y: 1600}
+        ];
         this.GravityWellMode = GravityMode.DistanceSquared;
     }
 
     private createCamera(): void {
-
-        this._camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(this.gameWorldSizeX / 4, 100, this.gameWorldSizeY / 4), this._scene);
+let camPos = new BABYLON.Vector3(0, 100, 0);
+        this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
         this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
@@ -63,7 +83,7 @@ class Game {
         this._camera.orthoBottom = -fieldSize / (2 * ratio);
         this._camera.orthoLeft = -fieldSize / 2;
         this._camera.orthoRight = fieldSize / 2;
-        this._camera.setTarget(new BABYLON.Vector3(this.gameWorldSizeX / 4, 0, this.gameWorldSizeY / 4));
+        this._camera.setTarget(new BABYLON.Vector3(camPos.x, 0, camPos.z));
         this._scene.activeCamera = this._camera;
     }
 
@@ -110,7 +130,7 @@ class Game {
     }
 
     private createStar(pos): void {
-        let star = new Star(this._scene, pos);
+        var star = new Star(this._scene, pos);
         this._stars.push(star);
         this._gravityWells.push(star);
         this.createPlanet(star);
@@ -124,8 +144,8 @@ class Game {
 
     private createShip(): void {
         this._ship = new Ship(this._scene);
-        this._ship.position.x = -1200;
-        this._ship.position.z = -1000;
+        //this._ship.position.x = -2200;
+        //this._ship.position.z = -2200;
     }
 
     private handleKeyboardInput(): void {
@@ -145,17 +165,17 @@ class Game {
     }
 
     private updateShipPositionOverflow(): void {
-        if (this._ship.position.x > 1600) {
-            this._ship.position.x = -1599;
+        if (this._ship.position.x > this.gameWorldSizeX / 2) {
+            this._ship.position.x = -this.gameWorldSizeX / 2;
         }
-        if (this._ship.position.x < -1600) {
-            this._ship.position.x = 1599;
+        if (this._ship.position.x < -this.gameWorldSizeX / 2) {
+            this._ship.position.x = this.gameWorldSizeX / 2;
         }
-        if (this._ship.position.z > 1600) {
-            this._ship.position.z = -1599;
+        if (this._ship.position.z > this.gameWorldSizeY / 2) {
+            this._ship.position.z = -this.gameWorldSizeY / 2;
         }
-        if (this._ship.position.z < -1600) {
-            this._ship.position.z = 1599;
+        if (this._ship.position.z < -this.gameWorldSizeY / 2) {
+            this._ship.position.z = this.gameWorldSizeY / 2;
         }
 
     }
@@ -163,6 +183,7 @@ class Game {
     private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
         let dCenter = BABYLON.Vector3.Distance(this._ship.position, gravSource.position),
             sRad = gravSource.radius || 10;
+
         if (dCenter <= sRad) { return; }
 
         let G = 6.67259e-11,
@@ -171,37 +192,46 @@ class Game {
             m1 = 100,
             m2 = gravSource.mass || 1;
 
-            if (this.GravityWellMode === GravityMode.DistanceCubed) {
-                r = r * dCenter; // r^3 propagation, like electrical fields
-            }
-        let f = -(G * (m1 * m2)) / (r); 
+        if (this.GravityWellMode === GravityMode.DistanceCubed) {
+            r = r * dCenter; // r^3 propagation, like electrical fields
+        }
+        let f = -(G * (m1 * m2)) / (r);
 
         this._ship.velocity.x += (dir.x * f);
         this._ship.velocity.z += (dir.z * f);
     }
 
-
-
     private moveCameraToShipSector() {
-        let activeCam = this._scene.activeCamera,
-            ship = this._ship;
-
-
-        var cellX = Math.floor(ship.position.x / 1600);
-        var cellY = Math.floor(ship.position.z / 1600);
-        activeCam.position.x = cellX * 1600 + 800;
-        activeCam.position.z = cellY * 1600 + 800;
+        
+        let activeCam = this._scene.activeCamera;
+        if (activeCam.isInFrustum(this._ship.mesh)) {
+            return;
+        }
+        let ship = this._ship,
+            halfSizeX = this.gameWorldSizeX/2,
+            halfCellX = this.gameWorldCellSizeX/2,
+            halfSizeY = this.gameWorldSizeY/2,
+            halfCellY = this.gameWorldCellSizeY/2,
+            posOffsetX = ship.position.x,
+            posOffsetY = ship.position.z,        
+            cellX = Math.fround(posOffsetX/this.gameWorldCellSizeX),
+            cellY = Math.fround(posOffsetY/this.gameWorldCellSizeY);
+        
+        activeCam.position.x = (cellX * this.gameWorldCellSizeX);
+        activeCam.position.z = (cellY * this.gameWorldCellSizeY);
 
     }
+    
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
 
         this.createCamera();
         this.createLight();
         //   this.createBackground();
-        for (let i = 0; i < this.numberOfStars; i++) {
-            let starPos = new BABYLON.Vector3(i * 1600 - 800, 0, i*1600 - 800);
-            this.createStar(starPos);         
+        for (let i = 0; i < this._starMap.length; i++) {
+            let item = this._starMap[i];
+            var starPos = new BABYLON.Vector3(item.x, 0, item.y);
+            this.createStar(starPos);
         }
 
         this.createShip();
@@ -227,7 +257,6 @@ class Game {
                 this.applyGravitationalForceToShip(gravWell);
             });
 
-
             this._ship.onUpdate();
             this.updateShipPositionOverflow();
             this.moveCameraToShipSector();
@@ -251,9 +280,9 @@ class Game {
 
 window.addEventListener('DOMContentLoaded', () => {
     // TODO: load game data from TBD
-    let starCount = 2;
+   
     // Create the game using the 'renderCanvas'.
-    let game = new Game('renderCanvas', starCount);
+    let game = new Game('renderCanvas');
     // Create the scene.
     game.createScene();
     // Start render loop.
