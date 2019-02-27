@@ -232,7 +232,7 @@ class Game {
         this._scene = new BABYLON.Scene(this._engine);
 
         this.createCamera();
-        this.createLight();
+       // this.createLight();
         //   this.createBackground();
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];

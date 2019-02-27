@@ -33,7 +33,14 @@ class Planet implements IGravityContributor {
     constructor(scene: BABYLON.Scene, parentStar: Star) {
         this._parentStar = parentStar;
         this._mesh = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, scene);
-
+        
+        
+        var plantMat = new BABYLON.StandardMaterial("planetMat", scene);
+        var planColor = BABYLON.Color3.Gray();
+        plantMat.emissiveColor = planColor;
+        plantMat.diffuseColor = planColor;
+        plantMat.specularColor = BABYLON.Color3.Random();
+        this._mesh.material = plantMat;
         this.mass = parentStar.mass * 0.2;
         this.radius = 48;
         this.position = new BABYLON.Vector3(parentStar.position.x - 10*this.radius, 0, parentStar.position.z + 10*this.radius);
@@ -73,19 +80,20 @@ class Star implements IGravityContributor {
         let sphMat = new BABYLON.StandardMaterial("starMat", scene);
         sphMat.emissiveColor = BABYLON.Color3.Yellow();
         sphMat.diffuseColor = BABYLON.Color3.Yellow();
-        sphMat.specularColor = BABYLON.Color3.Yellow();
+        sphMat.specularColor = BABYLON.Color3.Magenta();
 
         this._mesh.material = sphMat;
         this.mass = 7.5e8;
         this.radius = 80;
         this._mesh.position = initialPos;
 
-        this._light = new BABYLON.PointLight("light1", new BABYLON.Vector3(0, 0, 0), scene);
-        this._light.diffuse = BABYLON.Color3.Red();
+        this._light = new BABYLON.PointLight("", new BABYLON.Vector3(0, 100, 0), scene);
+        this._light.diffuse = BABYLON.Color3.White();
         this._light.specular = BABYLON.Color3.Yellow();
-        this._light.range = 1600;
-        this._light.intensity = 10;
-        this._light.position = this._mesh.position;
+ 
+        this._light.intensity = 1;
+        this._light.position.x = this._mesh.position.x;
+        this._light.position.z = this._mesh.position.z;
 
     }
 }
