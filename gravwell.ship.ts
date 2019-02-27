@@ -5,6 +5,16 @@ class Ship {
     public maxAcceleration : number;
     public maxAngularVelocity : number;    
     public mesh : BABYLON.Mesh;
+
+    
+    private _isAlive : boolean;
+    public get isAlive() : boolean {
+        return this._isAlive;
+    }
+    public set isAlive(v : boolean) {
+        this._isAlive = v;
+    }
+    
     
     public get rotation() : number {
         return this.mesh.rotation.z;
@@ -29,7 +39,7 @@ class Ship {
         this.mesh.rotation.x = Math.PI/2;
         //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
-        this.maxAcceleration = 0.1;
+        this.maxAcceleration = 0.01;
         this.maxAngularVelocity = (2*Math.PI)/60;
         this.velocity = new BABYLON.Vector3(.01, 0, 1);
 
@@ -39,13 +49,18 @@ class Ship {
         shipMat.diffuseColor = BABYLON.Color3.White();
         //shipMat.emissiveColor = BABYLON.Color3.Blue();
         this.mesh.material = shipMat;
+
+        this.isAlive = false;
         
       
     }
 
     public onUpdate() {
-         this.position.x += this.velocity.x;
-         this.position.z += this.velocity.z;
+        if (this.isAlive) {
+            this.position.x += (this.velocity.x * this.mesh.getEngine().getDeltaTime());
+            this.position.z += this.velocity.z * this.mesh.getEngine().getDeltaTime();
+        }
+
     }
     /**
      * fireThrusters

@@ -18,6 +18,9 @@ class Planet implements IGravityContributor {
     public set position(v: BABYLON.Vector3) {
         this._mesh.position = v;
     }
+    public get mesh(): BABYLON.Mesh {
+        return this._mesh;
+    }
 
     private _parentStar: Star;
     private _mesh: BABYLON.Mesh;
@@ -37,7 +40,6 @@ class Planet implements IGravityContributor {
         
         var plantMat = new BABYLON.StandardMaterial("planetMat", scene);
         var planColor = BABYLON.Color3.Gray();
-      //  plantMat.emissiveColor = planColor;
         plantMat.diffuseColor = planColor;
         plantMat.specularColor = BABYLON.Color3.Random();
         this._mesh.material = plantMat;
@@ -50,6 +52,9 @@ class Planet implements IGravityContributor {
 class Star implements IGravityContributor {
 
     private _mesh: BABYLON.Mesh;
+    public get mesh(): BABYLON.Mesh {
+        return this._mesh;
+    }
     private _light: BABYLON.PointLight;
 
     private _mass: number;
@@ -83,7 +88,7 @@ class Star implements IGravityContributor {
         sphMat.specularColor = BABYLON.Color3.Magenta();
 
         this._mesh.material = sphMat;
-        this.mass = 7.5e8;
+        this.mass = 7.5e7;
         this.radius = 80;
         this._mesh.position = initialPos;
 

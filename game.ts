@@ -29,6 +29,8 @@ class Game {
     private _planets: Array<Planet>;
     private _gravityWells: Array<IGravityContributor>;
     private readonly _starMap: Array<Point>;
+
+    private _explosionParticle : BABYLON.ParticleSystem;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
 
@@ -50,7 +52,8 @@ class Game {
         this._engine = new BABYLON.Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
-        });
+        },true);
+        
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
@@ -69,12 +72,15 @@ class Game {
             { x: 1600, y: 1600 }
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
+
+   
+       
     }
 
     private createCamera(): void {
-        let camPos = new BABYLON.Vector3(0, 100, 0);
+        let camPos = new BABYLON.Vector3(0, 1600, 0);
         this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
-        this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+      //  this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
         var ratio = this._camera.viewport.width / this._camera.viewport.height;
@@ -138,7 +144,8 @@ class Game {
     }
 
     private createPlanet(parentStar: Star): void {
-        let planet = new Planet(this._scene, parentStar)
+        
+        var planet = new Planet(this._scene, parentStar)
         this._planets.push(planet);
         this._gravityWells.push(planet);
     }
@@ -229,19 +236,67 @@ class Game {
 
     }
 
+    private createExplosion() : void {
+
+        this._explosionParticle = new BABYLON.ParticleSystem("explosion", 250, this._scene);
+        this._explosionParticle.particleTexture = new BABYLON.Texture("textures/explosion-3.png", this._scene);
+        
+        this._explosionParticle.preventAutoStart = true;
+        this._explosionParticle.disposeOnStop = false;
+        this._explosionParticle.startDelay = 0;
+       // var explosion = BABYLON.Mesh.CreateSphere('explosion', 1, this._ship.mesh.getBoundingInfo().diagonalLength, this._scene);
+     //   explosion.visibility =0;
+         // Colors of all particles (splited in 2 + specific color before dispose)
+         this._explosionParticle.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 1);
+         this._explosionParticle.color2 = new BABYLON.Color4(0.2, 0.5, 1.0, 1);
+         this._explosionParticle.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
+         // Size of each particle (random between...)
+         this._explosionParticle.minSize = 10;
+         this._explosionParticle.maxSize = 100;
+         // Life time of each particle (random between...)
+         this._explosionParticle.minLifeTime = 0.3;
+         this._explosionParticle.maxLifeTime = 0.8;
+         this._explosionParticle.emitRate = 20;
+         //Set the gravity of all particles (not necessarily down)
+       //  this._explosionParticle.gravity = new BABYLON.Vector3(0, 0,-9.81);
+         //Direction
+         this._explosionParticle.direction1 = new BABYLON.Vector3(-7, 0, 3);
+         this._explosionParticle.direction2 = new BABYLON.Vector3(7, 0, -3);
+         //Angular speed
+         this._explosionParticle.minAngularSpeed = 0.001;
+         this._explosionParticle.maxAngularSpeed = 1.5*Math.PI;
+   //     this._explosionParticle.emitter = explosion;
+     //   explosion.position = this._ship.position;
+        this._explosionParticle.targetStopDuration = 1;        
+        
+        this._explosionParticle.addStartSizeGradient(0,1,1.5);
+        this._explosionParticle.addStartSizeGradient(1,5,9);
+        this._explosionParticle.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+        
+
+    }
+
+    private resetShip(): void {
+        console.log('resetting ship', this._ship);
+        if (!this._ship) { return; }
+        this._ship.position = BABYLON.Vector3.Zero(); 
+        this._ship.velocity = new BABYLON.Vector3(0, 0, 0.2);
+        this._ship.rotation = 0;
+        this._ship.isAlive = true;
+    }
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
+
         var gl = new BABYLON.GlowLayer("glow", this._scene);
         this.createCamera();
        // this.createLight();
-        this.createBackground();
+   //     this.createBackground();
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
             var starPos = new BABYLON.Vector3(item.x, 0, item.y);
             this.createStar(starPos);
-        }
-
-        this.createShip();
+        }        
+        
         //  this.createFollowCamera();
 
         this._scene.onKeyboardObservable.add((kbInfo) => {
@@ -257,24 +312,50 @@ class Game {
         var alpha = 0;
         //deterministic steps for update loop
         this._scene.onBeforeStepObservable.add(() => {
+            var self = this;
+            
+            this.updateShipPositionOverflow();
+
+            let sh = this._ship;
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
+ 
+                if (sh.isAlive === true && planet.mesh.intersectsPoint(sh.mesh.position)) {
+                    console.log('mesh intersection!', sh, planet);
+                    sh.isAlive = false;
+                    sh.velocity = BABYLON.Vector3.Zero();
+                    this.createExplosion();                   
+                    this._explosionParticle.emitter = sh.mesh;
+                    this._explosionParticle.start();
+
+                    this._scene.executeOnceBeforeRender(() => this.resetShip(),2500);
+                    return false;
+                }
             });
+
             this._gravityWells.forEach(gravWell => {
                 this.applyGravitationalForceToShip(gravWell);
             });
-
-            this._ship.onUpdate();
-            this.updateShipPositionOverflow();
+            
             this.moveCameraToShipSector();
             alpha += 0.001;
         });
+
+        this.createShip();
+        this.resetShip();
     }
 
     doRender(): void {
         this._engine.runRenderLoop(() => {
-            this.handleKeyboardInput();
+            if (this._ship.isAlive) {
+                this.handleKeyboardInput();
+            }
+            this._ship.onUpdate();
+            
+            
 
+            var alpha = 0.0;
+            
             this._scene.render();
         });
 
