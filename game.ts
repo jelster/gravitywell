@@ -8,8 +8,8 @@ enum GravityMode {
 }
 
 class Point {
-    public x : number;
-    public y : number;
+    public x: number;
+    public y: number;
 }
 class Game {
     private _canvas: HTMLCanvasElement;
@@ -59,20 +59,20 @@ class Game {
         this.gameWorldSizeY = 4800;
         this.gameWorldCellsX = 3;
         this.gameWorldCellsY = 3;
-        
+
         this._starMap = [
-            {x: -1600, y: -1600},
-            {x: 0, y: -1600},
-            {x: 1600, y: -1600},
-            {x: -1600, y: 0},
-            {x: 0, y: 1600},
-            {x: 1600, y: 1600}
+            { x: -1600, y: -1600 },
+            { x: 0, y: -1600 },
+            { x: 1600, y: -1600 },
+            { x: -1600, y: 0 },
+            { x: 0, y: 1600 },
+            { x: 1600, y: 1600 }
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
     }
 
     private createCamera(): void {
-let camPos = new BABYLON.Vector3(0, 100, 0);
+        let camPos = new BABYLON.Vector3(0, 100, 0);
         this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
         this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
@@ -202,26 +202,32 @@ let camPos = new BABYLON.Vector3(0, 100, 0);
     }
 
     private moveCameraToShipSector() {
-        
+
         let activeCam = this._scene.activeCamera;
-        if (activeCam.isInFrustum(this._ship.mesh)) {
+        // if (activeCam.isCompletelyInFrustum(this._ship.mesh)) {
+        //     return;
+        // }
+        let ship = this._ship,
+            halfSizeX = this.gameWorldSizeX / 2,
+            halfCellX = this.gameWorldCellSizeX / 2,
+            halfSizeY = this.gameWorldSizeY / 2,
+            halfCellY = this.gameWorldCellSizeY / 2,
+            posOffsetX = ship.position.x,
+            posOffsetY = ship.position.z,
+            cellX = +((posOffsetX / this.gameWorldCellSizeX).toFixed(0)),
+            cellY = +((posOffsetY / this.gameWorldCellSizeY).toFixed(0)),
+            camCellX = +((activeCam.position.x / this.gameWorldCellSizeX).toFixed(0)),
+            camCellY = +((activeCam.position.z / this.gameWorldCellSizeY).toFixed(0));
+
+        if (camCellX === cellX && camCellY === cellY) {
             return;
         }
-        let ship = this._ship,
-            halfSizeX = this.gameWorldSizeX/2,
-            halfCellX = this.gameWorldCellSizeX/2,
-            halfSizeY = this.gameWorldSizeY/2,
-            halfCellY = this.gameWorldCellSizeY/2,
-            posOffsetX = ship.position.x,
-            posOffsetY = ship.position.z,        
-            cellX = Math.fround(posOffsetX/this.gameWorldCellSizeX),
-            cellY = Math.fround(posOffsetY/this.gameWorldCellSizeY);
-        
+        console.log('moving camera s{0}, s{1}, c{2}, c{3}', cellX, cellY, camCellX, camCellY);
         activeCam.position.x = (cellX * this.gameWorldCellSizeX);
         activeCam.position.z = (cellY * this.gameWorldCellSizeY);
 
     }
-    
+
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
 
@@ -280,7 +286,7 @@ let camPos = new BABYLON.Vector3(0, 100, 0);
 
 window.addEventListener('DOMContentLoaded', () => {
     // TODO: load game data from TBD
-   
+
     // Create the game using the 'renderCanvas'.
     let game = new Game('renderCanvas');
     // Create the scene.
