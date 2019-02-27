@@ -120,12 +120,13 @@ class Game {
     private createBackground(): void {
         this._backgroundTexture = new BABYLON.Texture("textures/corona_lf.png", this._scene);
         this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
-        this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: 3200, height: 3200, subdivisions: 4 }, this._scene);
+        this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisions: this.gameWorldCellsY * this.gameWorldCellsX }, this._scene);
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
+        backMat.primaryColor = BABYLON.Color3.White();
         backMat.reflectionTexture = this._backgroundTexture;
-        backMat.useRGBColor = false;
+        backMat.alphaMode = 5;
         backMat.fillMode = BABYLON.Material.TriangleFillMode;
-
+        
         this._floor.material = backMat;
     }
 
@@ -230,10 +231,10 @@ class Game {
 
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
-
+        var gl = new BABYLON.GlowLayer("glow", this._scene);
         this.createCamera();
        // this.createLight();
-        //   this.createBackground();
+        this.createBackground();
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
             var starPos = new BABYLON.Vector3(item.x, 0, item.y);

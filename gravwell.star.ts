@@ -37,13 +37,13 @@ class Planet implements IGravityContributor {
         
         var plantMat = new BABYLON.StandardMaterial("planetMat", scene);
         var planColor = BABYLON.Color3.Gray();
-        plantMat.emissiveColor = planColor;
+      //  plantMat.emissiveColor = planColor;
         plantMat.diffuseColor = planColor;
         plantMat.specularColor = BABYLON.Color3.Random();
         this._mesh.material = plantMat;
-        this.mass = parentStar.mass * 0.2;
-        this.radius = 48;
-        this.position = new BABYLON.Vector3(parentStar.position.x - 10*this.radius, 0, parentStar.position.z + 10*this.radius);
+        this.mass = parentStar.mass * 0.3;
+        this.radius = 52;
+        this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
     }
 }
 

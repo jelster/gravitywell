@@ -33,7 +33,12 @@ class Ship {
         this.maxAngularVelocity = (2*Math.PI)/60;
         this.velocity = new BABYLON.Vector3(.01, 0, 1);
 
-        this.mesh.material = new BABYLON.StandardMaterial("shipMat", scene);
+        var shipMat = new BABYLON.StandardMaterial("shipMat", scene);
+        shipMat.specularColor = BABYLON.Color3.Blue();
+        shipMat.ambientColor = BABYLON.Color3.White();
+        shipMat.diffuseColor = BABYLON.Color3.White();
+        //shipMat.emissiveColor = BABYLON.Color3.Blue();
+        this.mesh.material = shipMat;
         
       
     }
