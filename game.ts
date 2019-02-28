@@ -31,6 +31,7 @@ class Game {
     private readonly _starMap: Array<Point>;
 
     private _explosionParticle : BABYLON.ParticleSystem;
+    private _respawnTimeLimit : number;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
 
@@ -74,6 +75,7 @@ class Game {
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
         this.isPaused = true;
+        this._respawnTimeLimit = 4000;
        
     }
 
@@ -273,7 +275,6 @@ class Game {
         this._explosionParticle.updateSpeed = 0.005;
         this._explosionParticle.addStartSizeGradient(0,1);
         this._explosionParticle.addStartSizeGradient(1,100);
-
         this._explosionParticle.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
         
 
@@ -287,6 +288,7 @@ class Game {
         this._ship.rotation = 0;
         this._ship.isAlive = true;
         this._ship.mesh.isVisible = true;
+        this._ship.mesh.checkCollisions = true;
         this._explosionParticle.stop();
     }
 
@@ -294,12 +296,13 @@ class Game {
         this._ship.isAlive = false;
         this._ship.mesh.isVisible = false;
         this._ship.velocity = BABYLON.Vector3.Zero();
+        this._ship.mesh.checkCollisions = false;
         
         this._explosionParticle.emitter = this._ship.mesh;
         this._explosionParticle.start(); 
 
         //BABYLON.ParticleHelper.CreateAsync("explosion", this._scene, true).then((s) => s.start(sh.mesh));
-        this._scene.executeOnceBeforeRender(() => this.resetShip(),4000);
+        this._scene.executeOnceBeforeRender(() => this.resetShip(),this._respawnTimeLimit);
     }
     createScene(): void {
         let self = this;
@@ -339,7 +342,9 @@ class Game {
             });
 
             this._gravityWells.forEach(gravWell => {
-                this.applyGravitationalForceToShip(gravWell);
+                if (this._ship.isAlive) {
+                    this.applyGravitationalForceToShip(gravWell);
+                }                
             });
             this._ship.onUpdate();
             this.updateShipPositionOverflow();
@@ -382,15 +387,23 @@ class Game {
     doRender(): void {
         this._engine.runRenderLoop(() => {
             if (!this.isPaused) {
-                this._planets.forEach(planet => {
-                    if (this._ship.isAlive === true && planet.mesh.intersectsPoint(this._ship.mesh.position)) {
-                        console.log('mesh intersection!', this._ship, planet);
-                        this.killShip();
-                        return false;
-                    }
-                });
-                if (this._ship.isAlive) {
+                
+                if (this._ship.isAlive) {                    
                     this.handleKeyboardInput();
+                    this._planets.forEach(planet => {
+                        if (planet.mesh.intersectsPoint(this._ship.mesh.position)) {
+                            console.log('mesh intersection!', this._ship, planet);
+                            this.killShip();
+                            return false;
+                        }
+                    });
+                    this._stars.forEach(star => {
+                        if (star.mesh.intersectsPoint(this._ship.mesh.position)) {
+                            console.log('mesh intersection!', this._ship, star);
+                            this.killShip();
+                            return false;
+                        }
+                    });
                 }
             }            
 
