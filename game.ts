@@ -268,7 +268,8 @@ class Game {
          this._explosionParticle.maxAngularSpeed = Math.PI/2;
    //     this._explosionParticle.emitter = explosion;
      //   explosion.position = this._ship.position;
-        this._explosionParticle.targetStopDuration = 1;        
+        this._explosionParticle.targetStopDuration = 0.5;
+                
         this._explosionParticle.maxEmitPower = 50;
         this._explosionParticle.minEmitPower = 10;
         this._explosionParticle.updateSpeed = 0.005;
