@@ -238,9 +238,9 @@ class Game {
 
     private createExplosion() : void {
 
-        this._explosionParticle = new BABYLON.ParticleSystem("explosion", 250, this._scene);
+        this._explosionParticle = new BABYLON.ParticleSystem("explosion", 200, this._scene);
         this._explosionParticle.particleTexture = new BABYLON.Texture("textures/explosion-3.png", this._scene);
-        
+        this._explosionParticle.particleEmitterType = new BABYLON.SphereParticleEmitter(5,0);
         this._explosionParticle.preventAutoStart = true;
         this._explosionParticle.disposeOnStop = false;
         this._explosionParticle.startDelay = 0;
@@ -251,27 +251,31 @@ class Game {
          this._explosionParticle.color2 = new BABYLON.Color4(0.2, 0.5, 1.0, 1);
          this._explosionParticle.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
          // Size of each particle (random between...)
-         this._explosionParticle.minSize = 10;
-         this._explosionParticle.maxSize = 100;
+        //  this._explosionParticle.minSize = 10;
+        //  this._explosionParticle.maxSize = 100;
          // Life time of each particle (random between...)
-         this._explosionParticle.minLifeTime = 0.3;
-         this._explosionParticle.maxLifeTime = 0.8;
-         this._explosionParticle.emitRate = 20;
+         this._explosionParticle.minLifeTime = 1;
+         this._explosionParticle.maxLifeTime = 1;
+         this._explosionParticle.emitRate = 200;
+         
          //Set the gravity of all particles (not necessarily down)
-       //  this._explosionParticle.gravity = new BABYLON.Vector3(0, 0,-9.81);
+  
          //Direction
-         this._explosionParticle.direction1 = new BABYLON.Vector3(-7, 0, 3);
-         this._explosionParticle.direction2 = new BABYLON.Vector3(7, 0, -3);
+     //    this._explosionParticle.direction1 = new BABYLON.Vector3(-7, 0, 3);
+      //   this._explosionParticle.direction2 = new BABYLON.Vector3(7, 0, -3);
          //Angular speed
-         this._explosionParticle.minAngularSpeed = 0.001;
-         this._explosionParticle.maxAngularSpeed = 1.5*Math.PI;
+         this._explosionParticle.minAngularSpeed = 0.00;
+         this._explosionParticle.maxAngularSpeed = Math.PI/2;
    //     this._explosionParticle.emitter = explosion;
      //   explosion.position = this._ship.position;
         this._explosionParticle.targetStopDuration = 1;        
-        
-        this._explosionParticle.addStartSizeGradient(0,1,1.5);
-        this._explosionParticle.addStartSizeGradient(1,5,9);
-        this._explosionParticle.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+        this._explosionParticle.maxEmitPower = 50;
+        this._explosionParticle.minEmitPower = 10;
+        this._explosionParticle.updateSpeed = 0.005;
+        this._explosionParticle.addStartSizeGradient(0,1);
+        this._explosionParticle.addStartSizeGradient(1,100);
+
+        this._explosionParticle.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
         
 
     }
@@ -283,6 +287,23 @@ class Game {
         this._ship.velocity = new BABYLON.Vector3(0, 0, 0.2);
         this._ship.rotation = 0;
         this._ship.isAlive = true;
+        this._ship.mesh.isVisible = true;
+        this._explosionParticle.stop();
+    }
+
+    private killShip() :void {
+        this._ship.isAlive = false;
+        this._ship.mesh.isVisible = false;
+        this._ship.velocity = BABYLON.Vector3.Zero();
+        
+        this._explosionParticle.emitter = this._ship.mesh;
+        this._explosionParticle.start(); 
+
+        //BABYLON.ParticleHelper.CreateAsync("explosion", this._scene, true).then((s) => s.start(sh.mesh));
+                      
+
+
+        this._scene.executeOnceBeforeRender(() => this.resetShip(),4000);
     }
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
@@ -290,13 +311,13 @@ class Game {
         var gl = new BABYLON.GlowLayer("glow", this._scene);
         this.createCamera();
        // this.createLight();
-   //     this.createBackground();
+        this.createBackground();
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
             var starPos = new BABYLON.Vector3(item.x, 0, item.y);
             this.createStar(starPos);
         }        
-        
+        this.createExplosion();     
         //  this.createFollowCamera();
 
         this._scene.onKeyboardObservable.add((kbInfo) => {
@@ -312,23 +333,13 @@ class Game {
         var alpha = 0;
         //deterministic steps for update loop
         this._scene.onBeforeStepObservable.add(() => {
-            var self = this;
             
-            this.updateShipPositionOverflow();
-
-            let sh = this._ship;
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
  
-                if (sh.isAlive === true && planet.mesh.intersectsPoint(sh.mesh.position)) {
-                    console.log('mesh intersection!', sh, planet);
-                    sh.isAlive = false;
-                    sh.velocity = BABYLON.Vector3.Zero();
-                    this.createExplosion();                   
-                    this._explosionParticle.emitter = sh.mesh;
-                    this._explosionParticle.start();
-
-                    this._scene.executeOnceBeforeRender(() => this.resetShip(),2500);
+                if (this._ship.isAlive === true && planet.position.equalsWithEpsilon(this._ship.mesh.position, planet.radius)) {
+                    console.log('mesh intersection!', this._ship, planet);
+                    this.killShip();
                     return false;
                 }
             });
@@ -336,26 +347,31 @@ class Game {
             this._gravityWells.forEach(gravWell => {
                 this.applyGravitationalForceToShip(gravWell);
             });
-            
+            this._ship.onUpdate();
+            this.updateShipPositionOverflow();
             this.moveCameraToShipSector();
             alpha += 0.001;
         });
 
         this.createShip();
-        this.resetShip();
+        this._scene.executeOnceBeforeRender(() => this.resetShip(),5000);
+
     }
 
     doRender(): void {
         this._engine.runRenderLoop(() => {
+            this._planets.forEach(planet => {
+                if (this._ship.isAlive === true && planet.mesh.intersectsPoint(this._ship.mesh.position)) {
+                    console.log('mesh intersection!', this._ship, planet);
+                    this.killShip();
+                    return false;
+                }
+            });
             if (this._ship.isAlive) {
                 this.handleKeyboardInput();
             }
-            this._ship.onUpdate();
-            
-            
 
             var alpha = 0.0;
-            
             this._scene.render();
         });
 
