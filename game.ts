@@ -78,7 +78,7 @@ class Game {
     }
 
     private createCamera(): void {
-        let camPos = new BABYLON.Vector3(0, 1600, 0);
+        let camPos = new BABYLON.Vector3(0, 2200, 0);
         this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
       //  this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
@@ -130,7 +130,7 @@ class Game {
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = BABYLON.Color3.White();
         backMat.reflectionTexture = this._backgroundTexture;
-        backMat.alphaMode = 5;
+        backMat.alphaMode = 0;
         backMat.fillMode = BABYLON.Material.TriangleFillMode;
         
         this._floor.material = backMat;
