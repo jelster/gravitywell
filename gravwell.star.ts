@@ -46,6 +46,7 @@ class Planet implements IGravityContributor {
         this.mass = parentStar.mass * 0.3;
         this.radius = 52;
         this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
+
     }
 }
 
@@ -99,6 +100,8 @@ class Star implements IGravityContributor {
         this._light.intensity = 1;
         this._light.position.x = this._mesh.position.x;
         this._light.position.z = this._mesh.position.z;
+
+        this.mesh.checkCollisions = true;
 
     }
 }

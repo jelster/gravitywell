@@ -2,6 +2,7 @@
 ///<reference path="gravwell.ship.ts" />
 ///<reference path="gravwell.star.ts" />
 
+
 enum GravityMode {
     DistanceSquared = 1,
     DistanceCubed = 2
@@ -78,9 +79,9 @@ class Game {
     }
 
     private createCamera(): void {
-        let camPos = new BABYLON.Vector3(0, 2200, 0);
+        let camPos = new BABYLON.Vector3(0, 1600, 0);
         this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
-      //  this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+      this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
         var ratio = this._camera.viewport.width / this._camera.viewport.height;
@@ -89,6 +90,7 @@ class Game {
         this._camera.orthoBottom = -fieldSize / (2 * ratio);
         this._camera.orthoLeft = -fieldSize / 2;
         this._camera.orthoRight = fieldSize / 2;
+
         this._camera.setTarget(new BABYLON.Vector3(camPos.x, 0, camPos.z));
         this._scene.activeCamera = this._camera;
     }
@@ -127,6 +129,7 @@ class Game {
         this._backgroundTexture = new BABYLON.Texture("textures/corona_lf.png", this._scene);
         this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
         this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisions: this.gameWorldCellsY * this.gameWorldCellsX }, this._scene);
+        this._floor.position.y = -10;
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = BABYLON.Color3.White();
         backMat.reflectionTexture = this._backgroundTexture;
@@ -216,10 +219,6 @@ class Game {
         //     return;
         // }
         let ship = this._ship,
-            halfSizeX = this.gameWorldSizeX / 2,
-            halfCellX = this.gameWorldCellSizeX / 2,
-            halfSizeY = this.gameWorldSizeY / 2,
-            halfCellY = this.gameWorldCellSizeY / 2,
             posOffsetX = ship.position.x,
             posOffsetY = ship.position.z,
             cellX = +((posOffsetX / this.gameWorldCellSizeX).toFixed(0)),
@@ -301,25 +300,23 @@ class Game {
         this._explosionParticle.start(); 
 
         //BABYLON.ParticleHelper.CreateAsync("explosion", this._scene, true).then((s) => s.start(sh.mesh));
-                      
-
-
         this._scene.executeOnceBeforeRender(() => this.resetShip(),4000);
     }
     createScene(): void {
         this._scene = new BABYLON.Scene(this._engine);
-
+        this._scene.collisionsEnabled = true;
         var gl = new BABYLON.GlowLayer("glow", this._scene);
         this.createCamera();
-       // this.createLight();
         this.createBackground();
+
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
             var starPos = new BABYLON.Vector3(item.x, 0, item.y);
             this.createStar(starPos);
-        }        
+        }
+
         this.createExplosion();     
-        //  this.createFollowCamera();
+        this.createShip();
 
         this._scene.onKeyboardObservable.add((kbInfo) => {
 
@@ -337,12 +334,6 @@ class Game {
             
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
- 
-                if (this._ship.isAlive === true && planet.position.equalsWithEpsilon(this._ship.mesh.position, planet.radius)) {
-                    console.log('mesh intersection!', this._ship, planet);
-                    this.killShip();
-                    return false;
-                }
             });
 
             this._gravityWells.forEach(gravWell => {
@@ -352,10 +343,20 @@ class Game {
             this.updateShipPositionOverflow();
             this.moveCameraToShipSector();
             alpha += 0.001;
+        });       
+
+
+        this._ship.mesh.checkCollisions = true;
+        this._stars.forEach(star => {
+            star.mesh.checkCollisions = true;
+        });
+        this._planets.forEach(planet => {
+            planet.mesh.checkCollisions = true;
         });
 
-        this.createShip();
-        this._scene.executeOnceBeforeRender(() => this.resetShip(),5000);
+     //   this._scene.debugLayer.show();//.then(console.log);
+        this._scene.executeOnceBeforeRender(() => this.resetShip(),2500);
+
 
     }
 

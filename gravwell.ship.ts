@@ -50,8 +50,7 @@ class Ship {
         //shipMat.emissiveColor = BABYLON.Color3.Blue();
         this.mesh.material = shipMat;
 
-        this.isAlive = false;
-        
+        this.isAlive = false;      
       
     }
 
