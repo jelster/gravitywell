@@ -20,14 +20,12 @@
             height: 100%;
             touch-action: none;
         }
-
-       
     </style>
 
-    <script src="https://cdn.babylonjs.com/babylon.js"></script> 
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
     <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="game.js"></script>
     <script src="gravwell.ship.js"></script>
     <script src="gravwell.star.js"></script>
@@ -35,11 +33,22 @@
 
 <body>
 
+    <div id="toolbar">
+        <div>
+                <label for="debugViewToggle">Enable debug layer</label>
+                <input type="checkbox" id="debugViewToggle" name="debugViewToggle" value="debugViewEnabled" />
+                <label for="pauseGame">Pause Game</label>
+                <input type="checkbox" id="pauseGame" name="pauseGame" checked value="gamePaused" />
+        </div>
+        <div>
+                
+        </div>
 
+    </div>
     <canvas id="renderCanvas"></canvas>
 
 
-   
+
 </body>
 
 </html>

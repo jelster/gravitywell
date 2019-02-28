@@ -46,6 +46,7 @@ class Planet implements IGravityContributor {
         this.mass = parentStar.mass * 0.3;
         this.radius = 52;
         this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
+        this.mesh.ellipsoid = new BABYLON.Vector3(1,1,1);
 
     }
 }

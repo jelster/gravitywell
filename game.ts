@@ -2,7 +2,6 @@
 ///<reference path="gravwell.ship.ts" />
 ///<reference path="gravwell.star.ts" />
 
-
 enum GravityMode {
     DistanceSquared = 1,
     DistanceCubed = 2
@@ -40,6 +39,7 @@ class Game {
     public readonly numberOfStars: number;
 
     public GravityWellMode: GravityMode;
+    public isPaused: boolean;
 
     public get gameWorldCellSizeX(): number {
         return Math.floor(this.gameWorldSizeX / this.gameWorldCellsX);
@@ -73,13 +73,12 @@ class Game {
             { x: 1600, y: 1600 }
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
-
-   
+        this.isPaused = true;
        
     }
 
     private createCamera(): void {
-        let camPos = new BABYLON.Vector3(0, 1600, 0);
+        let camPos = new BABYLON.Vector3(0, 1700, 0);
         this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
       this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
@@ -303,6 +302,7 @@ class Game {
         this._scene.executeOnceBeforeRender(() => this.resetShip(),4000);
     }
     createScene(): void {
+        let self = this;
         this._scene = new BABYLON.Scene(this._engine);
         this._scene.collisionsEnabled = true;
         var gl = new BABYLON.GlowLayer("glow", this._scene);
@@ -331,7 +331,9 @@ class Game {
         var alpha = 0;
         //deterministic steps for update loop
         this._scene.onBeforeStepObservable.add(() => {
-            
+            if (this.isPaused) {
+                return;
+            }
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
             });
@@ -353,25 +355,44 @@ class Game {
         this._planets.forEach(planet => {
             planet.mesh.checkCollisions = true;
         });
-
+        
      //   this._scene.debugLayer.show();//.then(console.log);
-        this._scene.executeOnceBeforeRender(() => this.resetShip(),2500);
+        
+
+        $("#debugViewToggle").on("change", function() {
+            if (self._scene.debugLayer.isVisible()) {
+                self._scene.debugLayer.hide();
+            }
+            else {
+                console.log('enabling debug layer');
+                self._scene.debugLayer.show({handleResize: true});
+            }
+            
+        });
+
+        $("#pauseGame").on("change", function() {
+            self.isPaused = $(this).is(":checked");
+        });
+
+        this._scene.executeOnceBeforeRender(() => this.resetShip(),1000);
 
 
     }
 
     doRender(): void {
         this._engine.runRenderLoop(() => {
-            this._planets.forEach(planet => {
-                if (this._ship.isAlive === true && planet.mesh.intersectsPoint(this._ship.mesh.position)) {
-                    console.log('mesh intersection!', this._ship, planet);
-                    this.killShip();
-                    return false;
+            if (!this.isPaused) {
+                this._planets.forEach(planet => {
+                    if (this._ship.isAlive === true && planet.mesh.intersectsPoint(this._ship.mesh.position)) {
+                        console.log('mesh intersection!', this._ship, planet);
+                        this.killShip();
+                        return false;
+                    }
+                });
+                if (this._ship.isAlive) {
+                    this.handleKeyboardInput();
                 }
-            });
-            if (this._ship.isAlive) {
-                this.handleKeyboardInput();
-            }
+            }            
 
             var alpha = 0.0;
             this._scene.render();
