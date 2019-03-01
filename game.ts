@@ -134,7 +134,7 @@ class Game {
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = BABYLON.Color3.White();
         backMat.reflectionTexture = this._backgroundTexture;
-        backMat.alphaMode = 0;
+        backMat.alphaMode = 10;
         backMat.fillMode = BABYLON.Material.TriangleFillMode;
         
         this._floor.material = backMat;
@@ -244,30 +244,22 @@ class Game {
         this._explosionParticle.preventAutoStart = true;
         this._explosionParticle.disposeOnStop = false;
         this._explosionParticle.startDelay = 0;
-       // var explosion = BABYLON.Mesh.CreateSphere('explosion', 1, this._ship.mesh.getBoundingInfo().diagonalLength, this._scene);
-     //   explosion.visibility =0;
+   
          // Colors of all particles (splited in 2 + specific color before dispose)
          this._explosionParticle.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 1);
          this._explosionParticle.color2 = new BABYLON.Color4(0.2, 0.5, 1.0, 1);
          this._explosionParticle.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
-         // Size of each particle (random between...)
-        //  this._explosionParticle.minSize = 10;
-        //  this._explosionParticle.maxSize = 100;
+     
          // Life time of each particle (random between...)
          this._explosionParticle.minLifeTime = 1;
          this._explosionParticle.maxLifeTime = 1;
          this._explosionParticle.emitRate = 200;
          
-         //Set the gravity of all particles (not necessarily down)
-  
-         //Direction
-     //    this._explosionParticle.direction1 = new BABYLON.Vector3(-7, 0, 3);
-      //   this._explosionParticle.direction2 = new BABYLON.Vector3(7, 0, -3);
+         
          //Angular speed
          this._explosionParticle.minAngularSpeed = 0.00;
          this._explosionParticle.maxAngularSpeed = Math.PI/2;
-   //     this._explosionParticle.emitter = explosion;
-     //   explosion.position = this._ship.position;
+ 
         this._explosionParticle.targetStopDuration = 0.5;
                 
         this._explosionParticle.maxEmitPower = 50;
@@ -379,7 +371,7 @@ class Game {
             self.isPaused = $(this).is(":checked");
         });
 
-        this._scene.executeOnceBeforeRender(() => this.resetShip(),1000);
+        this.resetShip();
 
 
     }
