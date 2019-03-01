@@ -16,11 +16,11 @@ class Ship {
     }
 
     public get rotation(): number {
-        return this.mesh.rotation.z;
+        return this.mesh.rotation.y;
     }
     public set rotation(r: number) {
 
-        this.mesh.rotation.x = 0;
+       // this.mesh.rotation.x = 0;
         this.mesh.rotation.y = r;
         this.mesh.rotation.z = r;
     }
@@ -33,7 +33,7 @@ class Ship {
     }
 
     constructor(scene: BABYLON.Scene) {
-        this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 24, diameterTop: 0, diameterBottom: 24 }, scene);
+        this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 0, diameterBottom: 32 }, scene);
 
         this.mesh.rotation.x = Math.PI / 2;
         //set base orientation for mesh

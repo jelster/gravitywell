@@ -67,9 +67,9 @@ class Game {
 
         this._starMap = [
             { x: -1600, y: -1600 },
-            { x: 0, y: -1600 },
+           
             { x: 1600, y: -1600 },
-            { x: -1600, y: 0 },
+         
             { x: 0, y: 1600 },
             { x: 1600, y: 1600 }
         ];
@@ -81,12 +81,12 @@ class Game {
 
     private createCamera(): void {
         let camPos = new BABYLON.Vector3(0, 1700, 0);
-        this._camera = new BABYLON.UniversalCamera('camera1', camPos, this._scene);
+        this._camera = new BABYLON.UniversalCamera('uniCam', camPos, this._scene);
       this._camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._camera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
         var ratio = this._camera.viewport.width / this._camera.viewport.height;
-        var fieldSize = this.gameWorldSizeX / this.gameWorldCellsX;
+        var fieldSize = 1.5*(this.gameWorldSizeX / this.gameWorldCellsX);
         this._camera.orthoTop = fieldSize / (2 * ratio);
         this._camera.orthoBottom = -fieldSize / (2 * ratio);
         this._camera.orthoLeft = -fieldSize / 2;
@@ -97,13 +97,13 @@ class Game {
     }
 
     private createFollowCamera(): void {
-
-        this._followCam = new BABYLON.FollowCamera("followCam", new BABYLON.Vector3(0, 1131, 0), this._scene, this._ship.mesh);
+        let camPos = new BABYLON.Vector3(0, 1700, 0);
+        this._followCam = new BABYLON.FollowCamera("followCam", camPos, this._scene, this._ship.mesh);
         this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
         //   this._camera.attachControl(this._canvas, true);
         this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
         var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
-        var fieldSize = 1600;
+        var fieldSize = 1.5*(this.gameWorldSizeX / this.gameWorldCellsX);
         this._followCam.orthoTop = fieldSize / (2 * ratio);
         this._followCam.orthoBottom = -fieldSize / (2 * ratio);
         this._followCam.orthoLeft = -fieldSize / 2;
@@ -112,18 +112,11 @@ class Game {
         this._followCam.radius = fieldSize;
         this._followCam.cameraAcceleration = 0.005;
         this._followCam.heightOffset = 1131;
+        
         // this._followCam.rotationOffset = ;
 
 
         this._scene.activeCamera = this._followCam;
-    }
-
-    private createLight(): void {
-        this._light = new BABYLON.PointLight("light1", new BABYLON.Vector3(0, 0, 0), this._scene);
-        this._light.diffuse = BABYLON.Color3.Red();
-        this._light.specular = BABYLON.Color3.Yellow();
-        this._light.range = 1600;
-        this._light.intensity = 10;
     }
 
     private createBackground(): void {
@@ -132,10 +125,11 @@ class Game {
         this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisions: this.gameWorldCellsY * this.gameWorldCellsX }, this._scene);
         this._floor.position.y = -10;
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
-        backMat.primaryColor = BABYLON.Color3.White();
+        backMat.primaryColor = BABYLON.Color3.Black();
         backMat.reflectionTexture = this._backgroundTexture;
-        backMat.alphaMode = 10;
-        backMat.fillMode = BABYLON.Material.TriangleFillMode;
+        backMat.useRGBColor = true;
+        //backMat.alphaMode = 10;
+       // backMat.fillMode = BABYLON.Material.TriangleFillMode;
         
         this._floor.material = backMat;
     }
@@ -227,10 +221,10 @@ class Game {
             camCellX = +((activeCam.position.x / this.gameWorldCellSizeX).toFixed(0)),
             camCellY = +((activeCam.position.z / this.gameWorldCellSizeY).toFixed(0));
 
-        if (camCellX === cellX && camCellY === cellY) {
-            return;
-        }
-        console.log('moving camera s{0}, s{1}, c{2}, c{3}', cellX, cellY, camCellX, camCellY);
+        // if (camCellX === cellX && camCellY === cellY) {
+        //     return;
+        // }
+        //console.log('moving camera s{0}, s{1}, c{2}, c{3}', cellX, cellY, camCellX, camCellY);
         activeCam.position.x = (cellX * this.gameWorldCellSizeX);
         activeCam.position.z = (cellY * this.gameWorldCellSizeY);
 
@@ -341,7 +335,7 @@ class Game {
             this._ship.onUpdate();
             this.updateShipPositionOverflow();
             this.moveCameraToShipSector();
-            alpha += 0.001;
+            alpha += 0.0001;
         });       
 
 

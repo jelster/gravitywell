@@ -5,5 +5,5 @@
         "pretty": true,
         "sourceMap": true
     },
-    "typeAcquisition": {"enable": true, "include": ["jquery"]}
+    "typeAcquisition": {"enable": true, "include": ["babylonjs","jquery"]}
 }

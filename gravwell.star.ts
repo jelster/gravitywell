@@ -35,7 +35,9 @@ class Planet implements IGravityContributor {
     }
     constructor(scene: BABYLON.Scene, parentStar: Star) {
         this._parentStar = parentStar;
-        this._mesh = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 96 }, scene);
+        this.mass = parentStar.mass * 0.3;
+        this.radius = 128;
+        this._mesh = BABYLON.MeshBuilder.CreateSphere("planet", { segments: 16, diameter: this.radius*2 }, scene);
         
         
         var plantMat = new BABYLON.StandardMaterial("planetMat", scene);
@@ -43,10 +45,9 @@ class Planet implements IGravityContributor {
         plantMat.diffuseColor = planColor;
         plantMat.specularColor = BABYLON.Color3.Random();
         this._mesh.material = plantMat;
-        this.mass = parentStar.mass * 0.3;
-        this.radius = 52;
+        
         this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
-        this.mesh.ellipsoid = new BABYLON.Vector3(1,1,1);
+        //this.mesh.ellipsoid = new BABYLON.Vector3(1,1,1);
 
     }
 }
@@ -83,16 +84,18 @@ class Star implements IGravityContributor {
     }
 
     constructor(scene: BABYLON.Scene, initialPos: BABYLON.Vector3) {
-        this._mesh = BABYLON.MeshBuilder.CreateSphere('star', { segments: 16, diameter: 160 }, scene);
+        this.mass = 7.5e7;
+        this.radius = 240;
+
+        this._mesh = BABYLON.MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2*this.radius }, scene);
+        this._mesh.position = initialPos;
         let sphMat = new BABYLON.StandardMaterial("starMat", scene);
         sphMat.emissiveColor = BABYLON.Color3.Yellow();
         sphMat.diffuseColor = BABYLON.Color3.Yellow();
         sphMat.specularColor = BABYLON.Color3.Magenta();
 
         this._mesh.material = sphMat;
-        this.mass = 7.5e7;
-        this.radius = 80;
-        this._mesh.position = initialPos;
+        
 
         this._light = new BABYLON.PointLight("", new BABYLON.Vector3(0, 100, 0), scene);
         this._light.diffuse = BABYLON.Color3.White();
