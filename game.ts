@@ -59,12 +59,9 @@ class Game {
         this.gameWorldSizeY = 9600;
 
         this._starMap = [
-            { x: -4500, y: -4400 },
-
-            { x: 1600, y: -3600 },
-
-            { x: 0, y: 1600 },
-            { x: 3600, y: 4500 }
+            { x: 1700, y: -2000 },
+            { x: -1200, y: 600 },
+            { x: -2000, y: 3000 }
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
         this.isPaused = true;
@@ -96,13 +93,13 @@ class Game {
         this._followCam = new BABYLON.UniversalCamera("followCam", camPos, this._scene);
      //   this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
 
-        this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
-        var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
+     //   this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
+     //   var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
 
-        this._followCam.orthoTop = this._dollySize / (2 * ratio)
-        this._followCam.orthoBottom = -this._dollySize / (2 * ratio);
-        this._followCam.orthoLeft = -this._dollySize / 2;
-        this._followCam.orthoRight = this._dollySize / 2;
+        // this._followCam.orthoTop = this._dollySize / (2 * ratio)
+        // this._followCam.orthoBottom = -this._dollySize / (2 * ratio);
+        // this._followCam.orthoLeft = -this._dollySize / 2;
+        // this._followCam.orthoRight = this._dollySize / 2;
 
         this._followCam.layerMask = Game.MAIN_RENDER_MASK;
         this._cameraDolly = BABYLON.MeshBuilder.CreatePlane("dollyPlane", { size: this._dollySize }, this._scene);
@@ -269,9 +266,7 @@ class Game {
     }
 
     private moveCamera(): void {
-        let diffX = this._ship.position.x - this._cameraDolly.position.x,
-            diffY = this._ship.position.z - this._cameraDolly.position.z;
-        
+                
        this._cameraDolly.position = this._ship.position.scale(0.78);
         
     }

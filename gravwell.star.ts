@@ -48,7 +48,7 @@ class Planet implements IGravityContributor {
         this.mesh.outlineColor = BABYLON.Color3.Green();
         this.mesh.outlineWidth = 4;
         this.mesh.renderOutline = true;
-        this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
+        this.position = new BABYLON.Vector3(parentStar.position.x - 3*(2*parentStar.radius), 0, parentStar.position.z + 3*(2*parentStar.radius));
         //this.mesh.ellipsoid = new BABYLON.Vector3(1,1,1);
 
     }
