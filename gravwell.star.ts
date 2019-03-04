@@ -45,7 +45,9 @@ class Planet implements IGravityContributor {
         plantMat.diffuseColor = planColor;
         plantMat.specularColor = BABYLON.Color3.Random();
         this._mesh.material = plantMat;
-        
+        this.mesh.outlineColor = BABYLON.Color3.Green();
+        this.mesh.outlineWidth = 4;
+        this.mesh.renderOutline = true;
         this.position = new BABYLON.Vector3(parentStar.position.x - 8.5*this.radius, 0, parentStar.position.z + 8.5*this.radius);
         //this.mesh.ellipsoid = new BABYLON.Vector3(1,1,1);
 

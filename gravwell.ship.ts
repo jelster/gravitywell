@@ -50,14 +50,16 @@ class Ship {
         shipMat.diffuseColor = BABYLON.Color3.White();
         //shipMat.emissiveColor = BABYLON.Color3.Blue();
         this.mesh.material = shipMat;
-
+        this.mesh.outlineColor = BABYLON.Color3.Blue();
+        this.mesh.outlineWidth = 2.4;
+        this.mesh.renderOutline = true;
         this.isAlive = false;
     }
 
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime();
         this.mesh.moveWithCollisions(new BABYLON.Vector3((this.velocity.x * dTime), 0, (this.velocity.z * dTime)));
-        this.position.y = 0;
+        this.position.y = 1;
     }
     /**
      * fireThrusters
