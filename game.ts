@@ -36,15 +36,13 @@ class Game {
     private _respawnTimeLimit: number;
 
     private _cameraDolly: BABYLON.Mesh;
+    private _dollySize : number;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
-
-    public readonly gameWorldCellsX: number;
-    public readonly gameWorldCellsY: number;
     public readonly numberOfStars: number;
 
     public GravityWellMode: GravityMode;
-    public isPaused: boolean;   
+    public isPaused: boolean;
 
     constructor(canvasElement: string, numStars: number = null) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
@@ -57,22 +55,21 @@ class Game {
         this._planets = [];
         this._stars = [];
         this._gravityWells = [];
-        this.gameWorldSizeX = 4800;
-        this.gameWorldSizeY = 4800;
-        this.gameWorldCellsX = 3;
-        this.gameWorldCellsY = 3;
+        this.gameWorldSizeX = 9600;
+        this.gameWorldSizeY = 9600;
 
         this._starMap = [
-            { x: -1600, y: -1600 },
+            { x: -4500, y: -4400 },
 
-            { x: 1600, y: -1600 },
+            { x: 1600, y: -3600 },
 
             { x: 0, y: 1600 },
-            { x: 1600, y: 1600 }
+            { x: 3600, y: 4500 }
         ];
         this.GravityWellMode = GravityMode.DistanceSquared;
         this.isPaused = true;
         this._respawnTimeLimit = 4000;
+        this._dollySize = 1600;
 
     }
 
@@ -95,21 +92,20 @@ class Game {
     }
 
     private createFollowCamera(): void {
-        let camPos = new BABYLON.Vector3(0, 2300, 0),
-            dollySize = 1700;
+        let camPos = new BABYLON.Vector3(0, 2300, 0)
         this._followCam = new BABYLON.UniversalCamera("followCam", camPos, this._scene);
-        this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+     //   this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
 
-          this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
-          var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
+        this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
+        var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
 
-        this._followCam.orthoTop = dollySize / (2*ratio)
-        this._followCam.orthoBottom = -dollySize / (2*ratio);
-        this._followCam.orthoLeft = -dollySize / 2;
-        this._followCam.orthoRight = dollySize / 2;
-        
+        this._followCam.orthoTop = this._dollySize / (2 * ratio)
+        this._followCam.orthoBottom = -this._dollySize / (2 * ratio);
+        this._followCam.orthoLeft = -this._dollySize / 2;
+        this._followCam.orthoRight = this._dollySize / 2;
+
         this._followCam.layerMask = Game.MAIN_RENDER_MASK;
-        this._cameraDolly = BABYLON.MeshBuilder.CreatePlane("dollyPlane", { size: dollySize }, this._scene);
+        this._cameraDolly = BABYLON.MeshBuilder.CreatePlane("dollyPlane", { size: this._dollySize }, this._scene);
         this._cameraDolly.position.y = 1;
         this._cameraDolly.layerMask = Game.MINIMAP_RENDER_MASK;
         this._cameraDolly.rotation.x = Math.PI / 2;
@@ -125,7 +121,7 @@ class Game {
         this._backgroundTexture = new BABYLON.Texture("textures/corona_lf.png", this._scene);
         this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
         this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisions: 1 }, this._scene);
-       
+
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = BABYLON.Color3.Black();
         backMat.reflectionTexture = this._backgroundTexture;
@@ -207,7 +203,7 @@ class Game {
 
         this._ship.velocity.x += (dir.x * f);
         this._ship.velocity.z += (dir.z * f);
-    }  
+    }
 
     private createExplosion(): void {
 
@@ -271,6 +267,15 @@ class Game {
         //BABYLON.ParticleHelper.CreateAsync("explosion", this._scene, true).then((s) => s.start(sh.mesh));
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
+
+    private moveCamera(): void {
+        let diffX = this._ship.position.x - this._cameraDolly.position.x,
+            diffY = this._ship.position.z - this._cameraDolly.position.z;
+        
+       this._cameraDolly.position = this._ship.position.scale(0.78);
+        
+    }
+
     createScene(): void {
         let self = this;
         this._scene = new BABYLON.Scene(this._engine);
@@ -309,6 +314,7 @@ class Game {
             if (this.isPaused) {
                 return;
             }
+            
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
             });
@@ -320,8 +326,12 @@ class Game {
             });
             this._ship.onUpdate();
             this.updateShipPositionOverflow();
-            //          this.moveCameraToShipSector();
+            this.moveCamera();
+
             alpha += 0.0001;
+            if (alpha > 2* Math.PI) {
+                alpha = 0;
+            }
         });
 
 
@@ -360,9 +370,9 @@ class Game {
     doRender(): void {
 
         this._engine.runRenderLoop(() => {
-            this._cameraDolly.position = this._ship.position;
+
             if (!this.isPaused) {
-               
+
                 if (this._ship.isAlive) {
                     this.handleKeyboardInput();
                     this._planets.forEach(planet => {
