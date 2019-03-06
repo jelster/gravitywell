@@ -59,7 +59,7 @@ class Ship {
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime();
         this.mesh.moveWithCollisions(new BABYLON.Vector3((this.velocity.x * dTime), 0, (this.velocity.z * dTime)));
-        this.position.y = 1;
+
     }
     /**
      * fireThrusters

@@ -36,13 +36,15 @@ class Game {
     private _respawnTimeLimit: number;
 
     private _cameraDolly: BABYLON.Mesh;
-    private _dollySize : number;
+    private _dollySize: number;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
     public readonly numberOfStars: number;
 
     public GravityWellMode: GravityMode;
     public isPaused: boolean;
+    private _gridMat: BABYLON.GridMaterial;
+    private _gravUnit: number;
 
     constructor(canvasElement: string, numStars: number = null) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
@@ -57,7 +59,7 @@ class Game {
         this._gravityWells = [];
         this.gameWorldSizeX = 9600;
         this.gameWorldSizeY = 9600;
-
+        this._gravUnit = 50;
         this._starMap = [
             { x: 1700, y: -2000 },
             { x: -1200, y: 600 },
@@ -91,10 +93,10 @@ class Game {
     private createFollowCamera(): void {
         let camPos = new BABYLON.Vector3(0, 2300, 0)
         this._followCam = new BABYLON.UniversalCamera("followCam", camPos, this._scene);
-     //   this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+        //   this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
 
-     //   this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
-     //   var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
+        //   this._followCam.viewport = new BABYLON.Viewport(0, 0, 1, 1);
+        //   var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
 
         // this._followCam.orthoTop = this._dollySize / (2 * ratio)
         // this._followCam.orthoBottom = -this._dollySize / (2 * ratio);
@@ -108,25 +110,61 @@ class Game {
         this._cameraDolly.rotation.x = Math.PI / 2;
         this._cameraDolly.rotation.z = Math.PI;
         this._cameraDolly.bakeCurrentTransformIntoVertices();
-
+        this._cameraDolly.showBoundingBox = true;
         this._followCam.parent = this._cameraDolly;
         this._followCam.setTarget(this._ship.position);
         this._scene.activeCameras.push(this._followCam);
+
+        this._followCam.attachControl(this._engine.getRenderingCanvas(), true);
     }
 
     private createBackground(): void {
         this._backgroundTexture = new BABYLON.Texture("textures/corona_lf.png", this._scene);
         this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
-        this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisions: 1 }, this._scene);
-
+        this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisionsX: this.gameWorldSizeX / this._gravUnit, subdivisionsY: this.gameWorldSizeY / this._gravUnit, updatable: true }, this._scene);
+        this._floor.billboardMode = BABYLON.Mesh.BILLBOARDMODE_NONE;
         var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = BABYLON.Color3.Black();
         backMat.reflectionTexture = this._backgroundTexture;
         backMat.useRGBColor = true;
+
+        this._gridMat = new BABYLON.GridMaterial("gridMat", this._scene);
+        this._gridMat.gridRatio = this._gravUnit;
+        this._floor.layerMask = Game.MAIN_RENDER_MASK;
+        this._gridMat.lineColor = BABYLON.Color3.White();
+
         //backMat.alphaMode = 10;
         // backMat.fillMode = BABYLON.Material.TriangleFillMode;
         //this._floor.layerMask = Game.MAIN_RENDER_MASK;
-        this._floor.material = backMat;
+
+        //this._floor.material= backMat;
+        this._floor.material = this._gridMat;
+        this._gridMat.mainColor = BABYLON.Color3.Black();
+
+
+    }
+
+    private updateGridHeightMap(): void {
+        let worldX = this.gameWorldSizeX,
+            worldY = this.gameWorldSizeY,
+            gravWells = this._gravityWells;
+
+        var updatePositions = function (positions) {
+            for (var idx = 0; idx < positions.length; idx += 3) {
+                var forces = gravWells.reduce(function (pv, cv, ci, arr): BABYLON.Vector3 {
+                    let fi = Game.computeGravitationalForceAtPoint(cv, BABYLON.Vector3.Zero().set(positions[idx + 0], positions[idx + 1], positions[idx + 2]), 50000000);
+
+                    return pv.addInPlace(fi);
+                }, new BABYLON.Vector3());
+                //positions[idx + 0] += forces.length();
+                positions[idx + 1] = -forces.length();
+                //positions[idx + 2] += forces.z;
+
+            }
+        };
+        this._floor.updateMeshPositions(updatePositions, false);
+        console.log('updated mesh positions');
+
     }
 
     private createStar(pos): void {
@@ -145,8 +183,6 @@ class Game {
 
     private createShip(): void {
         this._ship = new Ship(this._scene);
-        //this._ship.position.x = -2200;
-        //this._ship.position.z = -2200;
     }
 
     private handleKeyboardInput(): void {
@@ -181,25 +217,30 @@ class Game {
 
     }
 
-    private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
-        let dCenter = BABYLON.Vector3.Distance(this._ship.position, gravSource.position),
+    private static computeGravitationalForceAtPoint(gravSource: IGravityContributor, testPoint: BABYLON.Vector3, testMass?: number): BABYLON.Vector3 {
+        let dCenter = BABYLON.Vector3.Distance(testPoint, gravSource.position),
             sRad = gravSource.radius || 10;
 
-        if (dCenter <= sRad) { return; }
+        if (dCenter <= 1) { return BABYLON.Vector3.Zero(); }
 
         let G = 6.67259e-11,
             r = dCenter ^ 2,
-            dir = this._ship.position.subtract(gravSource.position).normalize(),
-            m1 = 100,
-            m2 = gravSource.mass || 1;
+            dir = testPoint.subtract(gravSource.position).normalize(),
+            m1 = testMass || 100,
+            m2 = gravSource.mass || 100;
 
-        if (this.GravityWellMode === GravityMode.DistanceCubed) {
-            r = r * dCenter; // r^3 propagation, like electrical fields
-        }
+        // if (this.GravityWellMode === GravityMode.DistanceCubed) {
+        //     r = r * dCenter; // r^3 propagation, like electrical fields
+        // }
         let f = -(G * (m1 * m2)) / (r);
+        return dir.scaleInPlace(f);
 
-        this._ship.velocity.x += (dir.x * f);
-        this._ship.velocity.z += (dir.z * f);
+    }
+    private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
+        var dV = Game.computeGravitationalForceAtPoint(gravSource, this._ship.position);
+
+        this._ship.velocity.x += dV.x;
+        this._ship.velocity.z += dV.z;
     }
 
     private createExplosion(): void {
@@ -248,11 +289,11 @@ class Game {
         this._ship.mesh.isVisible = true;
         this._ship.mesh.checkCollisions = true;
         this._explosionParticle.stop();
-        //   this._followCam.lockedTarget = this._ship.mesh;
+
     }
 
     private killShip(): void {
-        //   this._followCam.lockedTarget = null;
+
         this._ship.isAlive = false;
         this._ship.mesh.isVisible = false;
         this._ship.velocity = BABYLON.Vector3.Zero();
@@ -260,15 +301,11 @@ class Game {
 
         this._explosionParticle.emitter = this._ship.mesh;
         this._explosionParticle.start();
-
-        //BABYLON.ParticleHelper.CreateAsync("explosion", this._scene, true).then((s) => s.start(sh.mesh));
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
 
     private moveCamera(): void {
-                
-       this._cameraDolly.position = this._ship.position.scale(0.78);
-        
+        this._cameraDolly.position = this._ship.position.scale(0.78);
     }
 
     createScene(): void {
@@ -277,13 +314,12 @@ class Game {
         this._scene.collisionsEnabled = true;
         var gl = new BABYLON.GlowLayer("glow", this._scene);
 
-
         this.createBackground();
 
 
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
-            var starPos = new BABYLON.Vector3(item.x, 0, item.y);
+            var starPos = new BABYLON.Vector3(item.x, -120, item.y);
             this.createStar(starPos);
         }
 
@@ -309,7 +345,7 @@ class Game {
             if (this.isPaused) {
                 return;
             }
-            
+
             this._planets.forEach(planet => {
                 planet.movePlanetInOrbit(alpha);
             });
@@ -324,9 +360,7 @@ class Game {
             this.moveCamera();
 
             alpha += 0.0001;
-            if (alpha > 2* Math.PI) {
-                alpha = 0;
-            }
+
         });
 
 
@@ -355,6 +389,7 @@ class Game {
         $("#pauseGame").on("change", function () {
             self.isPaused = $(this).is(":checked");
         }).attr("checked", "checked");
+        this._scene.executeOnceBeforeRender(() => this.updateGridHeightMap(), 500);
 
 
         this.resetShip();
