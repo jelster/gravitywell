@@ -3,6 +3,7 @@
 class Ship {
     public velocity: BABYLON.Vector3;
     public maxAcceleration: number;
+    public angularVelocity: number;
     public maxAngularVelocity: number;
     public mesh: BABYLON.Mesh;
 
@@ -36,13 +37,14 @@ class Ship {
         this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 0, diameterBottom: 32 }, scene);
 
         this.mesh.rotation.x = Math.PI / 2;
-        this.mesh.rotation.z = Math.PI / 2;
-        this.mesh.rotation.y = Math.PI / 2;
+     //   this.mesh.rotation.z = Math.PI / 2;
+        //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
         this.maxAcceleration = 0.01;
-        this.maxAngularVelocity = (2 * Math.PI) / 60;
+        this.maxAngularVelocity = 0.1;
         this.velocity = new BABYLON.Vector3(.01, 0, 1);
+        this.angularVelocity = 0.0;
 
         var shipMat = new BABYLON.StandardMaterial("shipMat", scene);
         shipMat.specularColor = BABYLON.Color3.Blue();
@@ -58,7 +60,11 @@ class Ship {
 
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime();
-        this.mesh.moveWithCollisions(new BABYLON.Vector3((this.velocity.x * dTime), 0, (this.velocity.z * dTime)));
+        if (this.angularVelocity > this.maxAngularVelocity) {
+            this.angularVelocity = this.maxAngularVelocity;
+        }
+        
+        this.mesh.moveWithCollisions(new BABYLON.Vector3((this.velocity.x * dTime), this.velocity.y * dTime, (this.velocity.z * dTime)));
 
     }
     /**
@@ -67,9 +73,11 @@ class Ship {
     public fireThrusters() {
 
         var dx = Math.sin(this.mesh.rotation.y) * this.maxAcceleration;
+        var dy = Math.atan(this.mesh.rotation.z) * this.maxAcceleration;
         var dz = Math.cos(this.mesh.rotation.y) * this.maxAcceleration;
         // always accelerate in the direction that the craft is currently pointing
         this.velocity.x += dx;
+        this.velocity.y += dy;
         this.velocity.z += dz;
     }
 }

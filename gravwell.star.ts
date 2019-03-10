@@ -99,17 +99,14 @@ class Star implements IGravityContributor {
         sphMat.specularColor = BABYLON.Color3.Magenta();
 
         this._mesh.material = sphMat;
-      //  this._mesh.position.y = this.radius;
-        this.mesh.rotation.x = Math.PI / 2;
-        this.mesh.rotation.z = Math.PI / 2;
-        this.mesh.rotation.y = Math.PI / 2;
+     
+      
         this._light = new BABYLON.PointLight("", new BABYLON.Vector3(0, 100, 0), scene);
         this._light.diffuse = BABYLON.Color3.White();
         this._light.specular = BABYLON.Color3.Yellow();
  
         this._light.intensity = 1;
-        this._light.position.x = this._mesh.position.x;
-        this._light.position.z = this._mesh.position.z;
+        this._light.parent = this._mesh;
 
         this.mesh.checkCollisions = true;
 
