@@ -3,7 +3,7 @@
 interface IGravityContributor {
     mass: number;
     radius: number;
-    position: BABYLON.Vector3
+    position: BABYLON.Vector3;
 }
 
 class Planet implements IGravityContributor {

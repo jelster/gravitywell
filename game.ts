@@ -12,9 +12,11 @@ class Point {
     public y: number;
 }
 class Game {
+
     static readonly MINIMAP_RENDER_MASK = 1;
     static readonly MAIN_RENDER_MASK = 2;
     static readonly BaseCameraPosition: BABYLON.Vector3 = new BABYLON.Vector3(0, 2300, 0);
+
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
     private _scene: BABYLON.Scene;
@@ -38,12 +40,15 @@ class Game {
 
     private _cameraDolly: BABYLON.Mesh;
     private _dollySize: number;
+
+    public GravGui : UI;
     public readonly gameWorldSizeX: number;
     public readonly gameWorldSizeY: number;
     public readonly numberOfStars: number;
 
     public GravityWellMode: GravityMode;
     public isPaused: boolean;
+
     private _gridMat: BABYLON.GridMaterial;
     private _gravUnit: number;
     private _flyCam: BABYLON.UniversalCamera;
@@ -79,6 +84,7 @@ class Game {
         this.isPaused = true;
         this._respawnTimeLimit = 4000;
         this._dollySize = 1600;
+        
     }
 
     private createCamera(): void {
@@ -147,12 +153,18 @@ class Game {
     private createBackground(): void {
         //  this._backgroundTexture = new BABYLON.Texture("textures/corona_lf.png", this._scene);
         //   this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
-        this._floor = BABYLON.MeshBuilder.CreateGround("floor", { width: this.gameWorldSizeX, height: this.gameWorldSizeY, subdivisionsX: this.gameWorldSizeX / this._gravUnit, subdivisionsY: this.gameWorldSizeY / this._gravUnit, updatable: true }, this._scene);
+        this._floor = BABYLON.MeshBuilder.CreateGround("floor", {
+            width: this.gameWorldSizeX,
+            height: this.gameWorldSizeY,
+            subdivisionsX: this.gameWorldSizeX / this._gravUnit,
+            subdivisionsY: this.gameWorldSizeY / this._gravUnit,
+            updatable: true
+        }, this._scene);
         this._floor.billboardMode = BABYLON.Mesh.BILLBOARDMODE_NONE;
-        var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
-        backMat.primaryColor = BABYLON.Color3.Black();
-        backMat.reflectionTexture = this._backgroundTexture;
-        backMat.useRGBColor = true;
+        //    var backMat = new BABYLON.BackgroundMaterial("backMat", this._scene);
+        //    backMat.primaryColor = BABYLON.Color3.Black();
+        //   backMat.reflectionTexture = this._backgroundTexture;
+        //   backMat.useRGBColor = true;
 
         this._gridMat = new BABYLON.GridMaterial("gridMat", this._scene);
         this._gridMat.gridRatio = this._gravUnit;
@@ -207,6 +219,9 @@ class Game {
         var planet = new Planet(this._scene, parentStar)
         this._planets.push(planet);
         this._gravityWells.push(planet);
+        var gs = Game.computeGravitationalForceAtPoint(planet, planet.position.subtractFromFloats(planet.radius, 0, planet.radius), planet.mass);
+        console.log('gForce from star', gs);
+        planet.position.y = -gs.length() / 2;
     }
 
     private createShip(): void {
@@ -446,7 +461,7 @@ class Game {
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
-        
+
         this.createFlyCam();
         this.createCamera();
         this.createExplosion();
@@ -458,9 +473,9 @@ class Game {
             this.createStar(starPos);
         }
 
-   
-       
-        
+
+
+
 
         // this.createFollowCamera();
 
@@ -511,7 +526,7 @@ class Game {
         });
 
         //   this._scene.debugLayer.show();//.then(console.log);
-
+        this.GravGui = new UI(this._scene);
 
         $("#debugViewToggle").on("change", function () {
             if (self._scene.debugLayer.isVisible()) {
@@ -565,8 +580,6 @@ class Game {
 
                 }
             }
-
-            var alpha = 0.0;
             this._scene.render();
         });
 
