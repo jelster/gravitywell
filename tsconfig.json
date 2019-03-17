@@ -1,9 +1,12 @@
 {
     "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
+        "target": "es6",
+        "module": "esnext",
         "pretty": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "outDir": "./dist/"
     },
+    "include": ["./src//**/*"],
     "typeAcquisition": {"enable": true, "include": ["babylonjs","jquery"]}
 }

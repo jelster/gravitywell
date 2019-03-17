@@ -1,12 +1,11 @@
-///<reference path="babylon.d.ts" />
+import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
 
-class Ship {
-    public velocity: BABYLON.Vector3;
+export class Ship {
+    public velocity: Vector3;
     public maxAcceleration: number;
     public angularVelocity: number;
     public maxAngularVelocity: number;
-    public mesh: BABYLON.Mesh;
-
+    public mesh: Mesh;
 
     private _isAlive: boolean;
     public get isAlive(): boolean {
@@ -26,15 +25,15 @@ class Ship {
       //  this.mesh.rotation.z = 0;
     }
 
-    public get position(): BABYLON.Vector3 {
+    public get position(): Vector3 {
         return this.mesh.position;
     }
-    public set position(p: BABYLON.Vector3) {
+    public set position(p: Vector3) {
         this.mesh.position = p;
     }
 
-    constructor(scene: BABYLON.Scene) {
-        this.mesh = BABYLON.MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 0, diameterBottom: 32 }, scene);
+    constructor(scene: Scene) {
+        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 0, diameterBottom: 32 }, scene);
 
         this.mesh.rotation.x = Math.PI / 2;
      //   this.mesh.rotation.z = Math.PI / 2;
@@ -43,16 +42,16 @@ class Ship {
         this.mesh.bakeCurrentTransformIntoVertices();
         this.maxAcceleration = 0.01;
         this.maxAngularVelocity = 0.1;
-        this.velocity = new BABYLON.Vector3(.01, 0, 1);
+        this.velocity = new Vector3(.01, 0, 1);
         this.angularVelocity = 0.0;
 
-        var shipMat = new BABYLON.StandardMaterial("shipMat", scene);
-        shipMat.specularColor = BABYLON.Color3.Blue();
-        shipMat.ambientColor = BABYLON.Color3.White();
-        shipMat.diffuseColor = BABYLON.Color3.White();
-        //shipMat.emissiveColor = BABYLON.Color3.Blue();
+        var shipMat = new StandardMaterial("shipMat", scene);
+        shipMat.specularColor = Color3.Blue();
+        shipMat.ambientColor = Color3.White();
+        shipMat.diffuseColor = Color3.White();
+        //shipMat.emissiveColor = Color3.Blue();
         this.mesh.material = shipMat;
-        this.mesh.outlineColor = BABYLON.Color3.Blue();
+        this.mesh.outlineColor = Color3.Blue();
         this.mesh.outlineWidth = 2.4;
         this.mesh.renderOutline = true;
         this.isAlive = false;
@@ -64,7 +63,7 @@ class Ship {
             this.angularVelocity = this.maxAngularVelocity;
         }
         
-        this.mesh.moveWithCollisions(new BABYLON.Vector3((this.velocity.x * dTime), this.velocity.y * dTime, (this.velocity.z * dTime)));
+        this.mesh.moveWithCollisions(new Vector3((this.velocity.x * dTime), this.velocity.y * dTime, (this.velocity.z * dTime)));
 
     }
     /**
