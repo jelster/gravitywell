@@ -28,6 +28,18 @@ export class Point {
     public y: number;
 }
 export class Game {
+    toggleDebugLayer(): any {
+        if (this._scene.debugLayer.isVisible()) {
+            this._scene.debugLayer.hide();
+        }
+        else {
+            this._scene.debugLayer.show({handleResize: true});
+        }
+    }
+    togglePause(): void {
+        console.log('toggled pause');
+       this.isPaused = !this.isPaused;
+    }
 
     static readonly MINIMAP_RENDER_MASK = 1;
     static readonly MAIN_RENDER_MASK = 2;
@@ -380,70 +392,22 @@ export class Game {
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
 
-    private isInTheDangaZone: boolean;
-
     private moveCamera(): void {
         if (!this.isPaused) {
-
             this._cameraDolly.position = this._ship.position;
         }
-
 
     }
     private createFlyCam(): void {
         var flyCam = new UniversalCamera("CockpitCam", new Vector3(0, 50, -80), this._scene);
-        // Airplane like rotation, with faster roll correction and banked-turns.
-        // Default is 100. A higher number means slower correction.
-        //flyCam.rollCorrect = 10;
-        // Default is false.
-        //flyCam.bankedTurn = true;
-        // Defaults to 90° in radians in how far banking will roll the camera.
-        // flyCam.bankedTurnLimit = Math.PI / 2;
-        // How much of the Yawing (turning) will affect the Rolling (banked-turn.)
-        // Less than 1 will reduce the Rolling, and more than 1 will increase it.
-        // flyCam.bankedTurnMultiplier = 1;
-
-        // flyCam.lockedTarget = this._cameraDolly;
+        
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1, 1);
-
-
-
         flyCam.rotation.x = 0.28;
         this._flyCam = flyCam;
         this._scene.activeCameras.push(this._flyCam);
         flyCam.parent = this._cameraTarget;
-    }
-    private enterTheDangerZone(): void {
-        console.log('entering TEH DANGA ZONE!');
-        let pos = this._ship.position,
-            canvas = this._engine.getRenderingCanvas();
-        this.isInTheDangaZone = true;
-        //    this.moveCamera();
-        // this._cameraDolly.position.y = this._ship.position.y + 100;
-        //  this._followCam.parent = null;
-        //  this._followCam.lockedTarget = this._ship.mesh; 
-        // this._cameraDolly.rotation.x =0;
-        // this._cameraDolly.rotation.x =0;
-        //  this._followCam.position.y = 500;
-
-
-
-
-
-
-
-
-        //     this._followCam.setEnabled(false);
-        //     // This attaches the camera to the canvas
-        //    this._flyCam.attachControl(canvas, false);
-        //    this._flyCam.setEnabled(true);
-
-
-        //     this._scene.activeCameras.push(this._flyCam);
-        //     this._scene.activeCamera = this._flyCam;
-        this._flyCam.parent = this._cameraTarget;
-    }
+    }   
 
     private leaveTheDangerZone(): void {
         console.log('leaving the DANGER ZONE!');
@@ -452,8 +416,7 @@ export class Game {
         // this._followCam.attachControl(canvas, false);
         // this._flyCam.setEnabled(false);
         // this._followCam.setEnabled(true);
-        // this._scene.activeCamera = this._followCam;
-        this.isInTheDangaZone = false;
+        // this._scene.activeCamera = this._followCam;        
         this._followCam.lockedTarget = null;
 
         this._followCam.position = Game.BaseCameraPosition;
@@ -461,11 +424,6 @@ export class Game {
 
         this._followCam.rotation.set(Math.PI / 2, 0, Math.PI);
         this._followCam.parent = this._cameraDolly;
-
-
-
-
-
     }
 
     createScene(): void {
@@ -489,15 +447,6 @@ export class Game {
             this.createStar(starPos);
         }
 
-
-
-
-
-        // this.createFollowCamera();
-
-
-        //   this._scene.activeCamera = this._flyCam;
-
         this._scene.onKeyboardObservable.add((kbInfo) => {
 
             switch (kbInfo.type) {
@@ -510,13 +459,13 @@ export class Game {
 
         var alpha = 0;
         //deterministic steps for update loop
-        this._scene.onBeforeStepObservable.add(() => {
+        this._scene.onBeforeRenderObservable.add(() => {
             if (this.isPaused) {
                 return;
             }
 
             this._planets.forEach(planet => {
-                planet.movePlanetInOrbit(alpha);
+            //    planet.movePlanetInOrbit(alpha);
             });
 
             this._gravityWells.forEach(gravWell => {
@@ -527,7 +476,7 @@ export class Game {
             this._ship.onUpdate();
 
 
-            alpha += 0.0001;
+            alpha = alpha + 0.001;
 
         });
 
@@ -542,7 +491,7 @@ export class Game {
         });
 
         //   this._scene.debugLayer.show();//.then(console.log);
-        this.GravGui = new UI(this._scene);
+        
 
         // $("#debugViewToggle").on("change", function () {
         //     if (self._scene.debugLayer.isVisible()) {
@@ -565,6 +514,7 @@ export class Game {
     }
 
     doRender(): void {
+        
 
         this._engine.runRenderLoop(() => {
             let alive = this._ship.isAlive, paused = this.isPaused;
@@ -572,6 +522,7 @@ export class Game {
             if (!paused) {
                 this.updateShipPositionOverflow();
                 this.moveCamera();
+               
                 if (alive) {
                     this.handleKeyboardInput();
                     for (var p = 0; p < this._planets.length; p++) {
@@ -597,6 +548,7 @@ export class Game {
                 }
             }
             this._scene.render();
+           
         });
 
         // The canvas/window resize event handler.
