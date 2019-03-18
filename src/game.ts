@@ -11,21 +11,23 @@ import { Scalar } from '@babylonjs/core/Maths/math.scalar';
 import { Ship } from './gravwell.ship';
 import { Star, Planet, IGravityContributor } from './gravwell.star';
 import { UI } from './gravwell.ui';
+import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
+import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
 
 
 //import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
 
 
-enum GravityMode {
+export enum GravityMode {
     DistanceSquared = 1,
     DistanceCubed = 2
 }
 
-class Point {
+export class Point {
     public x: number;
     public y: number;
 }
-class Game {
+export class Game {
 
     static readonly MINIMAP_RENDER_MASK = 1;
     static readonly MAIN_RENDER_MASK = 2;
@@ -475,9 +477,9 @@ class Game {
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
-
-        this.createFlyCam();
         this.createCamera();
+        this.createFlyCam();
+        
         this.createExplosion();
         for (let i = 0; i < this._starMap.length; i++) {
             let item = this._starMap[i];
@@ -542,20 +544,20 @@ class Game {
         //   this._scene.debugLayer.show();//.then(console.log);
         this.GravGui = new UI(this._scene);
 
-        $("#debugViewToggle").on("change", function () {
-            if (self._scene.debugLayer.isVisible()) {
-                self._scene.debugLayer.hide();
-            }
-            else {
-                console.log('enabling debug layer');
-                self._scene.debugLayer.show({ handleResize: true });
-            }
+        // $("#debugViewToggle").on("change", function () {
+        //     if (self._scene.debugLayer.isVisible()) {
+        //         self._scene.debugLayer.hide();
+        //     }
+        //     else {
+        //         console.log('enabling debug layer');
+        //         self._scene.debugLayer.show({ handleResize: true });
+        //     }
 
-        });
+        // });
 
-        $("#pauseGame").on("change", function () {
-            self.isPaused = $(this).is(":checked");
-        });
+        // $("#pauseGame").on("change", function () {
+        //     self.isPaused = $(this).is(":checked");
+        // });
 
 
         this.resetShip();
@@ -603,14 +605,3 @@ class Game {
         });
     }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    // TODO: load game data from TBD
-
-    // Create the game using the 'renderCanvas'.
-    let game = new Game('renderCanvas');
-    // Create the scene.
-    game.createScene();
-    // Start render loop.
-    game.doRender();
-});
