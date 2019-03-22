@@ -6,7 +6,7 @@ export class Ship {
     public angularVelocity: number;
     public maxAngularVelocity: number;
     public mesh: Mesh;
-
+    public geForce: Vector3;
     private _isAlive: boolean;
     public get isAlive(): boolean {
         return this._isAlive;
@@ -63,7 +63,7 @@ export class Ship {
             this.angularVelocity = this.maxAngularVelocity;
         }
         
-        this.mesh.moveWithCollisions(new Vector3((this.velocity.x * dTime), this.velocity.y * dTime, (this.velocity.z * dTime)));
+        this.mesh.moveWithCollisions(this.velocity.scale(dTime));
 
     }
     /**

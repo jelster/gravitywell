@@ -7,6 +7,7 @@ import "@babylonjs/inspector";
 export class UI {
     private _advancedTexture : AdvancedDynamicTexture;
     private _pauseButton : Button;
+    private _debugButton: Button;
    
 
     constructor(game : Game) {
@@ -28,18 +29,20 @@ export class UI {
 
         var pauseButton = Button.CreateSimpleButton("pauseButton", "Pause");      
         pauseButton.height = "120px";
-        pauseButton.width = "120px";
-
-       
+        pauseButton.width = "120px";       
         pauseButton.onPointerClickObservable.add(() => game.togglePause());
         sp.addControl(pauseButton);
+        this._pauseButton = pauseButton;
 
         var debugButton = Button.CreateSimpleButton("debugButton", "Debug");
         debugButton.width = "120px";
         debugButton.height = "120px";
+        
         debugButton.onPointerClickObservable.add(() => {
             game.toggleDebugLayer();
         });
+
         sp.addControl(debugButton);
+        this._debugButton = debugButton;
     }
 }
