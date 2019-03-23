@@ -102,8 +102,8 @@ export class Game {
         let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
         this._starMap = [];
         for (let index = 0; index < numStars; index++) {
-            let randX = Scalar.RandomRange(-this.gameWorldSizeX / 4, this.gameWorldSizeX / 4),
-                randZ = Scalar.RandomRange(-this.gameWorldSizeY / 4, this.gameWorldSizeY / 4);
+            let randX = Scalar.RandomRange(-this.gameWorldSizeX / 2, this.gameWorldSizeX / 2),
+                randZ = Scalar.RandomRange(-this.gameWorldSizeY / 2, this.gameWorldSizeY / 2);
             this._starMap.push({ x: randX, y: randZ });
 
         }
@@ -254,7 +254,7 @@ export class Game {
      //  console.log('gForce from star', gs);
     //   star.position.y = gs.length();
         this.createPlanet(star);
-      //  star.position.y = -star.radius;
+        star.position.y = -2*star.radius;
     }
 
     private createPlanet(parentStar: Star): void {
@@ -269,7 +269,7 @@ export class Game {
 
     private createShip(): void {
         this._ship = new Ship(this._scene);
-        this._ship.position.y = 50;
+        this._ship.position.y = 500;
         this._cameraTarget = new TransformNode("shipNode");
         this._cameraTarget.parent = this._ship.mesh;
         //      this._cameraTarget.setPositionWithLocalVector(new BABYLON.Vector3(0, 30, -24));

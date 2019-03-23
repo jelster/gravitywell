@@ -45,16 +45,17 @@ export class GravityManager {
                     // dX = gwA.position.x - positionVector.x,
                     // dY = gwA.position.y - positionVector.y,
                     // dZ = gwA.position.z - positionVector.z;
-                if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius/GravityManager.GRAV_UNIT)) {
-                    continue;
-                }
+                // if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius/GravityManager.GRAV_UNIT)) {
+                //     continue;
+                // }
              //   console.log('pre-calc force: ', forceVector);
             //    this.computeGravitationalForceAtPointToRef(gwA, positionVector, forceVector);
+                positionVector.y = gwA.position.y;
                 forceVector.addInPlace(this.computeGravitationalForceAtPoint(gwA, positionVector, gwA.mass));
                 
             //    console.log('post-calc force', forceVector);
             }
-            forceLength = Scalar.Clamp(forceVector.length(), 0, 20*GravityManager.GRAV_UNIT);
+            forceLength = Scalar.Clamp(forceVector.length(), 1, 20*GravityManager.GRAV_UNIT);
             positions[idx + 1] = -forceLength;
             
             //positions[idx + 0] += forces.length();
