@@ -97,7 +97,7 @@ export class Game {
        
         this.gameWorldSizeX = 12800;
         this.gameWorldSizeY = 12800;
-        this._gravUnit = 50;
+        this._gravUnit = 64;
 
         let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
         this._starMap = [];
@@ -250,11 +250,11 @@ export class Game {
         var star = new Star(this._scene, pos);
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
-     //  var gs = Game.computeGravitationalForceAtPoint(star, star.position, star.mass);
+       var gs = Game.computeGravitationalForceAtPoint(star, star.position, star.mass);
      //  console.log('gForce from star', gs);
-     //  star.position.y = gs.length();
+    //   star.position.y = gs.length();
         this.createPlanet(star);
-        star.position.y = -star.radius;
+      //  star.position.y = -star.radius;
     }
 
     private createPlanet(parentStar: Star): void {

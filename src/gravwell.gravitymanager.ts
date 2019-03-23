@@ -1,4 +1,5 @@
-import { FloatArray, Vector3, DebugLayer, Logger } from '@babylonjs/core'
+import { FloatArray, Vector3, DebugLayer, Logger, Scalar } from '@babylonjs/core'
+import { Game } from './game';
 
 export interface IGravityContributor {
     mass: number;
@@ -7,7 +8,7 @@ export interface IGravityContributor {
 }
 
 export class GravityManager {
-
+    public static GRAV_UNIT : number = 64;
     private readonly ZERO_VECTOR: Vector3 = Vector3.Zero();
     private readonly GRAV_CONST: number = 6.67259e-11;
 
@@ -40,17 +41,20 @@ export class GravityManager {
                          
             forceVector.setAll(0); 
             for (var gidx = 0; gidx < gravWells.length; gidx++) {
-                let gwA = gravWells[gidx];
-                // if (gwA.position.equalsWithEpsilon(positionVector, 0.001*gwA.radius)) {
-                //     continue;
-                // }
+                let gwA = gravWells[gidx]; 
+                    // dX = gwA.position.x - positionVector.x,
+                    // dY = gwA.position.y - positionVector.y,
+                    // dZ = gwA.position.z - positionVector.z;
+                if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius/GravityManager.GRAV_UNIT)) {
+                    continue;
+                }
              //   console.log('pre-calc force: ', forceVector);
             //    this.computeGravitationalForceAtPointToRef(gwA, positionVector, forceVector);
                 forceVector.addInPlace(this.computeGravitationalForceAtPoint(gwA, positionVector, gwA.mass));
                 
             //    console.log('post-calc force', forceVector);
             }
-            forceLength = forceVector.length();
+            forceLength = Scalar.Clamp(forceVector.length(), 0, 20*GravityManager.GRAV_UNIT);
             positions[idx + 1] = -forceLength;
             
             //positions[idx + 0] += forces.length();

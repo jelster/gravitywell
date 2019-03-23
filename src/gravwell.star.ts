@@ -34,7 +34,7 @@ export class Planet implements IGravityContributor {
     constructor(scene: Scene, parentStar: Star) {
         this._parentStar = parentStar;
         this.mass = parentStar.mass * 0.4;
-        this.radius = 150;
+        this.radius = 128;
         this.orbitalRadius = Scalar.RandomRange(this.radius + 3*parentStar.radius, this.radius + 9*parentStar.radius);
         this._mesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: this.radius*2 }, scene);
      //   this._mesh.position.y = 128;
@@ -88,7 +88,7 @@ export class Star implements IGravityContributor {
 
     constructor(scene: Scene, initialPos: Vector3) {
         this.mass = 7.5e7;
-        this.radius = 400;
+        this.radius = 320;
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2*this.radius }, scene);
         this._mesh.position = initialPos;
