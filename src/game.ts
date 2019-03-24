@@ -141,6 +141,18 @@ export class Game {
         this._scene.activeCameras.push(this._camera);
     }
 
+    private createFlyCam(): void {
+        let gameData = this._gameData;
+        var flyCam = new UniversalCamera("CockpitCam", gameData.flyCamRelativePosition , this._scene);
+
+        flyCam.layerMask = Game.MAIN_RENDER_MASK;
+        flyCam.viewport = new Viewport(0, 0, 1,1 );
+        flyCam.rotation.x = 0.28;
+        this._flyCam = flyCam;
+        this._scene.activeCameras.push(this._flyCam);
+        flyCam.parent = this._cameraTarget;
+    }
+
     private createCameraDolly() {
         this._cameraDolly = MeshBuilder.CreatePlane("dollyPlane", { size: this._dollySize }, this._scene);
         // this._cameraDolly.position.y = 165;
@@ -352,17 +364,7 @@ export class Game {
 
     }
 
-    private createFlyCam(): void {
-        let gameData = this._gameData;
-        var flyCam = new UniversalCamera("CockpitCam", gameData.flyCamRelativePosition , this._scene);
 
-        flyCam.layerMask = Game.MAIN_RENDER_MASK;
-        flyCam.viewport = new Viewport(0, 0, 1, 1);
-        flyCam.rotation.x = 0.28;
-        this._flyCam = flyCam;
-        this._scene.activeCameras.push(this._flyCam);
-        flyCam.parent = this._cameraTarget;
-    }
 
     createScene(): void {
          
