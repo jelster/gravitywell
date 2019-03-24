@@ -33,6 +33,7 @@ export class GameData {
         gameData.miniMapMaxZ = Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2));
         
         gameData.flyCamRelativePosition = new Vector3(0, 50, -80);
+        gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
         
         return gameData;
     }
@@ -47,5 +48,6 @@ export class GameData {
     public miniMapMaxZ: number;
     public miniMapCameraPosition: Vector3;
     public flyCamRelativePosition: Vector3;
+    public flyCamMaxZ: number;
 
 }

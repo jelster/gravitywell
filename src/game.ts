@@ -144,7 +144,7 @@ export class Game {
     private createFlyCam(): void {
         let gameData = this._gameData;
         var flyCam = new UniversalCamera("CockpitCam", gameData.flyCamRelativePosition , this._scene);
-
+        flyCam.maxZ = gameData.flyCamMaxZ;
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1,1 );
         flyCam.rotation.x = 0.28;
