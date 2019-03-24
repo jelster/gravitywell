@@ -1,5 +1,7 @@
 import { FloatArray, Vector3, DebugLayer, Logger, Scalar } from '@babylonjs/core'
 import { Game } from './game';
+import { GameData } from '.';
+import { Ship } from './gravwell.ship';
 
 export interface IGravityContributor {
     mass: number;
@@ -76,8 +78,18 @@ export class GravityManager {
         return resultVector.scaleInPlace(f);
 
     }
-    constructor() {
-        
+    public onUpdateShipStep(ship: Ship): void {
+        this.gravWells.forEach(gravWell => {
+            this.applyGravitationalForceToShip(gravWell, ship);
+        });
+    }
+    private applyGravitationalForceToShip(gravSource: IGravityContributor, ship: Ship): void {
+        let sV = ship.velocity, gForce = ship.geForce;
+        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1000, gForce)
+        sV.addInPlace(gForce);
+    }
+    constructor(opts: GameData) {
+        GravityManager.GRAV_UNIT = opts.gravUnit;
         this.gravWells = new Array<IGravityContributor>();
     }
 }

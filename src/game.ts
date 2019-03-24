@@ -15,6 +15,7 @@ import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug 
 import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
 import { IGravityContributor, GravityManager } from './gravwell.gravitymanager';
 import { number } from 'prop-types';
+import { GameData, Point } from '.';
 
 
 //import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
@@ -25,10 +26,7 @@ export enum GravityMode {
     DistanceCubed = 2
 }
 
-export class Point {
-    public x: number;
-    public y: number;
-}
+
 export class Game {
     toggleDebugLayer(): any {
         if (this._scene.debugLayer.isVisible()) {
@@ -41,6 +39,11 @@ export class Game {
     togglePause(): void {
         console.log('toggled pause');
         this.isPaused = !this.isPaused;
+    }
+
+    resetGame(): void {
+        console.log('resetting game');
+
     }
 
     static readonly MINIMAP_RENDER_MASK = 1;
@@ -62,7 +65,7 @@ export class Game {
 
     private _stars: Array<Star>;
     private _planets: Array<Planet>;
-    private readonly _starMap: Array<Point>;
+    private _starMap: Array<Point>;
 
     private _explosionParticle: ParticleSystem;
     private _respawnTimeLimit: number;
@@ -71,52 +74,61 @@ export class Game {
     private _dollySize: number;
 
     public GravGui: UI;
-    public readonly gameWorldSizeX: number;
-    public readonly gameWorldSizeY: number;
-    public readonly numberOfStars: number;
+    public gameWorldSizeX: number;
+    public gameWorldSizeY: number;
 
     public GravityWellMode: GravityMode;
     public isPaused: boolean;
 
     private _gridMat: GridMaterial;
-    private _gravUnit: number;
+
     private _flyCam: UniversalCamera;
     private _cameraTarget: TransformNode;
     private _gravManager: GravityManager;
     private _numberOfPlanets: number;
+    private _gameData: GameData;
 
-    constructor(canvasElement: string, numPlanets: number = 4) {
+    private initializeGame(gameData?: GameData) {
+        gameData = gameData || this._gameData || GameData.createDefault();
+        
+        this._planets.splice(0, this._planets.length);
+        this._stars.splice(0, this._stars.length);
+
+        this._gravManager = new GravityManager(gameData);
+        this._starMap = gameData.starMap;
+        this._numberOfPlanets = gameData.numberOfPlanets;
+        this.gameWorldSizeX = gameData.gameWorldSizeX;
+        this.gameWorldSizeY = gameData.gameWorldSizeY;
+     
+        this._dollySize = gameData.miniMapMaxZ/gameData.gravUnit;
+        this._respawnTimeLimit = gameData.respawnTimeLimit;
+
+        this.isPaused = true;
+
+    }
+
+    constructor(canvasElement: string, gameData: GameData) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         }, true);
-        this._numberOfPlanets = numPlanets;
+
+        this._gameData = gameData;
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
-        this._gravManager = new GravityManager();
-        this.gameWorldSizeX = 16000;
-        this.gameWorldSizeY = 16000;
-        this._gravUnit = GravityManager.GRAV_UNIT;
-
-       // let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
         this._starMap = [];
-        
-        this._starMap.push({ x: 0, y: 0 });
-
-        this.isPaused = true;
-        this._respawnTimeLimit = 4000;
-        this._dollySize = this.gameWorldSizeX/this._gravUnit;
-
     }
 
-    private createCamera(): void {
-        let camPos = new Vector3(0, this.gameWorldSizeX, 0);
+    private createMiniMapCamera(): void {
+        let gameData = this._gameData,
+            camPos = gameData.miniMapCameraPosition;
         this._camera = new UniversalCamera('uniCam', camPos, this._scene);
         this._camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
-        this._camera.maxZ = 16000;
-        var fieldSize = this.gameWorldSizeX;
+        this._camera.maxZ = gameData.miniMapMaxZ;
+
+        var fieldSize = gameData.miniMapMaxZ;
         this._camera.orthoTop = fieldSize / 2;
         this._camera.orthoBottom = -fieldSize / 2;
         this._camera.orthoLeft = -fieldSize / 2;
@@ -129,41 +141,6 @@ export class Game {
         this._scene.activeCameras.push(this._camera);
     }
 
-    // private createFollowCamera(): void {
-
-    //     this._followCam = new FollowCamera("followCam", Game.BaseCameraPosition, this._scene);
-    //     //   this._followCam.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
-
-    //     this._followCam.viewport = new Viewport(0, 0, 1, 1);
-    //     //   var ratio = this._followCam.viewport.width / this._followCam.viewport.height;
-
-    //     // this._followCam.orthoTop = this._dollySize / (2 * ratio)
-    //     // this._followCam.orthoBottom = -this._dollySize / (2 * ratio);
-    //     // this._followCam.orthoLeft = -this._dollySize / 2;
-    //     // this._followCam.orthoRight = this._dollySize / 2;
-
-    //     this._followCam.layerMask = Game.MAIN_RENDER_MASK;
-    //     this._followCam.heightOffset = 200;
-    //     this._followCam.radius = 300;
-    //     this._followCam.maxCameraSpeed = 20;
-    //     this._followCam.cameraAcceleration = .9;
-    //     this._followCam.rotationOffset = 180;
-
-    //     this._followCam.upperHeightOffsetLimit = 500;
-    //     this._followCam.upperRotationOffsetLimit = 220;
-    //     this._followCam.lowerHeightOffsetLimit = 100;
-    //     this._followCam.lowerRotationOffsetLimit = 140;
-    //     this._followCam.upperRadiusLimit = 800;
-
-    //     //    this._cameraDolly.parent = this._cameraTarget;
-    //     this._followCam.parent = this._cameraDolly;
-    //     this._followCam.setTarget(this._ship.position);
-    //     this._scene.activeCameras.push(this._followCam);
-
-    //     this._followCam.lockedTarget = null;
-    //     // this._followCam.attachControl(this._engine.getRenderingCanvas(), true);
-    // }
-
     private createCameraDolly() {
         this._cameraDolly = MeshBuilder.CreatePlane("dollyPlane", { size: this._dollySize }, this._scene);
         // this._cameraDolly.position.y = 165;
@@ -175,45 +152,36 @@ export class Game {
     }
 
     private createBackground(): void {
+        let gameData = this._gameData;
         this._backgroundTexture = new Texture("textures/corona_lf.png", this._scene);
         var backMat = new BackgroundMaterial("backMat", this._scene);
         backMat.primaryColor = Color3.Black();
         backMat.reflectionTexture = this._backgroundTexture;
         backMat.useRGBColor = true;
-        //   this._backgroundTexture.coordinatesMode = BABYLON.Texture.PROJECTION_MODE;
-        // var box = MeshBuilder.CreateBox("box", {
-        //     height: this.gameWorldSizeY,
-        //     width: this.gameWorldSizeX,
-        //     depth: this.gameWorldSizeX,
-            
-        //     sideOrientation: Mesh.BACKSIDE,
-        //     updatable: true
-        // },this._scene);
-        
-        // this._floor = box;
+
         this._floor = MeshBuilder.CreateGround("floor", {
-            width: this.gameWorldSizeX,
-            height: this.gameWorldSizeY,
-            subdivisionsX: this.gameWorldSizeX / this._gravUnit,
-            subdivisionsY: this.gameWorldSizeY / this._gravUnit,
+            width: gameData.gameWorldSizeX,
+            height: gameData.gameWorldSizeY,
+            subdivisionsX: gameData.gameWorldSizeX / gameData.gravUnit,
+            subdivisionsY: gameData.gameWorldSizeY / gameData.gravUnit,
             updatable: true
         }, this._scene);
 
-        this._floor.layerMask = Game.MAIN_RENDER_MASK;        
-       // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
+        this._floor.layerMask = Game.MAIN_RENDER_MASK;
+        this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
 
         this._gridMat = new GridMaterial("gridMat", this._scene);
-        this._gridMat.gridRatio = this._gravUnit;
+        this._gridMat.gridRatio = gameData.gravUnit;
         this._gridMat.lineColor = Color3.White();
-        this._gridMat.mainColor = Color3.Black();       
-        
+        this._gridMat.mainColor = Color3.Black();
+
         //backMat.alphaMode = 10;
         // backMat.fillMode = BABYLON.Material.TriangleFillMode;
-        
+
 
         //this._floor.material= backMat;
         this._floor.material = this._gridMat;
-        
+
     }
 
 
@@ -240,7 +208,6 @@ export class Game {
 
         var gravManager = this._gravManager;
         var updatePositions = function (positions) {
-            //        console.log('using grav manager to update mesh positions', gravManager);
             gravManager.updatePositions(positions);
         };
 
@@ -250,42 +217,38 @@ export class Game {
 
     }
 
-    private createStar(pos: Vector3): void {
-        var star = new Star(this._scene, pos);
+    private createStar(pos: Vector3, mass: number): void {
+        var star = new Star(this._scene, pos, mass);
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
-        
-        var gs = this._gravManager.computeGravitationalForceAtPoint(star, new Vector3(star.position.x + star.radius, 0, star.position.z), star.mass);
+
+        //var gs = this._gravManager.computeGravitationalForceAtPoint(star, new Vector3(star.position.x + star.radius, 0, star.position.z), star.mass);
         //  console.log('gForce from star', gs);
         for (var i = 0; i < this._numberOfPlanets; i++) {
             this.createPlanet(star);
         }
-        
-        
+
         //star.position.y = -gs.length()/2;
-       // star.position.y = -star.radius;
-        
+        // star.position.y = -star.radius;
     }
 
     private createPlanet(parentStar: Star): void {
-
         var planet = new Planet(this._scene, parentStar)
         this._planets.push(planet);
         this._gravManager.gravWells.push(planet);
-        var gs = this._gravManager.computeGravitationalForceAtPoint(planet, new Vector3(planet.position.x + planet.radius, 0, planet.position.z + planet.radius), planet.mass);
+        //var gs = this._gravManager.computeGravitationalForceAtPoint(planet, new Vector3(planet.position.x + planet.radius, 0, planet.position.z + planet.radius), planet.mass);
         //  console.log('gForce from star', gs);
-       // planet.position.y = -gs.length()/2;
+        // planet.position.y = -gs.length()/2;
     }
 
     private createShip(): void {
         this._ship = new Ship(this._scene);
         this._cameraTarget = new TransformNode("shipNode");
         this._cameraTarget.parent = this._ship.mesh;
-        //      this._cameraTarget.setPositionWithLocalVector(new BABYLON.Vector3(0, 30, -24));
     }
 
     private handleKeyboardInput(): void {
-        var
+        let
             inputMap = this._inputMap || {},
             ship = this._ship;
 
@@ -316,20 +279,6 @@ export class Game {
         if (this._ship.position.z < -this.gameWorldSizeY / 2) {
             this._ship.position.z = this.gameWorldSizeY / 2;
         }
-        // if (this._ship.position.y > 200) {
-        //     this._ship.position.y = 200;
-        // }
-        // if (this._ship.position.y < 0) {
-        //     this._ship.position.y = 0;
-        // }
-
-    }
-
-    
-    private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
-        let sV = this._ship.velocity, gForce = this._ship.geForce;
-        this._gravManager.computeGravitationalForceAtPointToRef(gravSource, this._ship.position, 1000, gForce)
-        sV.addInPlace(gForce);       
     }
 
     private createExplosion(): void {
@@ -371,7 +320,7 @@ export class Game {
     private resetShip(): void {
         console.log('resetting ship', this._ship);
         if (!this._ship) { return; }
-        this._ship.position.set(-this.gameWorldSizeX/2, 500, 64);
+        this._ship.position.set(-this.gameWorldSizeX / 2, 500, 64);
         this._ship.velocity.setAll(0);
         this._ship.rotation = 1.57;
         this._ship.isAlive = true;
@@ -402,8 +351,10 @@ export class Game {
         }
 
     }
+
     private createFlyCam(): void {
-        var flyCam = new UniversalCamera("CockpitCam", new Vector3(0, 50, -80), this._scene);
+        let gameData = this._gameData;
+        var flyCam = new UniversalCamera("CockpitCam", gameData.flyCamRelativePosition , this._scene);
 
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1, 1);
@@ -413,33 +364,17 @@ export class Game {
         flyCam.parent = this._cameraTarget;
     }
 
-    private leaveTheDangerZone(): void {
-        console.log('leaving the DANGER ZONE!');
-        // let canvas = this._engine.getRenderingCanvas();
-        // this._flyCam.detachControl(canvas);
-        // this._followCam.attachControl(canvas, false);
-        // this._flyCam.setEnabled(false);
-        // this._followCam.setEnabled(true);
-        // this._scene.activeCamera = this._followCam;        
-        this._followCam.lockedTarget = null;
-
-        this._followCam.position = Game.BaseCameraPosition;
-        this._followCam.setTarget(this._ship.position);
-
-        this._followCam.rotation.set(Math.PI / 2, 0, Math.PI);
-        this._followCam.parent = this._cameraDolly;
-    }
-
     createScene(): void {
-        let self = this;
+         
+        this.initializeGame(this._gameData);
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
-        var gl = new GlowLayer("glow", this._scene);
+        //var gl = new GlowLayer("glow", this._scene);
         this._scene.gravity = Vector3.Zero();
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
-        this.createCamera();
+        this.createMiniMapCamera();
         this.createFlyCam();
 
         this.createExplosion();
@@ -448,7 +383,7 @@ export class Game {
 
             var starPos = new Vector3(item.x, 0, item.y);
 
-            this.createStar(starPos);
+            this.createStar(starPos, this._gameData.starMass);
         }
 
         this._scene.onKeyboardObservable.add((kbInfo) => {
@@ -461,43 +396,29 @@ export class Game {
             }
         });
 
-       
         //deterministic steps for update loop
-        this._scene.onBeforeRenderObservable.add(() => {
-            if (this.isPaused) {
-                return;
-            }
-
-            this._planets.forEach(planet => {
-                planet.movePlanetInOrbit(0.0025);
-            });
-
-            this._gravManager.gravWells.forEach(gravWell => {
-                if (this._ship.isAlive) {
-                    this.applyGravitationalForceToShip(gravWell);
-                }
-            });
-
-            this.updateGridHeightMap();
-            this._ship.onUpdate();
-
-        });
-
-        //  this._floor.checkCollisions = true;
-        this._ship.mesh.checkCollisions = true;
-        this._stars.forEach(star => {
-            //     star.mesh.checkCollisions = true;
-        });
-        this._planets.forEach(planet => {
-            //     planet.mesh.checkCollisions = true;
-        });
+        this._scene.onBeforeRenderObservable.add(() => this.updateRunningGameState());
 
         this.resetShip();
 
     }
 
-    doRender(): void {
+    private updateRunningGameState() {
 
+        if (this.isPaused) {
+            return;
+        }
+        this.updateGridHeightMap();
+        this._planets.forEach(planet => {
+            planet.movePlanetInOrbit(0.0025);
+        });
+        if (this._ship.isAlive) {
+            this._gravManager.onUpdateShipStep(this._ship);
+            this._ship.onUpdate();
+        }
+    }
+
+    doRender(): void {
 
         this._engine.runRenderLoop(() => {
             let alive = this._ship.isAlive, paused = this.isPaused;

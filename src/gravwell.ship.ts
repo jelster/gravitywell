@@ -33,7 +33,7 @@ export class Ship {
     }
 
     constructor(scene: Scene, opts = {maxAcceleration: 0.00667, maxAngularVelocity: 0.1}) {
-        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 1, diameterBottom: 32 }, scene);
+        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 16, diameterTop: 1, diameterBottom: 16 }, scene);
         this.geForce = new Vector3();
         this.mesh.rotation.x = Math.PI / 2;
      //   this.mesh.rotation.z = Math.PI / 2;
