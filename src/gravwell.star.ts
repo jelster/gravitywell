@@ -36,7 +36,7 @@ export class Planet implements IGravityContributor {
         this._parentStar = parentStar;
         this.mass = parentStar.mass * Scalar.RandomRange(0.15, 0.5);
         this.radius = this.mass / Math.pow(GravityManager.GRAV_UNIT, 2.86);//this.radius = GravityManager.GRAV_UNIT * Scalar.RandomRange(1,8);
-        this.orbitalRadius = Scalar.RandomRange(this.radius + 3*parentStar.radius, this.radius + 8.75*parentStar.radius);
+        this.orbitalRadius = Scalar.RandomRange(this.radius + 3*parentStar.radius, this.radius + 10*parentStar.radius);
         this._mesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: this.radius*2 }, scene);
      //   this._mesh.position.y = 128;
         this.mesh.rotation.x = Math.PI / 2;
@@ -52,7 +52,7 @@ export class Planet implements IGravityContributor {
     //    this.mesh.renderOutline = true;
         this.position = new Vector3(parentStar.position.x + this.orbitalRadius, parentStar.position.y, parentStar.position.z + this.orbitalRadius);
         //this.mesh.ellipsoid = new Vector3(1,1,1);
-        this.mesh.parent = this._parentStar.mesh;
+     //   this.mesh.parent = this._parentStar.mesh;
         this.currentAlpha = Scalar.RandomRange(-Scalar.TwoPi, Scalar.TwoPi);
     }
 }
@@ -89,8 +89,8 @@ export class Star implements IGravityContributor {
     }
 
     constructor(scene: Scene, initialPos: Vector3) {
-        this.mass = 9.0e7;
-        this.radius = this.mass / Math.pow(GravityManager.GRAV_UNIT, 2.86);
+        this.mass = 9e7;
+        this.radius = this.mass / Math.pow(GravityManager.GRAV_UNIT, 2.77);
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2*this.radius }, scene);
         this._mesh.position = initialPos;
@@ -102,14 +102,12 @@ export class Star implements IGravityContributor {
         this._mesh.material = sphMat;
      
       
-        this._light = new PointLight("starLight", new Vector3(0, 100, 0), scene);
+        this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
         this._light.diffuse = Color3.White();
         this._light.specular = Color3.Yellow();
  
         this._light.intensity = 1;
-        this._light.parent = this._mesh;
-
-        this.mesh.checkCollisions = true;
+        this._light.parent = this._mesh;       
 
     }
 }

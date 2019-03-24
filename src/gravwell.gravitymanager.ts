@@ -8,6 +8,7 @@ export interface IGravityContributor {
 }
 
 export class GravityManager {
+
     public static GRAV_UNIT: number = 64;
     private readonly ZERO_VECTOR: Vector3 = Vector3.Zero();
     private readonly GRAV_CONST: number = 6.67259e-11;
@@ -20,33 +21,9 @@ export class GravityManager {
         this._gravWells = v;
     }
 
-
-    // private _positions: FloatArray;
-    // public get positions(): FloatArray {
-    //     return this._positions;
-    // }
-    // public set positions(v: FloatArray) {
-    //     this._positions = v;
-    // }
     public computeGravitationalForceAtPoint(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number): Vector3 {
         return this.computeGravitationalForceAtPointToRef(gravSource, testPoint, testMass);
-        let dCenter = Vector3.Distance(testPoint, gravSource.position),
-            sRad = gravSource.radius || 10;
-
-        if (dCenter < sRad) { return Vector3.Zero(); }
-
-        let G = 6.67259e-11,
-            r = Math.pow(dCenter, 2),
-            dir = testPoint.subtract(gravSource.position).normalize(),
-            m1 = testMass || 100,
-            m2 = gravSource.mass || 100;
-
-        // if (this.GravityWellMode === GravityMode.DistanceCubed) {
-        //     r = r * dCenter; // r^3 propagation, like electrical fields
-        // }
-        let f = -(G * (m1 * m2)) / (r);
-        return dir.scaleInPlace(f);
-
+        
     }
     public updatePositions(positions: FloatArray): void {
 
@@ -61,66 +38,32 @@ export class GravityManager {
             forceVector.setAll(0);
             for (var gidx = 0; gidx < gravWells.length; gidx++) {
                 let gwA = gravWells[gidx];
-                // dX = gwA.position.x - positionVector.x,
-                // dY = gwA.position.y - positionVector.y,
-                // dZ = gwA.position.z - positionVector.z;
+
                 if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius)) {
                     positionVector.y = gwA.position.y;
                 }
                 else {
                     positionVector.y = 0;
                 }
-                //   console.log('pre-calc force: ', forceVector);
-                //    this.computeGravitationalForceAtPointToRef(gwA, positionVector, forceVector);
+
                 this.computeGravitationalForceAtPointToRef(gwA, positionVector, gwA.mass, zeroVector)
                 forceVector.addInPlace(zeroVector);
 
-                //    console.log('post-calc force', forceVector);
             }
-            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/2, 15 * GravityManager.GRAV_UNIT);
+            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/3, 20 * GravityManager.GRAV_UNIT);
             positions[idx + 1] = -forceLength;
-
             //positions[idx + 0] += forces.length();
-
             //positions[idx + 2] += forces.z;
         }
-    }
-    // computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, positionVector: Vector3, forceVector: Vector3, testMass?: number): void {
-    //     let G = this.GRAV_CONST,
-    //         d = Vector3.Distance(gravSource.position, positionVector),
-    //         m1 = gravSource.mass,
-    //         m2 = testMass || 100,
-    //         dir = positionVector.subtractToRef(gravSource.position, this.ZERO_VECTOR).normalize(),
-    //         r = Math.pow(d, 2);
-    //     if (r === 0) { return; }
-
-    //     //  positionVector.subtract(gravSource.position).normalize();
-    //     let f = -(G * (m1 * m2)) / (r);
-
-    //     forceVector.set(dir.x * f, dir.y * f, dir.z * f);//forceVector.copyFrom(dir);
-    // //    console.log(forceVector);
-    // }
-
-    // private GravitySourceReductor(accum : IGravityContributor, gravSource : IGravityContributor) : Vector3 {
-    //     let fi = this.computeGravitationalForceAtPoint(
-    //         accum, 
-    //         Vector3.Zero().set(
-    //             positions[idx + 0], 
-    //             positions[idx + 1], 
-    //             positions[idx + 2]), cv.mass);
-
-    //     return pv.addInPlace(fi);
-    // }
-
-    
-    private computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero()): Vector3 {
+    }    
+    public computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero()): Vector3 {
         let dCenter = Vector3.Distance(testPoint, gravSource.position);
 
         resultVector.setAll(0);
 
         if (dCenter === 0) { return resultVector; }
 
-        let G = 6.67259e-11,
+        let G = this.GRAV_CONST,
             r = Math.pow(dCenter, 2),
 
             m1 = testMass || 100,
@@ -133,8 +76,8 @@ export class GravityManager {
         return resultVector.scaleInPlace(f);
 
     }
-    constructor(numberOfPositions: number) {
-        // this.positions = new Float32Array(numberOfPositions);
+    constructor() {
+        
         this.gravWells = new Array<IGravityContributor>();
     }
 }

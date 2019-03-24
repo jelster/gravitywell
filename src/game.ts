@@ -94,12 +94,12 @@ export class Game {
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
+        this._gravManager = new GravityManager();
+        this.gameWorldSizeX = 16000;
+        this.gameWorldSizeY = 16000;
+        this._gravUnit = GravityManager.GRAV_UNIT;
 
-        this.gameWorldSizeX = 12800;
-        this.gameWorldSizeY = 12800;
-        this._gravUnit = 64;
-
-        let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
+       // let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
         this._starMap = [];
         // for (let index = 0; index < numStars; index++) {
         //     let randX = Scalar.RandomRange(-this.gameWorldSizeX / 2, this.gameWorldSizeX / 2),
@@ -113,7 +113,7 @@ export class Game {
         //     { x: -2000, y: 3000 }
         // ];
         this._starMap.push({ x: 0, y: 0 });
-        this._gravManager = new GravityManager(numberOfCells);
+
         this.isPaused = true;
         this._respawnTimeLimit = 4000;
         this._dollySize = this.gameWorldSizeX/this._gravUnit;
@@ -264,15 +264,15 @@ export class Game {
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
         
-        var gs = this._gravManager.computeGravitationalForceAtPoint(star, star.position, star.mass);
+        var gs = this._gravManager.computeGravitationalForceAtPoint(star, new Vector3(star.position.x + star.radius, 0, star.position.z), star.mass);
         //  console.log('gForce from star', gs);
-        star.position.y = -gs.length();
-        this.createPlanet(star);
-        this.createPlanet(star);
-        this.createPlanet(star);
-        this.createPlanet(star);
         
-      //  star.position.y = -2*star.radius;
+        this.createPlanet(star);
+        this.createPlanet(star);
+        this.createPlanet(star);
+        this.createPlanet(star);
+        //star.position.y = -gs.length()/2;
+       // star.position.y = -star.radius;
         
     }
 
@@ -281,9 +281,9 @@ export class Game {
         var planet = new Planet(this._scene, parentStar)
         this._planets.push(planet);
         this._gravManager.gravWells.push(planet);
-        var gs = this._gravManager.computeGravitationalForceAtPoint(planet, planet.position, planet.mass);
+        var gs = this._gravManager.computeGravitationalForceAtPoint(planet, new Vector3(planet.position.x + planet.radius, 0, planet.position.z + planet.radius), planet.mass);
         //  console.log('gForce from star', gs);
-         planet.position.y = -gs.length() ;
+       // planet.position.y = -gs.length()/2;
     }
 
     private createShip(): void {
@@ -336,9 +336,9 @@ export class Game {
 
     
     private applyGravitationalForceToShip(gravSource: IGravityContributor): void {
-        
-        this._ship.velocity.addInPlace(this._gravManager.computeGravitationalForceAtPoint(gravSource, this._ship.position));
-       
+        let sV = this._ship.velocity, gForce = this._ship.geForce;
+        this._gravManager.computeGravitationalForceAtPointToRef(gravSource, this._ship.position, 1000, gForce)
+        sV.addInPlace(gForce);       
     }
 
     private createExplosion(): void {
@@ -478,7 +478,7 @@ export class Game {
             }
 
             this._planets.forEach(planet => {
-                planet.movePlanetInOrbit(0.005);
+                planet.movePlanetInOrbit(0.0025);
             });
 
             this._gravManager.gravWells.forEach(gravWell => {
@@ -489,10 +489,6 @@ export class Game {
 
             this.updateGridHeightMap();
             this._ship.onUpdate();
-
-
-
-            
 
         });
 
