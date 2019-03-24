@@ -77,7 +77,7 @@ export class GravityManager {
 
                 //    console.log('post-calc force', forceVector);
             }
-            forceLength = Scalar.Clamp(forceVector.length(), 1, 1000 * GravityManager.GRAV_UNIT);
+            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/2, 15 * GravityManager.GRAV_UNIT);
             positions[idx + 1] = -forceLength;
 
             //positions[idx + 0] += forces.length();

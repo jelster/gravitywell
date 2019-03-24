@@ -34,9 +34,9 @@ export class Planet implements IGravityContributor {
     }
     constructor(scene: Scene, parentStar: Star) {
         this._parentStar = parentStar;
-        this.mass = parentStar.mass * 0.2;
-        this.radius = GravityManager.GRAV_UNIT * 4;
-        this.orbitalRadius = Scalar.RandomRange(this.radius + 2*parentStar.radius, this.radius + 7*parentStar.radius);
+        this.mass = parentStar.mass * Scalar.RandomRange(0.15, 0.5);
+        this.radius = this.mass / Math.pow(GravityManager.GRAV_UNIT, 2.86);//this.radius = GravityManager.GRAV_UNIT * Scalar.RandomRange(1,8);
+        this.orbitalRadius = Scalar.RandomRange(this.radius + 3*parentStar.radius, this.radius + 8.75*parentStar.radius);
         this._mesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: this.radius*2 }, scene);
      //   this._mesh.position.y = 128;
         this.mesh.rotation.x = Math.PI / 2;
@@ -89,8 +89,8 @@ export class Star implements IGravityContributor {
     }
 
     constructor(scene: Scene, initialPos: Vector3) {
-        this.mass = 2.0e8;
-        this.radius = GravityManager.GRAV_UNIT*12;
+        this.mass = 9.0e7;
+        this.radius = this.mass / Math.pow(GravityManager.GRAV_UNIT, 2.86);
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2*this.radius }, scene);
         this._mesh.position = initialPos;

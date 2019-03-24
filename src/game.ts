@@ -269,6 +269,8 @@ export class Game {
         star.position.y = -gs.length();
         this.createPlanet(star);
         this.createPlanet(star);
+        this.createPlanet(star);
+        this.createPlanet(star);
         
       //  star.position.y = -2*star.radius;
         
