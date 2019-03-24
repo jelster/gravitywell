@@ -371,6 +371,8 @@ export class Game {
         this.initializeGame(this._gameData);
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
+        this._scene.clearColor = Color4.FromColor3(Color3.BlackReadOnly);
+        this._scene.ambientColor =  Color3.White();
         //var gl = new GlowLayer("glow", this._scene);
         this._scene.gravity = Vector3.Zero();
         this.createShip();

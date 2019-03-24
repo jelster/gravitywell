@@ -103,10 +103,10 @@ export class Star implements IGravityContributor {
      
       
         this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
-        this._light.diffuse = Color3.White();
+        this._light.diffuse = Color3.FromHexString('#FF8040');
         this._light.specular = Color3.Yellow();
  
-        this._light.intensity = 1;
+        this._light.intensity = 7.5;
         this._light.parent = this._mesh;       
 
     }

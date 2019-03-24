@@ -47,8 +47,8 @@ export class Ship {
 
         var shipMat = new StandardMaterial("shipMat", scene);
         shipMat.specularColor = Color3.Blue();
-        shipMat.ambientColor = Color3.White();
-        shipMat.diffuseColor = Color3.White();
+        //shipMat.ambientColor = Color3.White();
+        //shipMat.diffuseColor = Color3.White();
         //shipMat.emissiveColor = Color3.Blue();
         this.mesh.material = shipMat;
         this.mesh.outlineColor = Color3.Blue();
