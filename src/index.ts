@@ -4,7 +4,7 @@ import { Game } from './game';
 import { UI } from './gravwell.ui';
 window.addEventListener("DOMContentLoaded", () => {
     // Create the game using the 'renderCanvas'.
-    let game = new Game('renderCanvas', 2);    
+    let game = new Game('renderCanvas', 1);    
     // Create the scene.
     game.createScene();
     let gravGui = new UI(game);

@@ -32,17 +32,17 @@ export class Ship {
         this.mesh.position = p;
     }
 
-    constructor(scene: Scene) {
-        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 0, diameterBottom: 32 }, scene);
+    constructor(scene: Scene, opts = {maxAcceleration: 0.00667, maxAngularVelocity: 0.1}) {
+        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 32, diameterTop: 1, diameterBottom: 32 }, scene);
 
         this.mesh.rotation.x = Math.PI / 2;
      //   this.mesh.rotation.z = Math.PI / 2;
         //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
-        this.maxAcceleration = 0.01;
-        this.maxAngularVelocity = 0.1;
-        this.velocity = new Vector3(.01, 0, 1);
+        this.maxAcceleration = opts.maxAcceleration
+        this.maxAngularVelocity = opts.maxAngularVelocity;
+        this.velocity = new Vector3();
         this.angularVelocity = 0.0;
 
         var shipMat = new StandardMaterial("shipMat", scene);
@@ -53,7 +53,7 @@ export class Ship {
         this.mesh.material = shipMat;
         this.mesh.outlineColor = Color3.Blue();
         this.mesh.outlineWidth = 2.4;
-        this.mesh.renderOutline = true;
+        
         this.isAlive = false;
     }
 

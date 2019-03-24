@@ -28,7 +28,26 @@ export class GravityManager {
     // public set positions(v: FloatArray) {
     //     this._positions = v;
     // }
+    public computeGravitationalForceAtPoint(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number): Vector3 {
+        return this.computeGravitationalForceAtPointToRef(gravSource, testPoint, testMass);
+        let dCenter = Vector3.Distance(testPoint, gravSource.position),
+            sRad = gravSource.radius || 10;
 
+        if (dCenter < sRad) { return Vector3.Zero(); }
+
+        let G = 6.67259e-11,
+            r = Math.pow(dCenter, 2),
+            dir = testPoint.subtract(gravSource.position).normalize(),
+            m1 = testMass || 100,
+            m2 = gravSource.mass || 100;
+
+        // if (this.GravityWellMode === GravityMode.DistanceCubed) {
+        //     r = r * dCenter; // r^3 propagation, like electrical fields
+        // }
+        let f = -(G * (m1 * m2)) / (r);
+        return dir.scaleInPlace(f);
+
+    }
     public updatePositions(positions: FloatArray): void {
 
         let gravWells = this._gravWells,
@@ -53,7 +72,7 @@ export class GravityManager {
                 }
                 //   console.log('pre-calc force: ', forceVector);
                 //    this.computeGravitationalForceAtPointToRef(gwA, positionVector, forceVector);
-                this.computeGravitationalForceAtPoint(gwA, positionVector, gwA.mass, zeroVector)
+                this.computeGravitationalForceAtPointToRef(gwA, positionVector, gwA.mass, zeroVector)
                 forceVector.addInPlace(zeroVector);
 
                 //    console.log('post-calc force', forceVector);
@@ -93,19 +112,8 @@ export class GravityManager {
     //     return pv.addInPlace(fi);
     // }
 
-    private computeGravitationForceAtPointUsingFloatsToRef(gravSource: IGravityContributor, testPointX: number,
-        testPointY: number, testPointZ: number,
-        testMass?: number, result?: Vector3): void {
-        let dX = testPointX - gravSource.position.x,
-            dY = testPointY - gravSource.position.y,
-            dZ = testPointZ - gravSource.position.z,
-            m1 = testMass || 100,
-            m2 = testMass || 100;
-
-        let f = - (this.GRAV_CONST * (m1 * m2));
-
-    }
-    private computeGravitationalForceAtPoint(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero()): Vector3 {
+    
+    private computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero()): Vector3 {
         let dCenter = Vector3.Distance(testPoint, gravSource.position);
 
         resultVector.setAll(0);
