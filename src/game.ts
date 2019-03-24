@@ -83,14 +83,15 @@ export class Game {
     private _flyCam: UniversalCamera;
     private _cameraTarget: TransformNode;
     private _gravManager: GravityManager;
+    private _numberOfPlanets: number;
 
-    constructor(canvasElement: string, numStars: number = 6) {
+    constructor(canvasElement: string, numPlanets: number = 4) {
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         }, true);
-
+        this._numberOfPlanets = numPlanets;
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
@@ -101,17 +102,7 @@ export class Game {
 
        // let numberOfCells = (this.gameWorldSizeX / this._gravUnit) * (this.gameWorldSizeY / this._gravUnit);
         this._starMap = [];
-        // for (let index = 0; index < numStars; index++) {
-        //     let randX = Scalar.RandomRange(-this.gameWorldSizeX / 2, this.gameWorldSizeX / 2),
-        //         randZ = Scalar.RandomRange(-this.gameWorldSizeY / 2, this.gameWorldSizeY / 2);
-        //     this._starMap.push({ x: randX, y: randZ });
-
-        // }
-        // this._starMap = [
-        //     { x: 1700, y: -2000 },
-        //     { x: -1200, y: 600 },
-        //     { x: -2000, y: 3000 }
-        // ];
+        
         this._starMap.push({ x: 0, y: 0 });
 
         this.isPaused = true;
@@ -266,11 +257,11 @@ export class Game {
         
         var gs = this._gravManager.computeGravitationalForceAtPoint(star, new Vector3(star.position.x + star.radius, 0, star.position.z), star.mass);
         //  console.log('gForce from star', gs);
+        for (var i = 0; i < this._numberOfPlanets; i++) {
+            this.createPlanet(star);
+        }
         
-        this.createPlanet(star);
-        this.createPlanet(star);
-        this.createPlanet(star);
-        this.createPlanet(star);
+        
         //star.position.y = -gs.length()/2;
        // star.position.y = -star.radius;
         
