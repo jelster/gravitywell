@@ -1,4 +1,4 @@
-import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial } from '@babylonjs/core';
+import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
 import { FollowCamera } from '@babylonjs/core/Cameras/FollowCamera';
@@ -54,9 +54,8 @@ export class Game {
     private _engine: Engine;
     private _scene: Scene;
     private _camera: UniversalCamera;
-    private _followCam: FollowCamera;
 
-    private _backgroundTexture: Texture;
+    private _backgroundTexture: CubeTexture;
     private _floor: Mesh;
     private _skybox: Mesh;
 
@@ -138,6 +137,7 @@ export class Game {
 
         this._camera.rotation.x = Math.PI / 2;
         this._camera.rotation.z = Math.PI;
+        
         this._scene.activeCameras.push(this._camera);
     }
 
@@ -150,6 +150,7 @@ export class Game {
         flyCam.rotation.x = 0.28;
         this._flyCam = flyCam;
         this._scene.activeCameras.push(this._flyCam);
+        this._scene.cameraToUseForPointers = this._flyCam;
         flyCam.parent = this._cameraTarget;
     }
 
@@ -165,12 +166,11 @@ export class Game {
 
     private createBackground(): void {
         let gameData = this._gameData;
-        this._backgroundTexture = new Texture("textures/corona_lf.png", this._scene);
-        var backMat = new BackgroundMaterial("backMat", this._scene);
-        backMat.primaryColor = Color3.Black();
-        backMat.reflectionTexture = this._backgroundTexture;
-        backMat.useRGBColor = true;
-
+       
+        this._backgroundTexture = new CubeTexture("textures/Space/space", this._scene);
+        
+        this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
+        this._skybox.layerMask = Game.MAIN_RENDER_MASK;
         this._floor = MeshBuilder.CreateGround("floor", {
             width: gameData.gameWorldSizeX,
             height: gameData.gameWorldSizeY,
@@ -186,10 +186,6 @@ export class Game {
         this._gridMat.gridRatio = gameData.gravUnit;
         this._gridMat.lineColor = Color3.White();
         this._gridMat.mainColor = Color3.Black();
-
-        //backMat.alphaMode = 10;
-        // backMat.fillMode = BABYLON.Material.TriangleFillMode;
-
 
         //this._floor.material= backMat;
         this._floor.material = this._gridMat;
@@ -378,8 +374,9 @@ export class Game {
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
-        this.createMiniMapCamera();
+        
         this.createFlyCam();
+        this.createMiniMapCamera();
 
         this.createExplosion();
         for (let i = 0; i < this._starMap.length; i++) {

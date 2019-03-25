@@ -30,11 +30,12 @@ export class GameData {
         gameData.starMass = 9e7;
 
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameWorldSizeX, 0);
-        gameData.miniMapMaxZ = Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2));
+        gameData.miniMapMaxZ = Math.sqrt((Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2)));
         
-        gameData.flyCamRelativePosition = new Vector3(0, 50, -80);
+        gameData.flyCamRelativePosition = new Vector3(0, 120, -200);
         gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
         
+        gameData.skyBoxScale = 15360;
         return gameData;
     }
 
@@ -49,5 +50,6 @@ export class GameData {
     public miniMapCameraPosition: Vector3;
     public flyCamRelativePosition: Vector3;
     public flyCamMaxZ: number;
+    public skyBoxScale: number;
 
 }
