@@ -326,11 +326,12 @@ export class Game {
     }
 
     private resetShip(): void {
-        console.log('resetting ship', this._ship);
+        let gameData = this._gameData, ship = this._ship;
+        console.log('resetting ship', ship);
         if (!this._ship) { return; }
-        this._ship.position.set(-this.gameWorldSizeX / 2, 500, 64);
+        this._ship.position.copyFrom(gameData.initialShipPosition);
         this._ship.velocity.setAll(0);
-        this._ship.rotation = 1.57;
+       // this._ship.rotation = 1.57;
         this._ship.isAlive = true;
         this._ship.mesh.isVisible = true;
         this._ship.mesh.checkCollisions = true;

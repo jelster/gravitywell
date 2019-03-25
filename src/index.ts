@@ -36,6 +36,8 @@ export class GameData {
         gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
         
         gameData.skyBoxScale = 15360;
+
+        gameData.initialShipPosition = new Vector3(-gameData.gameWorldSizeX / 2, 0, 64);
         return gameData;
     }
 
@@ -51,5 +53,6 @@ export class GameData {
     public flyCamRelativePosition: Vector3;
     public flyCamMaxZ: number;
     public skyBoxScale: number;
+    public initialShipPosition: Vector3;
 
 }
