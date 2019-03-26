@@ -22,8 +22,8 @@ export class GameData {
         var gameData = new GameData();
         gameData.numberOfPlanets = 4;
         gameData.starMap = [ { x: 0, y: 0}];
-        gameData.gameWorldSizeX = 16000;
-        gameData.gameWorldSizeY = 16000;
+        gameData.gameWorldSizeX = 16000*2;
+        gameData.gameWorldSizeY = 16000*2;
         
         gameData.respawnTimeLimit = 4000;
         gameData.gravUnit = 64;
@@ -35,7 +35,7 @@ export class GameData {
         gameData.flyCamRelativePosition = new Vector3(0, 120, -200);
         gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
         
-        gameData.skyBoxScale = 15360;
+        gameData.skyBoxScale = 12000;//6760;
 
         gameData.initialShipPosition = new Vector3(-gameData.gameWorldSizeX / 2, 0, 64);
         return gameData;
