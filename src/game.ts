@@ -1,4 +1,4 @@
-import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture } from '@babylonjs/core';
+import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
 import { FollowCamera } from '@babylonjs/core/Cameras/FollowCamera';
@@ -80,12 +80,14 @@ export class Game {
     public isPaused: boolean;
 
     private _gridMat: GridMaterial;
+    private _planetMat: StandardMaterial;
 
     private _flyCam: UniversalCamera;
     private _cameraTarget: TransformNode;
     private _gravManager: GravityManager;
     private _numberOfPlanets: number;
     private _gameData: GameData;
+    private _trailMesh: TrailMesh;
 
     private initializeGame(gameData?: GameData) {
         gameData = gameData || this._gameData || GameData.createDefault();
@@ -219,9 +221,11 @@ export class Game {
             gravManager.updatePositions(positions);
         };
 
-        this._floor.updateMeshPositions(updatePositions, true);
+        var updateNormalsAfterGravUpdate = true;
+
+        this._floor.updateMeshPositions(updatePositions, updateNormalsAfterGravUpdate);
         this._floor.refreshBoundingInfo();
-        console.log('updated mesh positions');
+        console.log('updated mesh positions. Check whether enabling/disabling update of normals might be needed. current value', updateNormalsAfterGravUpdate);
 
     }
 
@@ -253,6 +257,17 @@ export class Game {
         this._ship = new Ship(this._scene);
         this._cameraTarget = new TransformNode("shipNode");
         this._cameraTarget.parent = this._ship.mesh;
+
+        var trail = new TrailMesh("trailer", this._ship.mesh, this._scene, 48, 512, false);
+        trail.layerMask = Game.MINIMAP_RENDER_MASK;
+        var trailMat = new StandardMaterial("trailMat", this._scene);
+        trailMat.ambientColor = Color3.Teal();
+        trailMat.emissiveColor = Color3.Purple();
+        trailMat.specularColor = Color3.Black();
+        trailMat.disableLighting = true;
+        trail.material = trailMat;
+        this._trailMesh = trail;
+        
     }
 
     private handleKeyboardInput(): void {
@@ -336,6 +351,7 @@ export class Game {
         this._ship.mesh.isVisible = true;
         this._ship.mesh.checkCollisions = true;
         this._explosionParticle.stop();
+        this._trailMesh.start();
         this._scene.activeCamera.update();
 
     }
@@ -346,6 +362,7 @@ export class Game {
         }
         this._ship.isAlive = false;
         this._ship.mesh.isVisible = false;
+        this._trailMesh.stop();
         this._ship.velocity = Vector3.Zero();
         this._ship.mesh.checkCollisions = false;
 
