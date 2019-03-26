@@ -12,13 +12,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@babylonjs/core": "^4.0.0-alpha.18",
-    "@babylonjs/gui": "^4.0.0-alpha.18",
-    "@babylonjs/inspector": "^4.0.0-alpha.18",
-    "@babylonjs/materials": "^4.0.0-alpha.18",
-    "@babylonjs/procedural-textures": "^4.0.0-alpha.18",
+    "@babylonjs/core": "4.0.0-beta.3",
+    "@babylonjs/gui": "4.0.0-beta.3",
+    "@babylonjs/inspector": "4.0.0-beta.3",
+    "@babylonjs/materials": "4.0.0-beta.3",
+    "@babylonjs/procedural-textures": "4.0.0-beta.3",
     "ts-loader": "^5.3.3",
-    "typescript": "^3.3.3333",
+    "typescript": "^3.3.4000",
     "webpack": "^4.29.6",
     "webpack-dev-server": "^3.2.1"
   }
