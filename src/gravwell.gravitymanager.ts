@@ -153,7 +153,7 @@ export class GravityManager {
             for (var gidx = 0; gidx < self.gravWells.length; gidx++) {
                 let gwA = self.gravWells[gidx];
                                 
-                self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 300,self.tmpVector)
+                self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 100,self.tmpVector)
                  
                 forceVector.addInPlace(self.tmpVector);
 

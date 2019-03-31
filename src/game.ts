@@ -398,7 +398,6 @@ export class Game {
         this._scene.gravity = Vector3.Zero();
         Planet.InitializeMasterMesh(this._scene);
         this.initializeGame(this._gameData);
-        this._scene.gravity = new Vector3(0, (-this._stars[0].mass * GravityManager.GRAV_CONST) / this._stars[0].radius,0);
         this._scene.onKeyboardObservable.add((kbInfo) => {
 
             switch (kbInfo.type) {

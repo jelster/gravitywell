@@ -54,7 +54,7 @@ export class GameData {
         gameData.miniMapCameraPosition = new Vector3(0, gameHypotenuse, 0);
         gameData.miniMapMaxZ =gameHypotenuse;
         
-        gameData.flyCamRelativePosition = new Vector3(0, 120, -200);
+        gameData.flyCamRelativePosition = new Vector3(0, 10, -12);
         gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
         
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
