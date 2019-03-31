@@ -1,4 +1,4 @@
-import { Vector3, Mesh, Scene, MeshBuilder, StandardMaterial, Color3, PointLight, Scalar } from "@babylonjs/core";
+import { Vector3, Mesh, Scene, MeshBuilder, StandardMaterial, Color3, PointLight, Scalar, InstancedMesh } from "@babylonjs/core";
 import { IGravityContributor, GravityManager } from "./gravwell.gravitymanager";
 import { GameData } from ".";
 
@@ -6,6 +6,18 @@ import { GameData } from ".";
 
 
 export class Planet implements IGravityContributor {
+    private static _masterMesh: Mesh;
+
+    public static InitializeMasterMesh(scene: Scene) {
+        Planet._masterMesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 1 }, scene);
+        Planet._masterMesh.rotation.x = Math.PI / 2;
+        Planet._masterMesh.bakeCurrentTransformIntoVertices();
+        var plantMat = new StandardMaterial("planetMat", scene);
+        var planColor = Color3.Random();
+        plantMat.diffuseColor = planColor;
+        plantMat.specularColor = Color3.Random();
+        Planet._masterMesh.material = plantMat;
+    }
 
     public mass: number;
     public radius: number;
@@ -13,32 +25,32 @@ export class Planet implements IGravityContributor {
     public totalElapsedTime: number;
     public orbitalPeriod: number; // TODO
     public orbitalSpeed: number;
-    
+
     public get position(): Vector3 {
         return this._mesh.position;
     }
     public set position(v: Vector3) {
         this._mesh.position = v;
     }
-    public get mesh(): Mesh {
+    public get mesh(): InstancedMesh {
         return this._mesh;
     }
 
     public parentStar: Star;
-    private _mesh: Mesh;
+    private _mesh: InstancedMesh;
     private _currTheta: number;
 
     public movePlanetInOrbit() {
-        let angularVel =  this.orbitalSpeed / this.orbitalRadius,
-            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime()/1000,
+        let angularVel = this.orbitalSpeed / this.orbitalRadius,
+            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 1000,
             dT = angularVel * timeSinceLastUpdate,
             angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
         //     rOrbit = Vector3.Distance(pPos, sPos); // TODO: refactor into planet class        
         this.position.set(this.orbitalRadius * Math.sin(angPos), this.position.y, Math.cos(angPos) * this.orbitalRadius);
         this._currTheta = angPos;
-        
-         
-        
+
+
+
     }
     /**
      * Vo = Sqrt(((G*m)/r))
@@ -54,22 +66,16 @@ export class Planet implements IGravityContributor {
         this.orbitalPeriod = Scalar.TwoPi * Math.sqrt(rCubed / gM);
     }
     constructor(scene: Scene, parentStar: Star, opts: GameData) {
+
         this.parentStar = parentStar;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
         this.mass = parentStar.mass * starScaleFactor;
         this.radius = opts.planetDensity * Math.sqrt(this.mass);
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * parentStar.radius, this.radius + opts.upperOrbitalRadiiScale * parentStar.radius) + parentStar.radius;
 
-        this._mesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: this.radius * 2 }, scene);
+        this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
+        this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);
         //   this._mesh.position.y = 128;
-        this.mesh.rotation.x = Math.PI / 2;
-
-        this.mesh.bakeCurrentTransformIntoVertices();
-        var plantMat = new StandardMaterial("planetMat", scene);
-        var planColor = Color3.Gray();
-        plantMat.diffuseColor = planColor;
-        plantMat.specularColor = Color3.Random();
-        this._mesh.material = plantMat;
         this.mesh.outlineColor = Color3.Green();
         this.mesh.outlineWidth = 4;
         //    this.mesh.renderOutline = true;
@@ -117,7 +123,7 @@ export class Star implements IGravityContributor {
 
     constructor(scene: Scene, initialPos: Vector3, mass: number) {
         this.mass = mass;
-        this.radius = (0.000940/36) * Math.sqrt(mass);
+        this.radius = (0.000940 / 36) * Math.sqrt(mass);
 
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
