@@ -7,6 +7,8 @@ export class Ship {
     public maxAngularVelocity: number;
     public mesh: Mesh;
     public geForce: Vector3;
+    public normal: Vector3 = new Vector3();
+
     private _isAlive: boolean;
     public get isAlive(): boolean {
         return this._isAlive;
@@ -32,8 +34,8 @@ export class Ship {
         this.mesh.position = p;
     }
 
-    constructor(scene: Scene, opts = {maxAcceleration: 0.00667, maxAngularVelocity: 0.1}) {
-        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 16, diameterTop: 1, diameterBottom: 16 }, scene);
+    constructor(scene: Scene, opts = {maxAcceleration: 1.25, maxAngularVelocity: 0.09}) {
+        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8 }, scene);
         this.geForce = new Vector3();
         this.mesh.rotation.x = Math.PI / 2;
      //   this.mesh.rotation.z = Math.PI / 2;
@@ -58,13 +60,13 @@ export class Ship {
     }
 
     public onUpdate() {
-        let dTime = this.mesh.getEngine().getDeltaTime();
+        let dTime = this.mesh.getEngine().getDeltaTime()/1000;
         if (this.angularVelocity > this.maxAngularVelocity) {
             this.angularVelocity = this.maxAngularVelocity;
         }
         
         this.mesh.moveWithCollisions(this.velocity.scale(dTime));
-
+        
     }
     /**
      * fireThrusters
@@ -72,11 +74,11 @@ export class Ship {
     public fireThrusters() {
 
         var dx = Math.sin(this.mesh.rotation.y) * this.maxAcceleration;
-        var dy = Math.atan(this.mesh.rotation.z) * this.maxAcceleration;
+     //   var dy = Math.atan(this.mesh.rotation.z) * this.maxAcceleration;
         var dz = Math.cos(this.mesh.rotation.y) * this.maxAcceleration;
         // always accelerate in the direction that the craft is currently pointing
         this.velocity.x += dx;
-        this.velocity.y += dy;
+      //  this.velocity.y += dy;
         this.velocity.z += dz;
     }
 }

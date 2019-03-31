@@ -96,6 +96,8 @@ export class Game {
         this._stars.splice(0, this._stars.length);
 
         this._gravManager = new GravityManager(gameData);
+        
+
         this._starMap = gameData.starMap;
         this._numberOfPlanets = gameData.numberOfPlanets;
         this.gameWorldSizeX = gameData.gameWorldSizeX;
@@ -105,6 +107,23 @@ export class Game {
         this._respawnTimeLimit = gameData.respawnTimeLimit;
 
         this.isPaused = true;
+        this.createShip();
+        this.createCameraDolly();
+        this.createBackground();
+        
+        this.createFlyCam();
+        this.createMiniMapCamera();
+
+        this.createExplosion();
+        for (let i = 0; i < this._starMap.length; i++) {
+            let item = this._starMap[i];
+
+            var starPos = new Vector3(item.x, 0, item.y);
+
+            this.createStar(starPos, this._gameData.starMass);
+        }
+        this._gravManager.generateDynamicTerrain(this._scene);
+        this._gravManager.gravityMap.mesh.material = this._gridMat;
 
     }
 
@@ -173,63 +192,51 @@ export class Game {
         
         this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
         this._skybox.layerMask = Game.MAIN_RENDER_MASK;
-        this._floor = MeshBuilder.CreateGround("floor", {
-            width: gameData.gameWorldSizeX,
-            height: gameData.gameWorldSizeY,
-            subdivisionsX: gameData.gameWorldSizeX / gameData.gravUnit,
-            subdivisionsY: gameData.gameWorldSizeY / gameData.gravUnit,
-            updatable: true
-        }, this._scene);
-
-        this._floor.layerMask = Game.MAIN_RENDER_MASK;
-        this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
 
         this._gridMat = new GridMaterial("gridMat", this._scene);
         this._gridMat.gridRatio = gameData.gravUnit;
         this._gridMat.lineColor = Color3.White();
         this._gridMat.mainColor = Color3.Black();
+        
+        // this._floor = MeshBuilder.CreateGround("floor", {
+        //     width: gameData.gameWorldSizeX,
+        //     height: gameData.gameWorldSizeY,
+        //     subdivisionsX: gameData.gameWorldSizeX / gameData.gravUnit,
+        //     subdivisionsY: gameData.gameWorldSizeY / gameData.gravUnit,
+        //     updatable: true
+        // }, this._scene);
 
-        //this._floor.material= backMat;
-        this._floor.material = this._gridMat;
+        // this._floor.layerMask = Game.MAIN_RENDER_MASK;
+        // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
+        // this._floor.material = this._gridMat;
+        
+
+
 
     }
 
 
+
     private updateGridHeightMap(): void {
-        // var gravWells = this._gravManager.gravWells;
-        // var updatePositions = function (positions) {
-        //     for (var idx = 0; idx < positions.length; idx += 3) {
-        //         var forces = gravWells.reduce(function (pv, cv, ci, arr): Vector3 {
-        //             let fi = Game.computeGravitationalForceAtPoint(
-        //                 cv, 
-        //                 Vector3.Zero().set(
-        //                     positions[idx + 0], 
-        //                     positions[idx + 1], 
-        //                     positions[idx + 2]), cv.mass);
+        return;
+        
+        let gravManager = this._gravManager;
+       // let updatePositions = function () {
+        gravManager.updatePositions(gravManager.heightMap);
+        
+        
+       // };
 
-        //             return pv.addInPlace(fi);
-        //         }, new Vector3());
-        //         //positions[idx + 0] += forces.length();
-        //         positions[idx + 1] = -forces.length();
-        //         //positions[idx + 2] += forces.z;
-
-        //     }
-        //};
-
-        var gravManager = this._gravManager;
-        var updatePositions = function (positions) {
-            gravManager.updatePositions(positions);
-        };
-
-        var updateNormalsAfterGravUpdate = true;
-
-        this._floor.updateMeshPositions(updatePositions, updateNormalsAfterGravUpdate);
-        this._floor.refreshBoundingInfo();
-        console.log('updated mesh positions. Check whether enabling/disabling update of normals might be needed. current value', updateNormalsAfterGravUpdate);
+       // let updateNormalsAfterGravUpdate = false;
+       // this._gravManager.gravityMap.beforeUpdate = updatePositions;
+       // this._floor.updateMeshPositions(updatePositions, updateNormalsAfterGravUpdate);
+       // this._floor.refreshBoundingInfo();
+       // console.log('updated mesh positions. Check whether enabling/disabling update of normals might be needed. current value', updateNormalsAfterGravUpdate);
 
     }
 
     private createStar(pos: Vector3, mass: number): void {
+  
         var star = new Star(this._scene, pos, mass);
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
@@ -245,7 +252,7 @@ export class Game {
     }
 
     private createPlanet(parentStar: Star): void {
-        var planet = new Planet(this._scene, parentStar)
+        var planet = new Planet(this._scene, parentStar, this._gameData);
         this._planets.push(planet);
         this._gravManager.gravWells.push(planet);
         //var gs = this._gravManager.computeGravitationalForceAtPoint(planet, new Vector3(planet.position.x + planet.radius, 0, planet.position.z + planet.radius), planet.mass);
@@ -259,6 +266,7 @@ export class Game {
         this._cameraTarget.parent = this._ship.mesh;
 
         var trail = new TrailMesh("trailer", this._ship.mesh, this._scene, 48, 512, false);
+        trail.position.y = 5000;
         trail.layerMask = Game.MINIMAP_RENDER_MASK;
         var trailMat = new StandardMaterial("trailMat", this._scene);
         trailMat.ambientColor = Color3.Teal();
@@ -290,17 +298,18 @@ export class Game {
     }
 
     private updateShipPositionOverflow(): void {
-        if (this._ship.position.x > this.gameWorldSizeX / 2) {
-            this._ship.position.x = -this.gameWorldSizeX / 2;
+        let gameData = this._gameData;
+        if (this._ship.position.x > gameData.skyBoxScale / 2) {
+            this._ship.position.x = -gameData.skyBoxScale / 2;
         }
-        if (this._ship.position.x < -this.gameWorldSizeX / 2) {
-            this._ship.position.x = this.gameWorldSizeX / 2;
+        if (this._ship.position.x < -gameData.skyBoxScale / 2) {
+            this._ship.position.x = gameData.skyBoxScale / 2;
         }
-        if (this._ship.position.z > this.gameWorldSizeY / 2) {
-            this._ship.position.z = -this.gameWorldSizeY / 2;
+        if (this._ship.position.z > gameData.skyBoxScale / 2) {
+            this._ship.position.z = -gameData.skyBoxScale / 2;
         }
-        if (this._ship.position.z < -this.gameWorldSizeY / 2) {
-            this._ship.position.z = this.gameWorldSizeY / 2;
+        if (this._ship.position.z < -gameData.skyBoxScale / 2) {
+            this._ship.position.z = gameData.skyBoxScale / 2;
         }
     }
 
@@ -380,31 +389,16 @@ export class Game {
 
 
 
-    createScene(): void {
-         
-        this.initializeGame(this._gameData);
+    createScene(): Scene {
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
         this._scene.clearColor = Color4.FromColor3(Color3.BlackReadOnly);
         this._scene.ambientColor =  Color3.White();
         //var gl = new GlowLayer("glow", this._scene);
         this._scene.gravity = Vector3.Zero();
-        this.createShip();
-        this.createCameraDolly();
-        this.createBackground();
-        
-        this.createFlyCam();
-        this.createMiniMapCamera();
-
-        this.createExplosion();
-        for (let i = 0; i < this._starMap.length; i++) {
-            let item = this._starMap[i];
-
-            var starPos = new Vector3(item.x, 0, item.y);
-
-            this.createStar(starPos, this._gameData.starMass);
-        }
-
+        Planet.InitializeMasterMesh(this._scene);
+        this.initializeGame(this._gameData);
+        this._scene.gravity = new Vector3(0, (-this._stars[0].mass * GravityManager.GRAV_CONST) / this._stars[0].radius,0);
         this._scene.onKeyboardObservable.add((kbInfo) => {
 
             switch (kbInfo.type) {
@@ -416,21 +410,24 @@ export class Game {
         });
 
         //deterministic steps for update loop
-        this._scene.onBeforeRenderObservable.add(() => this.updateRunningGameState());
-
+        this._scene.onBeforeStepObservable.add(() => this.updateRunningGameState());
+        
         this.resetShip();
-
+        return this._scene;
     }
 
     private updateRunningGameState() {
-
+        
         if (this.isPaused) {
             return;
         }
-        this.updateGridHeightMap();
+        
         this._planets.forEach(planet => {
-            planet.movePlanetInOrbit(0.0025);
+            planet.movePlanetInOrbit();
         });
+        
+    //    this.updateGridHeightMap();
+
         if (this._ship.isAlive) {
             this._gravManager.onUpdateShipStep(this._ship);
             this._ship.onUpdate();
@@ -443,9 +440,9 @@ export class Game {
             let alive = this._ship.isAlive, paused = this.isPaused;
 
             if (!paused) {
-                this.updateShipPositionOverflow();
+                //this.updateShipPositionOverflow();
                 this.moveCamera();
-                // this.updateGridHeightMap();
+                this.updateGridHeightMap();
                 if (alive) {
                     this.handleKeyboardInput();
                     for (var p = 0; p < this._planets.length; p++) {
@@ -470,6 +467,8 @@ export class Game {
 
                 }
             }
+            var terrHeight = this._gravManager.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 8;
+            this._ship.position.y = terrHeight;
             this._scene.render();
 
         });

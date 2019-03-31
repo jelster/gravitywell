@@ -10,11 +10,13 @@ export class UI {
     private _debugButton: Button;
    
 
-    constructor(game : Game) {
+    constructor(game : Game, scene?: Scene) {
         
-        this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
+
         this._advancedTexture.layer.layerMask = Game.MAIN_RENDER_MASK;
         var sp = new StackPanel("sp");
+        this._advancedTexture.renderAtIdealSize = true;
         sp.isHitTestVisible = true;
         sp.isPointerBlocker = true;
         sp.isVertical = true;
