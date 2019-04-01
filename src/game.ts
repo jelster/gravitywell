@@ -123,7 +123,7 @@ export class Game {
             this.createStar(starPos, this._gameData.starMass);
         }
         this._gravManager.generateDynamicTerrain(this._scene);
-        this._gravManager.gravityMap.mesh.material = this._gridMat;
+        //this._gravManager.gravityMap.mesh.material = this._gridMat;
 
     }
 
@@ -191,12 +191,7 @@ export class Game {
         this._backgroundTexture = new CubeTexture("textures/Space/space", this._scene);
         
         this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
-        this._skybox.layerMask = Game.MAIN_RENDER_MASK;
-
-        this._gridMat = new GridMaterial("gridMat", this._scene);
-        this._gridMat.gridRatio = gameData.gravUnit;
-        this._gridMat.lineColor = Color3.White();
-        this._gridMat.mainColor = Color3.Black();
+        this._skybox.layerMask = Game.MAIN_RENDER_MASK;        
         
         // this._floor = MeshBuilder.CreateGround("floor", {
         //     width: gameData.gameWorldSizeX,

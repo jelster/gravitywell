@@ -42,7 +42,7 @@ export class Planet implements IGravityContributor {
 
     public movePlanetInOrbit() {
         let angularVel = this.orbitalSpeed / this.orbitalRadius,
-            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 10,
+            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 100,
             dT = angularVel * timeSinceLastUpdate,
             angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
         //     rOrbit = Vector3.Distance(pPos, sPos); // TODO: refactor into planet class        
@@ -120,7 +120,7 @@ export class Star implements IGravityContributor {
 
     constructor(scene: Scene, initialPos: Vector3, mass: number) {
         this.mass = mass;
-        this.radius = (0.000940 / 36) * Math.sqrt(mass);
+        this.radius = (0.000340 / 36) * Math.sqrt(mass);
 
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);

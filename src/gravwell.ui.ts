@@ -24,7 +24,7 @@ export class UI {
         sp.left = 40;
         sp.top = 0;
         sp.color = "white";
-        sp.width = "180px";
+        sp.width = "7%";
         sp.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         sp.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
         this._advancedTexture.addControl(sp);
