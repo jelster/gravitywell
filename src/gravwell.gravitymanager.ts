@@ -140,30 +140,31 @@ export class GravityManager {
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = true;
         dynTerr.computeNormals = true;
-       
+        
         dynTerr.updateVertex = function(vertex, i, j) {
             forceVector.setAll(0);
             self.tmpVector.setAll(0);
             forceLength = 0;
             let heightMapIdx = 3*vertex.mapIndex + 1;
             //     heightValue = self.heightMap[heightMapIdx];  
-            if (vertex.lodX > 5 || vertex.lodZ > 5) {
+            if (vertex.lodX > 5 && vertex.lodZ > 5) {
                 return;
             }
             for (var gidx = 0; gidx < self.gravWells.length; gidx++) {
                 let gwA = self.gravWells[gidx];
                                 
-                self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 100,self.tmpVector)
+                self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 90, self.tmpVector)
                  
                 forceVector.addInPlace(self.tmpVector);
 
             }
-            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/4, 600 * GravityManager.GRAV_UNIT);   
+            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/16, 600 * GravityManager.GRAV_UNIT);   
           //  vertex.position.y = -forceLength;         
      //       vertex.position.x = self.heightMap[heightMapIdx + 0]
       //      vertex.position.y = heightValue;
       //      vertex.position.z = self.heightMap[heightMapIdx + 2];
             self.gravityMap.mapData[heightMapIdx] = -forceLength;
+            
            // self.heightMap[heightMapIdx] = -forceLength;
         };
         return dynTerr;

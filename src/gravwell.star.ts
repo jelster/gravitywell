@@ -42,15 +42,12 @@ export class Planet implements IGravityContributor {
 
     public movePlanetInOrbit() {
         let angularVel = this.orbitalSpeed / this.orbitalRadius,
-            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 1000,
+            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 10,
             dT = angularVel * timeSinceLastUpdate,
             angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
         //     rOrbit = Vector3.Distance(pPos, sPos); // TODO: refactor into planet class        
         this.position.set(this.orbitalRadius * Math.sin(angPos), this.position.y, Math.cos(angPos) * this.orbitalRadius);
         this._currTheta = angPos;
-
-
-
     }
     /**
      * Vo = Sqrt(((G*m)/r))

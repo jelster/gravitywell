@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Josh Elster",
   "license": "ISC",
   "devDependencies": {
     "@babylonjs/core": "4.0.0-beta.3",
@@ -17,6 +17,7 @@
     "@babylonjs/inspector": "4.0.0-beta.3",
     "@babylonjs/materials": "4.0.0-beta.3",
     "@babylonjs/procedural-textures": "4.0.0-beta.3",
+    "file-loader": "^3.0.1",
     "ts-loader": "^5.3.3",
     "typescript": "^3.3.4000",
     "webpack": "^4.29.6",

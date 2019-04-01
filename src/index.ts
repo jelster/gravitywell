@@ -3,6 +3,7 @@
 import { Game } from './game';
 import { UI } from './gravwell.ui';
 import { Vector3, SceneOptimizer } from '@babylonjs/core';
+
 window.addEventListener("DOMContentLoaded", () => {
    var defaults = GameData.createDefault();
     // Create the game using the 'renderCanvas'.
@@ -55,15 +56,15 @@ export class GameData {
         gameData.miniMapMaxZ =gameHypotenuse;
         
         gameData.flyCamRelativePosition = new Vector3(0, 10, -12);
-        gameData.flyCamMaxZ =  Math.sqrt(Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2))/2;
+        gameData.flyCamMaxZ =  gameData.gravUnit * 200;
         
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
 
         gameData.initialShipPosition = new Vector3(-gameData.gameWorldSizeX/2 + gameData.gravUnit, 0, 0);
 
         gameData.planetDensity = (0.000991/36);
-        gameData.lowerOrbitalRadiiScale = 15;
-        gameData.upperOrbitalRadiiScale = 40;
+        gameData.lowerOrbitalRadiiScale = 10;
+        gameData.upperOrbitalRadiiScale = 30;
         gameData.lowerPlanetaryMassScale = 0.1;
         gameData.upperPlanetaryMassScale = 0.5;
         return gameData;

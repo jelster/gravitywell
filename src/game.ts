@@ -409,7 +409,7 @@ export class Game {
         });
 
         //deterministic steps for update loop
-        this._scene.onBeforeStepObservable.add(() => this.updateRunningGameState());
+        this._scene.onBeforeRenderObservable.add(() => this.updateRunningGameState());
         
         this.resetShip();
         return this._scene;
