@@ -99,7 +99,7 @@ export class GravityManager {
         let G = GravityManager.GRAV_CONST,
             r = Math.pow(dCenter, 2),
 
-            m1 = testMass || 100,
+            m1 = testMass || 1,
             m2 = gravSource.mass || 100;
         testPoint.subtractToRef(gravSource.position, resultVector);
         // if (this.GravityWellMode === GravityMode.DistanceCubed) {
@@ -114,6 +114,9 @@ export class GravityManager {
         this.gravWells.forEach(gravWell => {
             self.applyGravitationalForceToShip(gravWell, ship);
         });
+        let dT = ship.mesh.getEngine().getDeltaTime()/1000;
+        ship.geForce.scaleAndAddToRef(dT, ship.velocity);
+        ship.geForce.setAll(0);
     }
 
     public generateDynamicTerrain(scene: Scene): DynamicTerrain {
@@ -122,24 +125,25 @@ export class GravityManager {
             wsZ = this._gameData.gameWorldSizeY,//gU * 12,        
             numberOfDivisionsX = wsX / gU,
             numberOfDivisionsZ = wsZ / gU,
-            maps = this.generateHeightMap({ gU: gU, wsX: wsX, wsZ: wsZ, mapSubX: numberOfDivisionsX, mapSubZ: numberOfDivisionsZ}),
+            maps = this.generateHeightMap({ gU: gU, wsX: wsX, wsZ: wsZ, mapSubX: numberOfDivisionsX, mapSubZ: numberOfDivisionsZ});
         
-        gridMat  = new GridMaterial("gridMat", scene);
-        gridMat.gridRatio = gU;
-        gridMat.lineColor = Color3.White();
-        gridMat.mainColor = Color3.Black();    
-        gridMat.alpha = 0.78;
-        gridMat.alphaMode = 1;
+        // gridMat  = new GridMaterial("gridMat", scene);
+        // gridMat.gridRatio = gU;
+        // gridMat.lineColor = Color3.White();
+        // gridMat.mainColor = Color3.Black();    
+        // gridMat.alpha = 0.78;
+        // gridMat.alphaMode = 1;
         
-        this._gridMat = gridMat;
-        var multiMat = new MultiMaterial("multi", scene);
+        // this._gridMat = gridMat;
+        
         var stdMat = new StandardMaterial("std", scene);
-        multiMat.subMaterials.push(gridMat);
-        multiMat.subMaterials.push(stdMat);
+        stdMat.diffuseColor = Color3.Gray();
+        stdMat.ambientColor = Color3.Gray();
+        stdMat.emissiveColor = Color3.Gray();
 
-        stdMat.alpha = 0.5;
-        stdMat.alphaMode = 2;
-        gridMat.needAlphaBlending = () => true;
+        stdMat.wireframe = true;
+        stdMat.disableLighting = true;
+        //gridMat.needAlphaBlending = () => true;
        
             
        // this.heightMap = heightMap;
@@ -148,22 +152,25 @@ export class GravityManager {
           //  mapColors: maps.colorMap,        
             mapSubX: numberOfDivisionsX,
             mapSubZ: numberOfDivisionsZ,
-            terrainSub: 160
+            terrainSub: 240
         }, scene);
         dynTerr.camera = scene.activeCameras[0];
         this.gravityMap = dynTerr;
         // dynTerr.subToleranceX = 2;
         // dynTerr.subToleranceZ = 2;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits = [1,2,2];
-        dynTerr.mesh.material = multiMat;
+        dynTerr.LODLimits = [1,1,1,2,2,2,2];
+        dynTerr.mesh.material = stdMat;
         this.tmpVector = new Vector3();
-        var forceVector = new Vector3(), self = this, forceLength = 0.0, forceLimit = 600 * GravityManager.GRAV_UNIT;
+        var forceVector = new Vector3(), self = this, forceLength = 0.0, forceLimit = 10000 * GravityManager.GRAV_UNIT;
      
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = true;
         dynTerr.computeNormals = true;
-        var whiteColor = Color4.FromColor3(Color3.White()), tmpColor = new Color4(1.0, 1.0, 1.0, 1.0);
+        var baseColor = Color4.FromColor3(Color3.Blue()), 
+            tmpColor = new Color4(1.0, 1.0, 1.0, 1.0),
+            endColor = Color4.FromColor3(Color3.Red()),
+            maxForceEncountered = 0.0;
         dynTerr.updateVertex = function(vertex, i, j) {
             forceVector.setAll(0);
             self.tmpVector.setAll(0);
@@ -179,13 +186,14 @@ export class GravityManager {
                 forceVector.addInPlace(self.tmpVector);
             }
 
-            forceLength = Scalar.Clamp(forceVector.length(), 1, forceLimit);        
+            forceLength = Scalar.Clamp(forceVector.length(), gU/16, forceLimit);
+            if (forceLength > maxForceEncountered) {
+                maxForceEncountered = forceLength;
+            }        
             self.gravityMap.mapData[heightMapIdx] = -forceLength;
-            var colorPerc = Scalar.RangeToPercent(forceLength, 0, forceLimit);
-            Color4.LerpToRef(Color4.FromColor3(Color3.BlackReadOnly), whiteColor, colorPerc, tmpColor);
-            vertex.color.r = 1.0 - colorPerc;
-            vertex.color.g = 1.0 - colorPerc;
-            vertex.color.b = 1.0 - colorPerc;
+            var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
+            Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
+            vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
 
         };
         return dynTerr;
@@ -193,16 +201,15 @@ export class GravityManager {
     private applyGravitationalForceToShip(gravSource: IGravityContributor, ship: Ship): void {
         let sV = ship.velocity, gForce = ship.geForce, dTime = ship.mesh.getEngine().getDeltaTime()/1000;
 
-        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, .1, gForce);
+        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce);
         
        // gForce.y = 0; // ship should follow the terrain's height
         gForce.scaleInPlace(dTime);
-        sV.addInPlace(gForce);
+       
     }
 
     private generateHeightMap(options): any {
-        let wsX = options.wsX, 
-            wsZ = options.wsZ,
+        let 
             gU = options.gU,  
             numberOfDivisionsX = options.mapSubX,
             numberOfDivisionsZ = options.mapSubZ,
