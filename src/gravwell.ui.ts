@@ -1,22 +1,36 @@
-import { AdvancedDynamicTexture, Button, StackPanel, Control } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style } from "@babylonjs/gui";
 import { Scene } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 
 export class UI {
+
+    public get speedText() : TextBlock {
+        var control : Array<Control> = this._advancedTexture.getDescendants(false, (ctrl) => ctrl.name === "speedView");
+        if (!control || (control.length <= 0)) {
+            return null;
+        }
+        return control[0] as TextBlock;
+    }
+    
+
     private _advancedTexture : AdvancedDynamicTexture;
     private _pauseButton : Button;
     private _debugButton: Button;
+
+    private _baseStyle: Style;
    
 
     constructor(game : Game, scene?: Scene) {
         
         this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
-
+        this._baseStyle = new Style(this._advancedTexture);
+        this._baseStyle.fontSize = "18pt";
         this._advancedTexture.layer.layerMask = Game.MAIN_RENDER_MASK;
-        var sp = new StackPanel("sp");
         this._advancedTexture.renderAtIdealSize = true;
+
+        var sp = new StackPanel("sp");        
         sp.isHitTestVisible = true;
         sp.isPointerBlocker = true;
         sp.isVertical = true;
@@ -46,5 +60,27 @@ export class UI {
 
         sp.addControl(debugButton);
         this._debugButton = debugButton;
+
+
+        var header = new StackPanel("header");        
+        header.isHitTestVisible = false;
+        header.isPointerBlocker = false;
+        header.left = 0;
+        header.top = 0;
+        header.height = "7%";
+        header.color = "white";
+        header.paddingTop = "1%";
+        header.adaptWidthToChildren = true;
+        header.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+        header.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+        this._advancedTexture.addControl(header);
+
+        
+        var speedView = new TextBlock("speedView", "Current Speed: 0.0");
+        speedView.width = "160px";
+       // speedView.height = "7%";
+        speedView.resizeToFit = true;
+        header.addControl(speedView);
+        
     }
 }

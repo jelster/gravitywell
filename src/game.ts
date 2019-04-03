@@ -43,7 +43,7 @@ export class Game {
 
     resetGame(): void {
         console.log('resetting game');
-
+        this.initializeGame(this._gameData);
     }
 
     static readonly MINIMAP_RENDER_MASK = 1;
@@ -91,7 +91,7 @@ export class Game {
 
     private initializeGame(gameData?: GameData) {
         gameData = gameData || this._gameData || GameData.createDefault();
-        
+        gameData.startTime = new Date();
         this._planets.splice(0, this._planets.length);
         this._stars.splice(0, this._stars.length);
 
@@ -411,7 +411,9 @@ export class Game {
     }
 
     private updateRunningGameState() {
-        
+        let gD = this._gameData;
+        gD.lastUpdate = new Date();
+        gD.lastShipSpeed = this._ship.velocity.length();        
         if (this.isPaused) {
             return;
         }

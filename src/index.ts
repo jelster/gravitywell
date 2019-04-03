@@ -11,6 +11,9 @@ window.addEventListener("DOMContentLoaded", () => {
     // Create the scene.
     var scene = game.createScene();
     let gravGui = new UI(game);
+    scene.registerAfterRender(() => {
+        gravGui.speedText.text = "Current Speed: " + defaults.lastShipSpeed.toFixed(4);
+    });
   //  var optimizer = SceneOptimizer.OptimizeAsync(scene);
     // Start render loop.
     game.doRender();
@@ -39,6 +42,11 @@ export class GameData {
     public upperOrbitalRadiiScale: number;
     public lowerPlanetaryMassScale: number;
     public upperPlanetaryMassScale: number;
+    
+    public startTime: Date;
+    public lastUpdate: Date;
+    public lastShipSpeed: number = 0.0;
+    
     
     public static createDefault(): GameData {
         var gameData = new GameData();
