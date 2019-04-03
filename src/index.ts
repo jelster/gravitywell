@@ -11,8 +11,15 @@ window.addEventListener("DOMContentLoaded", () => {
     // Create the scene.
     var scene = game.createScene();
     let gravGui = new UI(game);
+
+    function formatVectorText(vector: Vector3) : string {
+        return vector.length().toFixed(4) + " - {x: "  + vector.x.toFixed(4) + " y: " + vector.y.toFixed(4) + " z: " + vector.z.toFixed(4) + " }";
+    }
+
     scene.registerAfterRender(() => {
-        gravGui.speedText.text = "Current Speed: " + defaults.lastShipSpeed.toFixed(4);
+        
+        gravGui.speedText.text = "Speed: " + formatVectorText(defaults.lastShipVelocity);
+        gravGui.geText.text = "G-Forces: " + formatVectorText(defaults.lastShipGeForce);
     });
   //  var optimizer = SceneOptimizer.OptimizeAsync(scene);
     // Start render loop.
@@ -45,7 +52,8 @@ export class GameData {
     
     public startTime: Date;
     public lastUpdate: Date;
-    public lastShipSpeed: number = 0.0;
+    public lastShipVelocity: Vector3 = new Vector3();
+    lastShipGeForce: Vector3 = new Vector3();
     
     
     public static createDefault(): GameData {

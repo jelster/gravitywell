@@ -13,6 +13,14 @@ export class UI {
         }
         return control[0] as TextBlock;
     }
+
+    public get geText() : TextBlock {
+        var control : Array<Control> = this._advancedTexture.getDescendants(false, (ctrl) => ctrl.name === "geView");
+        if (!control || (control.length <= 0)) {
+            return null;
+        }
+        return control[0] as TextBlock;
+    }
     
 
     private _advancedTexture : AdvancedDynamicTexture;
@@ -78,9 +86,14 @@ export class UI {
         
         var speedView = new TextBlock("speedView", "Current Speed: 0.0");
         speedView.width = "160px";
+        speedView.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
        // speedView.height = "7%";
         speedView.resizeToFit = true;
         header.addControl(speedView);
+
+        var geView = new TextBlock("geView", "0.0x 0.0y 0.0z");
+        geView.resizeToFit = true;
+        header.addControl(geView);
         
     }
 }

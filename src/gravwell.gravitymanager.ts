@@ -111,12 +111,15 @@ export class GravityManager {
     }
     public onUpdateShipStep(ship: Ship): void {
         let self = this;
+        ship.geForce.setAll(0);
         this.gravWells.forEach(gravWell => {
             self.applyGravitationalForceToShip(gravWell, ship);
         });
-        let dT = ship.mesh.getEngine().getDeltaTime()/1000;
-        ship.geForce.scaleAndAddToRef(dT, ship.velocity);
-        ship.geForce.setAll(0);
+        let dT = ship.mesh.getEngine().getDeltaTime()/1000,
+            dV = ship.geForce;
+        //ship.geForce.y = 0;
+        dV.scaleAndAddToRef(dT, ship.velocity);
+        
     }
 
     public generateDynamicTerrain(scene: Scene): DynamicTerrain {

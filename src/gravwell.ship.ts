@@ -1,4 +1,4 @@
-import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar } from '@babylonjs/core';
 
 export class Ship {
     public velocity: Vector3;
@@ -8,7 +8,8 @@ export class Ship {
     public mesh: Mesh;
     public geForce: Vector3;
     public normal: Vector3 = new Vector3();
-
+    
+    private tempVector: Vector3 = new Vector3();
     private _isAlive: boolean;
     public get isAlive(): boolean {
         return this._isAlive;
@@ -60,21 +61,20 @@ export class Ship {
     }
 
     public onUpdate() {
-        let dTime = this.mesh.getEngine().getDeltaTime()/1000;
-        if (this.angularVelocity > this.maxAngularVelocity) {
-            this.angularVelocity = this.maxAngularVelocity;
-        }
-        
-        this.mesh.moveWithCollisions(this.velocity.scale(dTime));
-        
+        let dTime = this.mesh.getEngine().getDeltaTime()/1000, 
+            dV = this.velocity.scaleToRef(dTime, this.tempVector);        
+       
+        this.rotation += dTime * this.angularVelocity;
+        this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.96));
+        this.mesh.moveWithCollisions(dV);        
     }
     /**
      * fireThrusters
      */
     public fireThrusters() {
-
+        
         var dx = Math.sin(this.mesh.rotation.y) * this.maxAcceleration;
-     //   var dy = Math.atan(this.mesh.rotation.z) * this.maxAcceleration;
+        var dy = Math.tan(this.mesh.rotation.y) * this.maxAcceleration;
         var dz = Math.cos(this.mesh.rotation.y) * this.maxAcceleration;
         // always accelerate in the direction that the craft is currently pointing
         this.velocity.x += dx;

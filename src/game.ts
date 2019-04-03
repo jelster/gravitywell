@@ -284,11 +284,11 @@ export class Game {
         }
         if (inputMap["a"] || inputMap["ArrowLeft"]) {
             //    console.log('arrow left!', inputMap);
-            ship.rotation -= ship.maxAngularVelocity;
+            ship.angularVelocity -= ship.maxAngularVelocity 
         }
         if (inputMap["d"] || inputMap["ArrowRight"]) {
             //  console.log('arrow right!', inputMap);
-            ship.rotation += ship.maxAngularVelocity;
+            ship.angularVelocity += ship.maxAngularVelocity;
         }
     }
 
@@ -410,10 +410,7 @@ export class Game {
         return this._scene;
     }
 
-    private updateRunningGameState() {
-        let gD = this._gameData;
-        gD.lastUpdate = new Date();
-        gD.lastShipSpeed = this._ship.velocity.length();        
+    private updateRunningGameState() {       
         if (this.isPaused) {
             return;
         }
@@ -428,6 +425,7 @@ export class Game {
             this._gravManager.onUpdateShipStep(this._ship);
             this._ship.onUpdate();
         }
+        
     }
 
     doRender(): void {
@@ -435,6 +433,10 @@ export class Game {
         this._engine.runRenderLoop(() => {
             let alive = this._ship.isAlive, paused = this.isPaused;
 
+            let gD = this._gameData;
+            gD.lastUpdate = new Date();
+            gD.lastShipVelocity = this._ship.velocity;
+            gD.lastShipGeForce = this._ship.geForce;   
             if (!paused) {
                 //this.updateShipPositionOverflow();
                 this.moveCamera();
@@ -464,7 +466,10 @@ export class Game {
                 }
             }
             var terrHeight = this._gravManager.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 8;
-            this._ship.position.y = terrHeight;
+            if (this._ship.position.y <= terrHeight) {
+                this._ship.position.y = terrHeight;
+            }
+       
             this._scene.render();
 
         });
