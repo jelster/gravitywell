@@ -120,7 +120,7 @@ export class Star implements IGravityContributor {
 
     constructor(scene: Scene, initialPos: Vector3, mass: number) {
         this.mass = mass;
-        this.radius = (0.000340 / 36) * Math.sqrt(mass);
+        this.radius = (0.000225 / 36) * Math.sqrt(mass);
 
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);

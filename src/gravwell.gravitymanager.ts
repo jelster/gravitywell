@@ -115,6 +115,10 @@ export class GravityManager {
         this.gravWells.forEach(gravWell => {
             self.applyGravitationalForceToShip(gravWell, ship);
         });
+        if (ship.thrustersFiring === true) {
+            ship.geForce.addInPlace(ship.mesh.forward.scale(ship.maxAcceleration));
+            ship.thrustersFiring = false;
+        }
         let dT = ship.mesh.getEngine().getDeltaTime()/1000,
             dV = ship.geForce;
         //ship.geForce.y = 0;
@@ -155,7 +159,7 @@ export class GravityManager {
           //  mapColors: maps.colorMap,        
             mapSubX: numberOfDivisionsX,
             mapSubZ: numberOfDivisionsZ,
-            terrainSub: 240
+            terrainSub: 250
         }, scene);
         dynTerr.camera = scene.activeCameras[0];
         this.gravityMap = dynTerr;
@@ -165,7 +169,7 @@ export class GravityManager {
         dynTerr.LODLimits = [1,1,1,2,2,2,2];
         dynTerr.mesh.material = stdMat;
         this.tmpVector = new Vector3();
-        var forceVector = new Vector3(), self = this, forceLength = 0.0, forceLimit = 10000 * GravityManager.GRAV_UNIT;
+        var forceVector = new Vector3(), self = this, forceLength = 0.0, forceLimit = 100000 * GravityManager.GRAV_UNIT;
      
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = true;
@@ -189,11 +193,11 @@ export class GravityManager {
                 forceVector.addInPlace(self.tmpVector);
             }
 
-            forceLength = Scalar.Clamp(forceVector.length(), gU/16, forceLimit);
+            forceLength = Scalar.Clamp(forceVector.length(), gU/32, forceLimit);
             if (forceLength > maxForceEncountered) {
                 maxForceEncountered = forceLength;
             }        
-            self.gravityMap.mapData[heightMapIdx] = -forceLength;
+            self.gravityMap.mapData[heightMapIdx] = -(forceLength * 3);
             var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
             Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
             vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);

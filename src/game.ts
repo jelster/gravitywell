@@ -157,7 +157,7 @@ export class Game {
         this._camera.layerMask = Game.MINIMAP_RENDER_MASK;
 
         this._camera.rotation.x = Math.PI / 2;
-        this._camera.rotation.z = Math.PI;
+        //this._camera.rotation.z = Math.PI;
         
         this._scene.activeCameras.push(this._camera);
     }

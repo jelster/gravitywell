@@ -66,7 +66,7 @@ export class GameData {
         
         gameData.respawnTimeLimit = 4000;
         
-        gameData.starMass = 1.9181e17/36;
+        gameData.starMass = 4.9181e17/36;
         var gameHypotenuse = Math.sqrt((Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2)));
         gameData.miniMapCameraPosition = new Vector3(0, gameHypotenuse, 0);
         gameData.miniMapMaxZ =1.5*gameHypotenuse;
@@ -78,9 +78,9 @@ export class GameData {
 
         gameData.initialShipPosition = new Vector3(-gameData.gameWorldSizeX/2 + gameData.gravUnit, 0, 0);
 
-        gameData.planetDensity = (0.000391/36);
+        gameData.planetDensity = (0.000241/36);
         gameData.lowerOrbitalRadiiScale = 3;
-        gameData.upperOrbitalRadiiScale = 15;
+        gameData.upperOrbitalRadiiScale = 10;
         gameData.lowerPlanetaryMassScale = 0.1;
         gameData.upperPlanetaryMassScale = 0.5;
         return gameData;

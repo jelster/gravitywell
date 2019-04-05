@@ -10,6 +10,7 @@ export class Ship {
     public normal: Vector3 = new Vector3();
     
     private tempVector: Vector3 = new Vector3();
+    public thrustersFiring: boolean = false;
     private _isAlive: boolean;
     public get isAlive(): boolean {
         return this._isAlive;
@@ -35,7 +36,7 @@ export class Ship {
         this.mesh.position = p;
     }
 
-    constructor(scene: Scene, opts = {maxAcceleration: 1.25, maxAngularVelocity: 0.09}) {
+    constructor(scene: Scene, opts = {maxAcceleration: 20, maxAngularVelocity: 0.09}) {
         this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8 }, scene);
         this.geForce = new Vector3();
         this.mesh.rotation.x = Math.PI / 2;
@@ -65,20 +66,23 @@ export class Ship {
             dV = this.velocity.scaleToRef(dTime, this.tempVector);        
        
         this.rotation += dTime * this.angularVelocity;
-        this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.96));
+        this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.98));
         this.mesh.moveWithCollisions(dV);        
     }
     /**
      * fireThrusters
      */
     public fireThrusters() {
+        if (!this.thrustersFiring) {
+            this.thrustersFiring = true;
+        }
         
-        var dx = Math.sin(this.mesh.rotation.y) * this.maxAcceleration;
-        var dy = Math.tan(this.mesh.rotation.y) * this.maxAcceleration;
-        var dz = Math.cos(this.mesh.rotation.y) * this.maxAcceleration;
-        // always accelerate in the direction that the craft is currently pointing
-        this.velocity.x += dx;
-      //  this.velocity.y += dy;
-        this.velocity.z += dz;
+    //     var dx = Math.sin(this.mesh.rotation.y) * this.maxAcceleration;
+    //     var dy = Math.tan(this.mesh.rotation.y) * this.maxAcceleration;
+    //     var dz = Math.cos(this.mesh.rotation.y) * this.maxAcceleration;
+    //     // always accelerate in the direction that the craft is currently pointing
+    //     this.velocity.x += dx;
+    //   //  this.velocity.y += dy;
+    //     this.velocity.z += dz;
     }
 }
