@@ -1,0 +1,64 @@
+import { Vector3 } from '@babylonjs/core';
+import { Point } from './index';
+export class GameData {
+    public starMap: Array<Point>;
+    public numberOfPlanets: number = 3;
+    public gameWorldSizeX: number = 19600;
+    public gameWorldSizeY: number = 19600;
+    public gravUnit: number = 64;
+    public respawnTimeLimit: number;
+    public starMass: number;
+    public miniMapMaxZ: number;
+    public miniMapCameraPosition: Vector3;
+    public flyCamRelativePosition: Vector3;
+    public flyCamMaxZ: number;
+    public skyBoxScale: number;
+    public initialShipPosition: Vector3;
+    public planetDensity: number;
+    public starDensity: number;
+    public starRadius: number;
+    public initialStarPosition: Vector3;
+    public lowerOrbitalRadiiScale: number;
+    public upperOrbitalRadiiScale: number;
+    public lowerPlanetaryMassScale: number;
+    public upperPlanetaryMassScale: number;
+    public isStarted: boolean = false;
+    public startTime: Date;
+    public lastUpdate: Date;
+    public lastShipVelocity: Vector3 = new Vector3();
+    public lastShipGeForce: Vector3 = new Vector3();
+    public systemScaleFactor: number = 36;
+    public terrainSubCount: number = 250;
+    public terrainScaleFactor: number = 1.5;
+    public timeScaleFactor: number = 1000;
+
+    public static createDefault(): GameData {
+        var gameData = new GameData();
+        gameData.timeScaleFactor = 1000;
+        gameData.gravUnit = 64;
+        gameData.numberOfPlanets = 3;
+        gameData.starMap = [{ x: 0, y: 0 }];
+        gameData.gameWorldSizeX = gameData.gravUnit * 200;
+        gameData.gameWorldSizeY = gameData.gravUnit * 200;
+        gameData.terrainSubCount = 250;
+        gameData.terrainScaleFactor = 1.5;
+        gameData.respawnTimeLimit = 4000;
+        var gameHypotenuse = Math.sqrt((Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2)));
+        gameData.miniMapCameraPosition = new Vector3(0, gameHypotenuse, 0);
+        gameData.miniMapMaxZ = 1.5 * gameHypotenuse;
+        gameData.flyCamRelativePosition = new Vector3(0, 10, -12);
+        gameData.flyCamMaxZ = gameData.gravUnit * 200;
+        gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
+        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2 + gameData.gravUnit, 3 * gameData.gravUnit, 0);
+        gameData.initialStarPosition = new Vector3(0, 0, 0);
+        gameData.starMass = 4.9181e17 / gameData.systemScaleFactor;
+        gameData.starDensity = 0.000225;
+        gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
+        gameData.planetDensity = (0.000241 / gameData.systemScaleFactor);
+        gameData.lowerOrbitalRadiiScale = 3;
+        gameData.upperOrbitalRadiiScale = 10;
+        gameData.lowerPlanetaryMassScale = 0.1;
+        gameData.upperPlanetaryMassScale = 0.5;
+        return gameData;
+    }
+}

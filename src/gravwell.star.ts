@@ -1,6 +1,6 @@
 import { Vector3, Mesh, Scene, MeshBuilder, StandardMaterial, Color3, PointLight, Scalar, InstancedMesh } from "@babylonjs/core";
 import { IGravityContributor, GravityManager } from "./gravwell.gravitymanager";
-import { GameData } from ".";
+import { GameData } from "./GameData";
 
 
 
@@ -39,13 +39,14 @@ export class Planet implements IGravityContributor {
     public parentStar: Star;
     private _mesh: InstancedMesh;
     private _currTheta: number;
+    private _starMass: number;
 
     public movePlanetInOrbit() {
         let angularVel = this.orbitalSpeed / this.orbitalRadius,
             timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 1000,
             dT = angularVel * timeSinceLastUpdate,
             angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
-        //     rOrbit = Vector3.Distance(pPos, sPos); // TODO: refactor into planet class        
+              
         this.position.set(this.orbitalRadius * Math.sin(angPos), this.position.y, Math.cos(angPos) * this.orbitalRadius);
         this._currTheta = angPos;
     }
@@ -56,29 +57,29 @@ export class Planet implements IGravityContributor {
         let g = GravityManager.GRAV_CONST,
             r = this.orbitalRadius,
             rCubed = Math.pow(r, 3),
-            m = this.parentStar.mass,
+            m = this._starMass,
             gM = g * m;
 
         this.orbitalSpeed = Math.sqrt((gM) / r);
         this.orbitalPeriod = Scalar.TwoPi * Math.sqrt(rCubed / gM);
     }
-    constructor(scene: Scene, parentStar: Star, opts: GameData) {
-
-        this.parentStar = parentStar;
+    constructor(opts: GameData) {
+        let starMass = opts.starMass, starRad = opts.starRadius, starPos = opts.initialStarPosition
+        this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
-        this.mass = parentStar.mass * starScaleFactor;
+        this.mass = starMass * starScaleFactor;
         this.radius = opts.planetDensity * Math.sqrt(this.mass);
-        this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * parentStar.radius, this.radius + opts.upperOrbitalRadiiScale * parentStar.radius) + parentStar.radius;
+        this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
 
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);
-        //   this._mesh.position.y = 128;
+        
         this.mesh.outlineColor = Color3.Green();
         this.mesh.outlineWidth = 4;
-        //    this.mesh.renderOutline = true;
-        this.position = new Vector3(parentStar.position.x + this.orbitalRadius, parentStar.position.y, parentStar.position.z + this.orbitalRadius);
-        //this.mesh.ellipsoid = new Vector3(1,1,1);
-        //   this.mesh.parent = this._parentStar.mesh;
+        
+        this.position = new Vector3(starPos.x + this.orbitalRadius, starPos.y, starPos.z + this.orbitalRadius);
+        this.mesh.ellipsoid = new Vector3(1,1,1);
+        
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
         this.totalElapsedTime = 0.0;
 
@@ -118,26 +119,27 @@ export class Star implements IGravityContributor {
         this._mesh.position = v;
     }
 
-    constructor(scene: Scene, initialPos: Vector3, mass: number) {
-        this.mass = mass;
-        this.radius = (0.000225 / 36) * Math.sqrt(mass);
+    constructor(scene: Scene, opts: GameData) {
+        let starPos = opts.initialStarPosition;
 
+        this.mass = opts.starMass;
+        this.radius = opts.starRadius;
 
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
-        this._mesh.position = initialPos;
+        this._mesh.position = starPos;
         let sphMat = new StandardMaterial("starMat", scene);
-        sphMat.emissiveColor = Color3.Yellow();
+        sphMat.emissiveColor = Color3.White();
         sphMat.diffuseColor = Color3.Yellow();
-        sphMat.specularColor = Color3.Magenta();
+        sphMat.specularColor = Color3.White();
 
         this._mesh.material = sphMat;
 
 
         this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
         this._light.diffuse = Color3.FromHexString('#FF8040');
-        this._light.specular = Color3.Yellow();
+        this._light.specular = Color3.White();
 
-        this._light.intensity = 7.5;
+        this._light.intensity = 5.5;
         this._light.parent = this._mesh;
 
     }

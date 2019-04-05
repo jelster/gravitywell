@@ -1,6 +1,6 @@
 import { FloatArray, Vector3, DebugLayer, Logger, Scalar, _forceTransformFeedbackToBundle, Scene, Color3, Color4, StandardMaterial, MultiMaterial, MaterialFlags } from '@babylonjs/core';
 import { Game } from './game';
-import { GameData } from '.';
+import { GameData } from "./GameData";
 import { Ship } from './gravwell.ship';
 
 
@@ -132,6 +132,8 @@ export class GravityManager {
             wsZ = this._gameData.gameWorldSizeY,//gU * 12,        
             numberOfDivisionsX = wsX / gU,
             numberOfDivisionsZ = wsZ / gU,
+            numberOfTerrainTiles = this._gameData.terrainSubCount,
+            terrainGravScaleFactor = this._gameData.terrainScaleFactor,
             maps = this.generateHeightMap({ gU: gU, wsX: wsX, wsZ: wsZ, mapSubX: numberOfDivisionsX, mapSubZ: numberOfDivisionsZ});
         
         // gridMat  = new GridMaterial("gridMat", scene);
@@ -159,7 +161,7 @@ export class GravityManager {
           //  mapColors: maps.colorMap,        
             mapSubX: numberOfDivisionsX,
             mapSubZ: numberOfDivisionsZ,
-            terrainSub: 250
+            terrainSub: numberOfTerrainTiles
         }, scene);
         dynTerr.camera = scene.activeCameras[0];
         this.gravityMap = dynTerr;
@@ -169,7 +171,10 @@ export class GravityManager {
         dynTerr.LODLimits = [1,1,1,2,2,2,2];
         dynTerr.mesh.material = stdMat;
         this.tmpVector = new Vector3();
-        var forceVector = new Vector3(), self = this, forceLength = 0.0, forceLimit = 100000 * GravityManager.GRAV_UNIT;
+        var forceVector = new Vector3(), 
+            self = this, 
+            forceLength = 0.0, 
+            forceLimit = 100000 * GravityManager.GRAV_UNIT;
      
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = true;
@@ -197,7 +202,7 @@ export class GravityManager {
             if (forceLength > maxForceEncountered) {
                 maxForceEncountered = forceLength;
             }        
-            self.gravityMap.mapData[heightMapIdx] = -(forceLength * 3);
+            self.gravityMap.mapData[heightMapIdx] = -(forceLength * terrainGravScaleFactor);
             var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
             Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
             vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
@@ -206,7 +211,10 @@ export class GravityManager {
         return dynTerr;
     }
     private applyGravitationalForceToShip(gravSource: IGravityContributor, ship: Ship): void {
-        let sV = ship.velocity, gForce = ship.geForce, dTime = ship.mesh.getEngine().getDeltaTime()/1000;
+        let sV = ship.velocity, 
+            gForce = ship.geForce, 
+            tScale = this._gameData.timeScaleFactor,
+            dTime = ship.mesh.getEngine().getDeltaTime()/tScale;
 
         this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce);
         
