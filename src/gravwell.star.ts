@@ -78,7 +78,7 @@ export class Planet implements IGravityContributor {
         this.mesh.outlineColor = Color3.Green();
         this.mesh.outlineWidth = 4;
         
-        this.position = new Vector3(starPos.x + this.orbitalRadius, starPos.y, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, -this.radius, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1,1,1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);

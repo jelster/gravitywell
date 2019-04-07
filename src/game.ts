@@ -262,7 +262,7 @@ export class Game {
     }
 
     private createShip(): void {
-        this._ship = new Ship(this._scene);
+        this._ship = new Ship(this._scene, this._gameData);
         this._cameraTarget = new TransformNode("shipNode");
         this._cameraTarget.parent = this._ship.mesh;
 
@@ -460,12 +460,19 @@ export class Game {
     doRender(): void {
 
         this._engine.runRenderLoop(() => {
-            let alive = this._ship.isAlive, paused = this.isPaused;
-
-            let gD = this._gameData;
+            let alive = this._ship.isAlive, 
+                paused = this.isPaused,
+                gD = this._gameData,
+                gMan = this._gravManager;
             gD.lastUpdate = new Date();
             gD.lastShipVelocity = this._ship.velocity;
             gD.lastShipGeForce = this._ship.geForce;   
+            var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 4;
+            if (this._ship.position.y <= terrHeight) {
+                this._ship.position.y = terrHeight;
+                this._ship.velocity.y *= -0.1;
+                console.log('altitude warning', terrHeight, this._ship.normal);
+            }
             if (!paused) {
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();
@@ -494,10 +501,7 @@ export class Game {
 
                 }
             }
-            var terrHeight = this._gravManager.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 18;
-            if (this._ship.position.y <= terrHeight) {
-                this._ship.position.y = terrHeight;
-            }
+           
        
             this._scene.render();
 

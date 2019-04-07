@@ -70,13 +70,13 @@ export class GravityManager {
             for (var gidx = 0; gidx < gravWells.length; gidx++) {
                 let gwA = gravWells[gidx];
                 
-                // if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius)) {
-                //     positionVector.y = gwA.position.y + gwA.radius;
+                // if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius*0.98)) {
+                //     positionVector.y = (gwA.mass*GravityManager.GRAV_CONST)/gwA.radius;
                 // }
                 // else {
-                //     positionVector.y = 0;
+                //     positionVector.y = gwA.position.y;
                 // }
-                
+                positionVector.y = gwA.position.y;
                 this.computeGravitationalForceAtPointToRef(gwA, positionVector, 1, zeroVector)
                  
                 forceVector.addInPlace(zeroVector);
@@ -89,12 +89,23 @@ export class GravityManager {
         }
         
     }    
-    public computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero()): Vector3 {
+    public computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero(), overwriteYPos: boolean = true): Vector3 {
+        if (overwriteYPos) {
+            if (testPoint.equalsWithEpsilon(gravSource.position, gravSource.radius*0.67)) {
+                testPoint.y = gravSource.position.y + gravSource.radius;//(gravSource.mass*GravityManager.GRAV_CONST)/gravSource.radius;
+            }
+            else {
+                testPoint.y = 0;
+            }
+        }
+        
+        //testPoint.y = gravSource.position.y;
         let dCenter = Vector3.Distance(testPoint, gravSource.position);
-
+        //testPoint.y = gravSource.position.y;
+        //testPoint.y = 0;
         resultVector.setAll(0);
 
-        if (dCenter === 0) { return resultVector; }
+        if (dCenter === 0 ) { return resultVector; }
 
         let G = GravityManager.GRAV_CONST,
             r = Math.pow(dCenter, 2),
@@ -142,7 +153,7 @@ export class GravityManager {
         gridMat.lineColor = Color3.White();
         gridMat.mainColor = Color3.Black();   
         gridMat.minorUnitVisibility = 0.85;
-        gridMat.opacity = 0.75;
+        gridMat.opacity = 0.78;
         gridMat.majorUnitFrequency = 1;
         //gridMat.alpha = 0.78;
         //gridMat.alphaMode = 1;
@@ -169,6 +180,8 @@ export class GravityManager {
         dynTerr.createUVMap();
         dynTerr.camera = scene.activeCameras[0];
         dynTerr.isAlwaysVisible = true;
+        dynTerr.mesh.isPickable = false;
+        
         this.gravityMap = dynTerr;
         dynTerr.subToleranceX = 1;
         dynTerr.subToleranceZ = 1;
@@ -178,8 +191,9 @@ export class GravityManager {
         this.tmpVector = new Vector3();
         var forceVector = new Vector3(), 
             self = this, 
-            forceLength = 0.0, 
-            forceLimit = 100000 * GravityManager.GRAV_UNIT;
+            forceLength = 0.0,
+            forceMinimum = gU/256,
+            forceLimit = 10000 * GravityManager.GRAV_UNIT;
         
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = false;
@@ -201,12 +215,12 @@ export class GravityManager {
             
             for (var gidx = 0; gidx < self.gravWells.length; gidx++) {
                 let gwA = self.gravWells[gidx];
-                                
+                
                 self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 1, self.tmpVector);                 
                 forceVector.addInPlace(self.tmpVector);
             }
 
-            forceLength = Scalar.Clamp(forceVector.length(), gU/32, forceLimit);
+            forceLength = Scalar.Clamp(forceVector.length(), forceMinimum, forceLimit);
             if (forceLength > maxForceEncountered) {
                 maxForceEncountered = forceLength;
             }        
@@ -224,7 +238,7 @@ export class GravityManager {
             tScale = this._gameData.timeScaleFactor,
             dTime = ship.mesh.getEngine().getDeltaTime()/tScale;
 
-        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce);
+        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce, false);
         
        // gForce.y = 0; // ship should follow the terrain's height
         gForce.scaleInPlace(dTime);

@@ -1,6 +1,9 @@
 import { Vector3 } from '@babylonjs/core';
 import { Point } from './index';
 export class GameData {
+    public get gameHypotenuse() : number {
+        return Math.sqrt((Math.pow(this.gameWorldSizeX, 2) + Math.pow(this.gameWorldSizeY, 2)));
+    }
     public starMap: Array<Point>;
     public numberOfPlanets: number;
     public gameWorldSizeX: number;
@@ -31,6 +34,8 @@ export class GameData {
     public terrainSubCount: number;
     public terrainScaleFactor: number;
     public timeScaleFactor: number;
+    public shipMaxAngularVelocity: number;
+    public shipMaxAcceleration: number;
 
     public static createDefault(): GameData {
         var gameData = new GameData();
@@ -44,14 +49,13 @@ export class GameData {
         gameData.terrainSubCount = 240;
         gameData.terrainScaleFactor = 1.5;
         gameData.respawnTimeLimit = 4000;
-        var gameHypotenuse = Math.sqrt((Math.pow(gameData.gameWorldSizeX, 2) + Math.pow(gameData.gameWorldSizeY, 2)));
-        gameData.miniMapCameraPosition = new Vector3(0, gameHypotenuse, 0);
-        gameData.miniMapMaxZ = 1.5 * gameHypotenuse;
+        
+        gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
+        gameData.miniMapMaxZ = 1.5 * gameData.gameHypotenuse;
         gameData.flyCamRelativePosition = new Vector3(0, 10, -12);
-        gameData.flyCamMaxZ = gameHypotenuse * 0.467;
+        gameData.flyCamMaxZ = gameData.gameHypotenuse * 0.467;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
-        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2 + gameData.gravUnit, 2 * gameData.gravUnit, 0);
-        gameData.initialStarPosition = new Vector3(0, 0, 0);
+        
         gameData.starMass = 4.9181e17 / gameData.systemScaleFactor;
         gameData.starDensity = 0.000225;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
@@ -60,6 +64,12 @@ export class GameData {
         gameData.upperOrbitalRadiiScale = 10;
         gameData.lowerPlanetaryMassScale = 0.1;
         gameData.upperPlanetaryMassScale = 0.5;
+
+        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2 + gameData.gravUnit, 0, 0);
+        gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
+        gameData.shipMaxAcceleration = 20;
+        gameData.shipMaxAngularVelocity = 0.1;
+
         return gameData;
     }
 }

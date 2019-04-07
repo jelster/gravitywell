@@ -1,4 +1,5 @@
 import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar } from '@babylonjs/core';
+import { GameData } from './GameData';
 
 export class Ship {
     public velocity: Vector3;
@@ -9,8 +10,9 @@ export class Ship {
     public geForce: Vector3;
     public normal: Vector3 = new Vector3();
     
-    private tempVector: Vector3 = new Vector3();
+
     public thrustersFiring: boolean = false;
+
     private _isAlive: boolean;
     public get isAlive(): boolean {
         return this._isAlive;
@@ -35,24 +37,27 @@ export class Ship {
     public set position(p: Vector3) {
         this.mesh.position = p;
     }
+    private tempVector: Vector3 = new Vector3();
+    private _gameData: GameData;
 
-    constructor(scene: Scene, opts = {maxAcceleration: 20, maxAngularVelocity: 0.09}) {
-        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8 }, scene);
+    constructor(scene: Scene, opts: GameData) {
+        this._gameData = opts;
+        this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8, tessellation: 2 }, scene);
         this.geForce = new Vector3();
         this.mesh.rotation.x = Math.PI / 2;
-     //   this.mesh.rotation.z = Math.PI / 2;
+        //this.mesh.rotation.z = -Math.PI / 2;
         //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
         this.mesh.bakeCurrentTransformIntoVertices();
-        this.maxAcceleration = opts.maxAcceleration
-        this.maxAngularVelocity = opts.maxAngularVelocity;
+        this.maxAcceleration = opts.shipMaxAcceleration
+        this.maxAngularVelocity = opts.shipMaxAngularVelocity;
         this.velocity = new Vector3();
         this.angularVelocity = 0.0;
 
         var shipMat = new StandardMaterial("shipMat", scene);
         shipMat.specularColor = Color3.Blue();
         //shipMat.ambientColor = Color3.White();
-        //shipMat.diffuseColor = Color3.White();
+        shipMat.diffuseColor = Color3.Blue();
         //shipMat.emissiveColor = Color3.Blue();
         this.mesh.material = shipMat;
         this.mesh.outlineColor = Color3.Blue();
@@ -62,7 +67,7 @@ export class Ship {
     }
 
     public onUpdate() {
-        let dTime = this.mesh.getEngine().getDeltaTime()/1000, 
+        let dTime = this.mesh.getEngine().getDeltaTime()/this._gameData.timeScaleFactor, 
             dV = this.velocity.scaleToRef(dTime, this.tempVector);        
        
         this.rotation += dTime * this.angularVelocity;
