@@ -2,7 +2,7 @@
 // TODO: load game data from TBD
 import { Game } from './game';
 import { UI } from './gravwell.ui';
-import { SceneOptimizer } from '@babylonjs/core';
+import { SceneOptimizer, SceneOptimizerOptions } from '@babylonjs/core';
 import { GameData } from './GameData';
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -23,11 +23,14 @@ export class GravityWellGameManager {
         // Create the scene.
         var scene = game.createScene();
         let gravGui = new UI(game, scene);
-        scene.registerAfterRender(() => gravGui.updateControls(game));
-        //  var optimizer = SceneOptimizer.OptimizeAsync(scene);
+        scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
+        var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
+        
+        optimizer.onNewOptimizationAppliedObservable.add((ev) => console.log(ev));
+        
         // Start render loop.
         game.doRender();
-
+        
         return game;
     }
 }

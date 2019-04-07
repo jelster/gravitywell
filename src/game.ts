@@ -40,6 +40,7 @@ export class Game {
     togglePause(): void {
         console.log('toggled pause');
         this.isPaused = !this.isPaused;
+        this._gravManager.gravityMap.useCustomVertexFunction = !this.isPaused;
     }
 
     resetGame(): void {
@@ -87,7 +88,6 @@ export class Game {
     private _respawnTimeLimit: number;
 
     private _cameraDolly: Mesh;
-    private _dollySize: number;
 
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
@@ -101,6 +101,7 @@ export class Game {
     private _numberOfPlanets: number;
     private _gameData: GameData;
     private _trailMesh: TrailMesh;
+    private _miniMapMeshMaterial: Material;
 
     private initializeGame(gameData?: GameData) {
         if (gameData) {
@@ -122,7 +123,6 @@ export class Game {
         this.gameWorldSizeX = gameData.gameWorldSizeX;
         this.gameWorldSizeY = gameData.gameWorldSizeY;
      
-        this._dollySize = 800;//gameData.miniMapMaxZ/gameData.gravUnit;
         this._respawnTimeLimit = gameData.respawnTimeLimit;
 
         this.isPaused = true;
@@ -184,13 +184,20 @@ export class Game {
     }
 
     private createCameraDolly() {
-        this._cameraDolly = MeshBuilder.CreatePlane("dollyPlane", { size: 1600 }, this._scene);
-        //this._cameraDolly.position.y = 165;
+        //this._cameraDolly = MeshBuilder.CreatePlane("dollyPlane", { size: 1600 }, this._scene);
+        
+        this._cameraDolly = MeshBuilder.CreateCylinder("dolly", { height: 1100, diameterTop:1100, diameterBottom: 1, tessellation:2},this._scene);
         this._cameraDolly.layerMask = Game.MINIMAP_RENDER_MASK;
+        this._cameraDolly.billboardMode = 0;
+        this._cameraDolly.isPickable = false;
+
+        //this._cameraDolly.rotation = this._ship.mesh.forward.negate();
         this._cameraDolly.rotation.x = Math.PI / 2;
-     //   this._cameraDolly.rotation.z = Math.PI / 2;
-        //this._cameraDolly.bakeCurrentTransformIntoVertices();
-        this._cameraDolly.showBoundingBox = true;
+        this._cameraDolly.rotation.y = Math.PI;
+        this._cameraDolly.bakeCurrentTransformIntoVertices();
+        this._cameraDolly.computeWorldMatrix(true);
+        this._cameraDolly.material = this._scene.getMaterialByName("trailMat");
+        //this._cameraDolly.showBoundingBox = true;
         this._cameraDolly.parent = this._ship.mesh;
     }
 
@@ -201,7 +208,8 @@ export class Game {
         
         this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
         this._skybox.layerMask = Game.MAIN_RENDER_MASK;        
-        
+        this._skybox.receiveShadows = false;
+        this._skybox.infiniteDistance = true;
         // this._floor = MeshBuilder.CreateGround("floor", {
         //     width: gameData.gameWorldSizeX,
         //     height: gameData.gameWorldSizeY,
@@ -266,7 +274,11 @@ export class Game {
         trailMat.emissiveColor = Color3.Purple();
         trailMat.specularColor = Color3.Black();
         trailMat.disableLighting = true;
+        
         trail.material = trailMat;
+        trailMat.freeze();
+        trail.freezeNormals();
+        trail.isPickable = false;
         this._trailMesh = trail;
         
     }
@@ -390,8 +402,16 @@ export class Game {
         this._scene.collisionsEnabled = true;
         this._scene.clearColor = Color4.FromColor3(Color3.BlackReadOnly);
         this._scene.ambientColor =  Color3.White();
+        this._scene.fogEnabled = false;
+        this._scene.fogColor = Color3.FromInts(126,126,126);
+        this._scene.fogMode = 3;
+        this._scene.fogStart = this._gameData.flyCamMaxZ * 0.58;
+        this._scene.fogEnd = this._gameData.flyCamMaxZ;
         //var gl = new GlowLayer("glow", this._scene);
         this._scene.gravity = Vector3.Zero();
+        var miniMat = new StandardMaterial("miniMap", this._scene);
+        miniMat.emissiveColor = Color3.Teal();
+        this._miniMapMeshMaterial = miniMat;
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
@@ -449,7 +469,7 @@ export class Game {
             if (!paused) {
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();
-                this.updateGridHeightMap();
+                //this.updateGridHeightMap();
                 if (alive) {
                     this.handleKeyboardInput();
                     for (var p = 0; p < this._planets.length; p++) {

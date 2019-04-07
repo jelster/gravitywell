@@ -1,5 +1,5 @@
 import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style } from "@babylonjs/gui";
-import { Scene, Vector3 } from "@babylonjs/core";
+import { Scene, Vector3, Texture } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -34,13 +34,13 @@ export class UI {
 
     constructor(game: Game, scene?: Scene) {
         this._game = game;
-        this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
+        this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene, Texture.NEAREST_SAMPLINGMODE);
         this._baseStyle = new Style(this._advancedTexture);
         this._baseStyle.fontSize = "18pt";
         
         this._advancedTexture.layer.layerMask = Game.MAIN_RENDER_MASK;
         this._advancedTexture.renderAtIdealSize = true;
-
+        
         var sp = new StackPanel("sp");
         sp.style = this._baseStyle;
         sp.isHitTestVisible = true;

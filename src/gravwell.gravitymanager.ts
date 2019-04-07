@@ -110,7 +110,8 @@ export class GravityManager {
 
     }
     public onUpdateShipStep(ship: Ship): void {
-        let self = this;
+        let self = this,
+            timeScale = this._gameData.timeScaleFactor;
         ship.geForce.setAll(0);
         this.gravWells.forEach(gravWell => {
             self.applyGravitationalForceToShip(gravWell, ship);
@@ -119,7 +120,7 @@ export class GravityManager {
             ship.geForce.addInPlace(ship.mesh.forward.scale(ship.maxAcceleration));
             ship.thrustersFiring = false;
         }
-        let dT = ship.mesh.getEngine().getDeltaTime()/1000,
+        let dT = ship.mesh.getEngine().getDeltaTime()/timeScale,
             dV = ship.geForce;
         //ship.geForce.y = 0;
         dV.scaleAndAddToRef(dT, ship.velocity);
@@ -136,14 +137,16 @@ export class GravityManager {
             terrainGravScaleFactor = this._gameData.terrainScaleFactor,
             maps = this.generateHeightMap({ gU: gU, wsX: wsX, wsZ: wsZ, mapSubX: numberOfDivisionsX, mapSubZ: numberOfDivisionsZ});
         
-        // gridMat  = new GridMaterial("gridMat", scene);
-        // gridMat.gridRatio = gU;
-        // gridMat.lineColor = Color3.White();
-        // gridMat.mainColor = Color3.Black();    
-        // gridMat.alpha = 0.78;
-        // gridMat.alphaMode = 1;
-        
-        // this._gridMat = gridMat;
+        var gridMat  = new GridMaterial("gridMat", scene);
+        gridMat.gridRatio = gU;
+        gridMat.lineColor = Color3.White();
+        gridMat.mainColor = Color3.Black();   
+        gridMat.minorUnitVisibility = 0.85;
+        gridMat.opacity = 0.75;
+        gridMat.majorUnitFrequency = 1;
+        //gridMat.alpha = 0.78;
+        //gridMat.alphaMode = 1;
+                // this._gridMat = gridMat;
         
         var stdMat = new StandardMaterial("std", scene);
         stdMat.diffuseColor = Color3.Gray();
@@ -158,36 +161,41 @@ export class GravityManager {
        // this.heightMap = heightMap;
         var dynTerr = new DynamicTerrain("gravityHeightMap", {   
             mapData: maps.heightMap, 
-          //  mapColors: maps.colorMap,        
+            mapColors: maps.colorMap,        
             mapSubX: numberOfDivisionsX,
             mapSubZ: numberOfDivisionsZ,
             terrainSub: numberOfTerrainTiles
         }, scene);
+        dynTerr.createUVMap();
         dynTerr.camera = scene.activeCameras[0];
+        dynTerr.isAlwaysVisible = true;
         this.gravityMap = dynTerr;
-        // dynTerr.subToleranceX = 2;
-        // dynTerr.subToleranceZ = 2;
+        dynTerr.subToleranceX = 1;
+        dynTerr.subToleranceZ = 1;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits = [1,1,1,2,2,2,2];
-        dynTerr.mesh.material = stdMat;
+        dynTerr.LODLimits = [1,1,1,1];
+        dynTerr.mesh.material = gridMat;
         this.tmpVector = new Vector3();
         var forceVector = new Vector3(), 
             self = this, 
             forceLength = 0.0, 
             forceLimit = 100000 * GravityManager.GRAV_UNIT;
-     
+        
         dynTerr.refreshEveryFrame = true;
-        dynTerr.useCustomVertexFunction = true;
+        dynTerr.useCustomVertexFunction = false;
         dynTerr.computeNormals = true;
         var baseColor = Color4.FromColor3(Color3.Blue()), 
             tmpColor = new Color4(1.0, 1.0, 1.0, 1.0),
             endColor = Color4.FromColor3(Color3.Red()),
             maxForceEncountered = 0.0;
         dynTerr.updateVertex = function(vertex, i, j) {
+            if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
+                return;
+            }
             forceVector.setAll(0);
             self.tmpVector.setAll(0);
             forceLength = 0;
-            //tmpColor.set(1.0,1.0,1.0,1.0);
+            tmpColor.set(1.0,1.0,1.0,1.0);
             vertex.color.set(1.0, 1.0, 1.0, 1.0);
             let heightMapIdx = 3*vertex.mapIndex + 1;
             
@@ -203,9 +211,9 @@ export class GravityManager {
                 maxForceEncountered = forceLength;
             }        
             self.gravityMap.mapData[heightMapIdx] = -(forceLength * terrainGravScaleFactor);
-            var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
-            Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
-            vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
+           // var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
+           // Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
+            //vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
 
         };
         return dynTerr;

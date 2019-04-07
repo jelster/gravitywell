@@ -1,6 +1,7 @@
 import { Vector3, Mesh, Scene, MeshBuilder, StandardMaterial, Color3, PointLight, Scalar, InstancedMesh } from "@babylonjs/core";
 import { IGravityContributor, GravityManager } from "./gravwell.gravitymanager";
 import { GameData } from "./GameData";
+import { Game } from "./game";
 
 
 
@@ -128,19 +129,21 @@ export class Star implements IGravityContributor {
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;
         let sphMat = new StandardMaterial("starMat", scene);
-        sphMat.emissiveColor = Color3.White();
+        sphMat.emissiveColor = Color3.FromInts(226, 213, 37);
         sphMat.diffuseColor = Color3.Yellow();
         sphMat.specularColor = Color3.White();
+        sphMat.disableLighting = true;
 
         this._mesh.material = sphMat;
 
 
         this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
         this._light.diffuse = Color3.FromHexString('#FF8040');
-        this._light.specular = Color3.White();
-
+        this._light.specular = Color3.Yellow();
+        this._light.includeOnlyWithLayerMask = Game.MAIN_RENDER_MASK;
         this._light.intensity = 5.5;
         this._light.parent = this._mesh;
+        this._light.range = opts.gameWorldSizeX * 0.95;
 
     }
 }
