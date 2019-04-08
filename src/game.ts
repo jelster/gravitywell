@@ -63,6 +63,15 @@ export class Game {
     public get gameData(): GameData {
         return this._gameData;
     }
+    public get ship(): Ship {
+        return this._ship;
+    }
+    public get star(): Star {
+        return this._stars[0];
+    }
+    public get planets(): Array<Planet> {
+        return this._planets;
+    }
 
     static readonly MINIMAP_RENDER_MASK = 1;
     static readonly MAIN_RENDER_MASK = 2;
@@ -103,7 +112,10 @@ export class Game {
     private _trailMesh: TrailMesh;
     private _miniMapMeshMaterial: Material;
 
-    private initializeGame(gameData?: GameData) {
+    public initializeGame(gameData?: GameData) {
+        if (!this._scene) {
+            this.createScene();
+        }
         if (gameData) {
             this._gameData = gameData;
         }
@@ -131,6 +143,7 @@ export class Game {
         this.createPlanets(this._stars[0]);
         
         this._gravManager.generateDynamicTerrain(this._scene);
+        
         //this._gravManager.gravityMap.mesh.material = this._gridMat;
 
     }
@@ -434,7 +447,7 @@ export class Game {
         
         //deterministic steps for update loop
         this._scene.onBeforeRenderObservable.add(() => this.updateRunningGameState());
-        this.initializeGame(this._gameData);
+        // this.initializeGame(this._gameData);
         
         return this._scene;
     }

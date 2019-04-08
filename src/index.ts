@@ -23,6 +23,8 @@ export class GravityWellGameManager {
         // Create the scene.
         var scene = game.createScene();
         let gravGui = new UI(game, scene);
+        game.initializeGame();
+        gravGui.registerPlanetaryDisplays(game);
         scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
         var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
         

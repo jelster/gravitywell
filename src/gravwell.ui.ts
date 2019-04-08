@@ -1,5 +1,5 @@
-import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style } from "@babylonjs/gui";
-import { Scene, Vector3, Texture } from "@babylonjs/core";
+import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle } from "@babylonjs/gui";
+import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -37,10 +37,10 @@ export class UI {
         this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene, Texture.NEAREST_SAMPLINGMODE);
         this._baseStyle = new Style(this._advancedTexture);
         this._baseStyle.fontSize = "18pt";
-        
+
         this._advancedTexture.layer.layerMask = Game.MAIN_RENDER_MASK;
         this._advancedTexture.renderAtIdealSize = true;
-        
+
         var sp = new StackPanel("sp");
         sp.style = this._baseStyle;
         sp.isHitTestVisible = true;
@@ -53,11 +53,11 @@ export class UI {
         sp.width = "7%";
         sp.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         sp.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-        
+
         this._advancedTexture.addControl(sp);
 
         var pauseButton = Button.CreateSimpleButton("pauseButton", "Pause");
-        
+
         pauseButton.adaptWidthToChildren = true;
         pauseButton.height = "120px";
         pauseButton.onPointerClickObservable.add(() => game.togglePause());
@@ -84,8 +84,8 @@ export class UI {
         var header = new StackPanel("header");
         header.isHitTestVisible = false;
         header.isPointerBlocker = false;
-        header.left = 0;
-        header.top = 0;
+        header.left = 1;
+        header.top = 1;
         header.height = "7%";
         header.color = "white";
         header.paddingTop = "1%";
@@ -103,11 +103,43 @@ export class UI {
 
         var geView = new TextBlock("geView", this.formatVectorText(Vector3.Zero()));
         geView.resizeToFit = true;
-        header.addControl(geView);        
+        header.addControl(geView);
 
-        
+
     }
+    public registerPlanetaryDisplays(current: Game) {
+        current.planets.forEach(planet => {
+            var rect = new Rectangle();
+            rect.height = .1;
+            rect.width = "185px";
+           // rect.adaptWidthToChildren = true;
+            rect.cornerRadius = 8;
+            rect.thickness = 1;
+            rect.color = "white";
 
+            
+            //rect.background = "teal";
+            rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+            rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+            var planetView = 
+              "   Mass: " + planet.mass.toExponential(4) + "\n" 
+            + "Radius: " + planet.radius.toFixed(2) + "  \n"
+            + "  Orbit:  " + planet.orbitalRadius.toFixed(4) + "\n"
+            + "Period: " + planet.orbitalPeriod.toFixed(2) + " \n"
+            + " Speed:  " + planet.orbitalSpeed.toFixed(4);
+
+            var rectTb = new TextBlock("", planetView);
+            rectTb.left = rectTb.top = 0;
+            rectTb.resizeToFit = true;
+            rectTb.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+            rect.addControl(rectTb);
+            this._advancedTexture.addControl(rect);
+            rect.linkWithMesh(planet.mesh);
+            rect.linkOffsetY = -planet.radius*0.55;
+          //  rect.linkOffsetX = 2* planet.radius + planet.position.x;
+            
+        });
+    }
     public updateControls(current: Game): void {
         let data = current.gameData;
         this.setSpeedText(data.lastShipVelocity);
