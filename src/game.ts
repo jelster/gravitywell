@@ -471,7 +471,7 @@ export class Game {
             if (this._ship.position.y <= terrHeight) {
                 this._ship.position.y = terrHeight;
                 this._ship.velocity.y *= -0.1;
-                console.log('altitude warning', terrHeight, this._ship.normal);
+               // console.log('altitude warning', terrHeight, this._ship.normal);
             }
             if (!paused) {
                 //this.updateShipPositionOverflow();
