@@ -1,10 +1,11 @@
-import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle, Ellipse } from "@babylonjs/gui";
 import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import { GameData } from "./GameData";
 import { GravityWellGameManager } from ".";
+import { HemisphericLightPropertyGridComponent } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/lights/hemisphericLightPropertyGridComponent";
 
 export class UI {
 
@@ -110,6 +111,8 @@ export class UI {
     public registerPlanetaryDisplays(current: Game) {
         current.planets.forEach(planet => {
             var rect = new Rectangle();
+            rect.isHitTestVisible = false;
+            rect.isPointerBlocker = false;
             rect.height = .1;
             rect.width = "185px";
            // rect.adaptWidthToChildren = true;
@@ -137,7 +140,7 @@ export class UI {
             rect.linkWithMesh(planet.mesh);
             rect.linkOffsetY = -planet.radius*0.55;
           //  rect.linkOffsetX = 2* planet.radius + planet.position.x;
-            
+          
         });
     }
     public updateControls(current: Game): void {

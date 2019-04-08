@@ -48,6 +48,8 @@ export class Game {
         this._planets.forEach(planet => {
             this._scene.removeMesh(planet.mesh, true);
             planet.mesh.dispose();
+            this._scene.removeMesh(planet.hillSphereMesh, true);
+            planet.hillSphereMesh.dispose();
         });
         this._stars.forEach(star => {
             this._scene.removeMesh(star.mesh, true);
