@@ -1,4 +1,4 @@
-import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle, Ellipse } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle, Ellipse, Checkbox } from "@babylonjs/gui";
 import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
@@ -57,8 +57,20 @@ export class UI {
 
         this._advancedTexture.addControl(sp);
 
-        var pauseButton = Button.CreateSimpleButton("pauseButton", "Pause");
+        var toggleViewCb = Checkbox.AddCheckBoxWithHeader("Show flight info", (v) => {
+            header.isVisible = v;
+            this._advancedTexture.getDescendants(false).forEach((ctrl) => {
+                
+                let name = ctrl.name || '';
+                if (name.indexOf("planetInfo") >= 0) {
+                    ctrl.isVisible = v;
+                };
+            });
+        });
+        
+        sp.addControl(toggleViewCb);
 
+        var pauseButton = Button.CreateSimpleButton("pauseButton", "Pause");
         pauseButton.adaptWidthToChildren = true;
         pauseButton.height = "120px";
         pauseButton.onPointerClickObservable.add(() => game.togglePause());
@@ -107,10 +119,12 @@ export class UI {
         header.addControl(geView);
 
 
+
     }
     public registerPlanetaryDisplays(current: Game) {
+        var i = 1;
         current.planets.forEach(planet => {
-            var rect = new Rectangle();
+            var rect = new Rectangle("planetInfo-" + i++);
             rect.isHitTestVisible = false;
             rect.isPointerBlocker = false;
             rect.height = .1;
