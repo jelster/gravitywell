@@ -2,12 +2,9 @@ import { FloatArray, Vector3, DebugLayer, Logger, Scalar, _forceTransformFeedbac
 import { Game } from './game';
 import { GameData } from "./GameData";
 import { Ship } from './gravwell.ship';
-
-
- import './babylon.dynamicTerrain';
-import { DynamicTerrain } from './babylon.dynamicTerrain';
 import { GridMaterial } from '@babylonjs/materials/grid';
 import { MaterialAlphaMode } from 'babylonjs-gltf2interface';
+import { DynamicTerrain } from './babylon.dynamicTerrain';
 
 export interface IGravityContributor {
     mass: number;

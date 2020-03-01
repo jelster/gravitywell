@@ -1,6 +1,4 @@
-import { SolidParticleSystem, Scene, Camera, IndicesArray, Vector3, Vector2, Color4, Mesh, MeshBuilder, VertexBuffer, VertexData, Color3 } from "@babylonjs/core";
-
-import { Tools } from "@babylonjs/core/Misc/tools";
+import { SolidParticleSystem, Mesh, Scene, Camera, IndicesArray, VertexBuffer, Vector3, Vector2, Color4, Quaternion, MeshBuilder, VertexData, Color3, Tools } from "@babylonjs/core";
 
 export class DynamicTerrain {
 
@@ -19,35 +17,41 @@ export class DynamicTerrain {
     private _SPuvData: number[][] | Float32Array[];       // Solid particle uv data : array of arrays, one per particle type
     private _sps: SolidParticleSystem;              // SPS used to manage the particles
     private _spsTypeStartIndexes: number[];         // type start indexes in the SPS
-    private _nbAvailablePerType: number[];          // per type of used particle counter
+    private _nbAvailableParticlesPerType: number[]; // per type of used particle counter
     private _spsNbPerType: number[];                // number of particles available per type in the SPS
     private _particleDataStride: number = 9;        // data stride : position, rotation, scaling : 9 floats
     private _particleColorStride: number = 4;       // color stride : color4 : r, g, b, a : 4 floats
     private _particleUVStride: number = 4;          // uv stride : vector4 : x, y, z, w : 4 floats
+    private _instanceMapData: number[][] | Float32Array[];   // Instance data (position, rotation, scaling) of the object map : array of arrays, one per instance type
+    private _instanceColorData: number[][] | Float32Array[]; // Instance color data : array of arrays, one per instance type
+    private _nbAvailableInstancesPerType: number[]; // per type of used instance counter
+    private _sourceMeshes: Mesh[];                  // Source meshes used to hold the instances
+    private _typeSPS: number = 0;                   // Constant to define the SPS in the mapQuads
+    private _typeInstance: number = 1;              // Constant to define the SPS in the mapQuads
     private _scene: Scene;                          // current scene
-    private _subToleranceX: number = 1|0;           // hoSPcw many cells flought over thy the camera on the terrain x axis before update
-    private _subToleranceZ: number = 1|0;           // hoSPcw many cells flought over thy the camera on the terrain z axis before update
-    private _LODLimits: number[] = [];              // arSPcray of LOD limits
-    private _initialLOD: number = 1|0;              // inSPcitial LOD value (integer > 0)
-    private _LODValue: number = 1|0;                // cuSPcrrent LOD value : initial + camera correction
-    private _cameraLODCorrection: number = 0|0;     // LOSPcD correction (integer) according to the camera altitude
-    private _LODPositiveX: boolean = true;          // DoeSPcs LOD apply to the terrain right edge ?
-    private _LODNegativeX: boolean = true;          // DoeSPcs LOD apply to the terrain left edge ?
-    private _LODPositiveZ: boolean = true;          // DoeSPcs LOD apply to the terrain upper edge ?
-    private _LODNegativeZ: boolean = true;          // DoeSPcs LOD apply to the terrain lower edge ?
-    private _terrainCamera: Camera;                 // caSPcmera linked to the terrain
+    private _subToleranceX: number = 1 | 0;           // how many cells flought over thy the camera on the terrain x axis before update
+    private _subToleranceZ: number = 1 | 0;           // how many cells flought over thy the camera on the terrain z axis before update
+    private _LODLimits: number[] = [];              // array of LOD limits
+    private _initialLOD: number = 1 | 0;              // initial LOD value (integer > 0)
+    private _LODValue: number = 1 | 0;                // current LOD value : initial + camera correction
+    private _cameraLODCorrection: number = 0 | 0;     // LOD correction (integer) according to the camera altitude
+    private _LODPositiveX: boolean = true;          // Does LOD apply to the terrain right edge ?
+    private _LODNegativeX: boolean = true;          // Does LOD apply to the terrain left edge ?
+    private _LODPositiveZ: boolean = true;          // Does LOD apply to the terrain upper edge ?
+    private _LODNegativeZ: boolean = true;          // Does LOD apply to the terrain lower edge ?
+    private _terrainCamera: Camera;                 // camera linked to the terrain
     private _inverted: boolean = false;             // is the terrain mesh inverted upside down ?
-    public shiftFromCamera: {x: number; z: number} = {  // terrain center shift from camera position
+    public shiftFromCamera: { x: number; z: number } = {  // terrain center shift from camera position
         x: 0.0,
         z: 0.0
-    };       
+    };
     private _indices: IndicesArray;
     private _positions: Float32Array | number[];
     private _normals: Float32Array | number[];
     private _colors: Float32Array | number[];
     private _uvs: Float32Array | number[];
-    private _deltaSubX: number = 0|0;                   // map x subdivision delta : variation in number of map subdivisions
-    private _deltaSubZ: number = 0|0;                   // map z subdivision delta 
+    private _deltaSubX: number = 0 | 0;                   // map x subdivision delta : variation in number of map subdivisions
+    private _deltaSubZ: number = 0 | 0;                   // map z subdivision delta 
     private _refreshEveryFrame: boolean = false;        // boolean : to force the terrain computation every frame
     private _useCustomVertexFunction: boolean = false;  // boolean : to allow the call to updateVertex()
     private _computeNormals: boolean = false;           // boolean : to skip or not the normal computation
@@ -57,15 +61,20 @@ export class DynamicTerrain {
     private _mapSPData: boolean = false;                // boolean : true if a SPmapData array is passed as parameter
     private _colorSPData: boolean = false;              // boolean : true if a SPcolorData array is passed as parameter
     private _uvSPData: boolean = false;                 // boolean : true if a SPuvData array is passed as parameter
-    private _mapQuads: number[][][];                    // map quads of types of particle index in the SPmapData array mapQuads[mapIndex][partType] = [pIndex1, pIndex2, ...] (particle indexes in SPmapData)
+    private _mapInstanceData: boolean = false;          // boolean : true if a instanceMapData array is passed as parameter
+    private _colorInstanceData: boolean = false;        // boolean : true if a instanceColorData array is passed as parameter
+    private _colorBuffers: VertexBuffer[];              // Reference to the created Color Buffers for the instances
+    private _mapQuads: number[][][][];                  // map quads of types of particle/instance index in the SPmapData/instanceMapData array mapQuads[mapIndex]["sps" | "instances"][partType] = [pIndex1, pIndex2, ...] (particle/instance indexes in SPmapData/instanceMapData)
+    private _instanceWM: Float32Array[];                // precomputed world matrices of instances per type
+    private _precomputeInstances: boolean = true;       // if the instance WM must be precomputed once before
     private static _vertex: any = {                     // current vertex object passed to the user custom function
         position: Vector3.Zero(),                           // vertex position in the terrain space (Vector3)
         uvs: Vector2.Zero(),                                // vertex uv
         color: new Color4(1.0, 1.0, 1.0, 1.0),              // vertex color (Color4)
-        lodX: 1|0,                                          // vertex LOD value on X axis
-        lodZ: 1|0,                                          // vertex LOD value on Z axis
+        lodX: 1 | 0,                                          // vertex LOD value on X axis
+        lodZ: 1 | 0,                                          // vertex LOD value on Z axis
         worldPosition: Vector3.Zero(),                      // vertex World position
-        mapIndex: 0|0                                       // current map index
+        mapIndex: 0 | 0                                       // current map index
     };
     private _averageSubSizeX: number = 0.0;                             // map cell average x size
     private _averageSubSizeZ: number = 0.0;                             // map cell average z size
@@ -90,6 +99,14 @@ export class DynamicTerrain {
     private static _norm: Vector3 = Vector3.Zero();
     private static _bbMin: Vector3 = Vector3.Zero();
     private static _bbMax: Vector3 = Vector3.Zero();
+    private static _pos: Vector3 = Vector3.Zero();
+    private static _scl: Vector3 = Vector3.Zero();
+    // tmp quaternion and matrix or arrays
+    private static _quat: Quaternion = Quaternion.Identity();
+    private static _mat: Float32Array = new Float32Array(16);
+    private static _matZero: Float32Array = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+    private static _col: Float32Array = new Float32Array(4);
+
 
     /**
      * constructor
@@ -101,18 +118,22 @@ export class DynamicTerrain {
      * @param {*} mapSubZ the data map number of z subdivisions : integer
      * @param {*} terrainSub the wanted terrain number of subdivisions : integer, multiple of 2.
      * @param {*} mapUVs the array of the map UV data (optional) : u,v successive values, each between 0 and 1.
-     * @param {*} mapColors the array of the map Color data (optional) : x, y, z successive float values.
-     * @param {*} mapNormals the array of the map normal data (optional) : r,g,b successive values, each between 0 and 1.
+     * @param {*} mapColors the array of the map Color data (optional) : r,g,b successive values, each between 0 and 1.
+     * @param {*} mapNormals the array of the map normal data (optional) : x, y, z successive float values.
      * @param {*} invertSide boolean, to invert the terrain mesh upside down. Default false.
      * @param {*} camera the camera to link the terrain to. Optional, by default the scene active camera
      * @param {*} SPmapData an array of arrays or Float32Arrays (one per particle type) of object data (position, rotation, scaling) on the map. Optional.
      * @param {*} sps the Solid Particle System used to manage the particles. Required when used with SPmapData.  
-     * @param {*} SPcolorData an array of arrays or Float32Arrays (one per particle type) of object colors on the map. One series of r, g, b, a floats per object. Optional, requires a SPmapData and a sps to be passed.    
-     * @param {*} SPuvData an array of arrays or Float32Arrays (one per particle type) of object uvs on the map. One series of x, y, z, w floats per object. Optional, requires a SPmapData and a sps to be passed.      
+     * @param {*} SPcolorData an optional array of arrays or Float32Arrays (one per particle type) of object colors on the map. One series of r, g, b, a floats per object. Optional, requires a SPmapData and a sps to be passed.    
+     * @param {*} SPuvData an optional array of arrays or Float32Arrays (one per particle type) of object uvs on the map. One series of x, y, z, w floats per object. Optional, requires a SPmapData and a sps to be passed.      
+     * @param {*} instanceMapData an array of arrays or Float32Arrays (one per instance type) of object data (position, rotation, scaling) on the map. Optional.
+     * @param {*} sourceMeshes an array of source meshes. Required when used with InstanceMapdata.
+     * @param {*} instanceColorData an optional array of arrays or Float32Arrays (one per instance type) of object colors on the map. One series of r, g, b, a floats per object. Optional, requires a InstanceMapData and an sourceMeshes array to be passed.    
+     * @param {*} precomputeInstances an optional boolean (default true) to precompute all the instance world matrices (faster, but more memory used)
      */
     constructor(name: string, options: {
-        terrainSub?: number, 
-        mapData?: number[]| Float32Array,
+        terrainSub?: number,
+        mapData?: number[] | Float32Array,
         mapSubX?: number, mapSubZ?: number,
         mapUVs?: number[] | Float32Array,
         mapColors?: number[] | Float32Array,
@@ -123,11 +144,15 @@ export class DynamicTerrain {
         sps?: SolidParticleSystem,
         SPcolorData?: number[][] | Float32Array[];
         SPuvData?: number[][] | Float32Array[];
+        instanceMapData?: number[][] | Float32Array[];
+        sourceMeshes?: Mesh[];
+        instanceColorData?: number[][] | Float32Array[];
+        precomputeInstances?: boolean;
     }, scene: Scene) {
-        
+
         this.name = name;
         this._terrainSub = options.terrainSub || 60;
-        this._mapData = options.mapData; 
+        this._mapData = options.mapData;
         this._terrainIdx = this._terrainSub + 1;
         this._mapSubX = options.mapSubX || this._terrainIdx;
         this._mapSubZ = options.mapSubZ || this._terrainIdx;
@@ -140,7 +165,11 @@ export class DynamicTerrain {
         this._SPcolorData = options.SPcolorData;
         this._SPuvData = options.SPuvData;
         this._sps = options.sps;
-        
+        this._instanceMapData = options.instanceMapData;
+        this._instanceColorData = options.instanceColorData;
+        this._sourceMeshes = options.sourceMeshes;
+        this._precomputeInstances = (options.precomputeInstances) ? (options.precomputeInstances) : true;
+
         // initialize the map arrays if not passed as parameters
         this._datamap = (this._mapData) ? true : false;
         this._uvmap = (this._mapUVs) ? true : false;
@@ -148,14 +177,17 @@ export class DynamicTerrain {
         this._mapSPData = (this._SPmapData) ? true : false;
         this._colorSPData = (this._mapSPData && this._SPcolorData) ? true : false;
         this._uvSPData = (this._mapSPData && this._SPuvData) ? true : false;
+        this._mapInstanceData = (this._instanceMapData) ? true : false;
+        this._colorInstanceData = (this._mapInstanceData && this._instanceColorData) ? true : false;
         this._mapData = (this._datamap) ? this._mapData : new Float32Array(this._terrainIdx * this._terrainIdx * 3);
         this._mapUVs = (this._uvmap) ? this._mapUVs : new Float32Array(this._terrainIdx * this._terrainIdx * 2);
         if (this._datamap) {
             this._mapNormals = options.mapNormals || new Float32Array(this._mapSubX * this._mapSubZ * 3);
-        } 
+        }
         else {
             this._mapNormals = new Float32Array(this._terrainIdx * this._terrainIdx * 3);
         }
+        this._mapQuads = [];
 
         // Ribbon creation
         let index = 0;                                          // current vertex index in the map array
@@ -176,6 +208,9 @@ export class DynamicTerrain {
         const mapData = this._mapData;
         const mapColors = this._mapColors;
         const mapUVs = this._mapUVs;
+        const nbAvailableParticlesPerType = [];
+        this._nbAvailableParticlesPerType = nbAvailableParticlesPerType;
+
         for (let j = 0; j <= this._terrainSub; j++) {
             terrainPath = [];
             for (let i = 0; i <= this._terrainSub; i++) {
@@ -187,7 +222,7 @@ export class DynamicTerrain {
                 // geometry
                 if (this._datamap) {
                     y = mapData[posIndex + 1];
-                } 
+                }
                 else {
                     y = 0.0;
                     mapData[3 * terIndex] = i;
@@ -206,7 +241,7 @@ export class DynamicTerrain {
                 // uvs
                 if (this._uvmap) {
                     uv = new Vector2(mapUVs[uvIndex], mapUVs[uvIndex + 1]);
-                }          
+                }
                 else {
                     u = 1.0 - Math.abs(1.0 - 2.0 * i / lg);
                     v = 1.0 - Math.abs(1.0 - 2.0 * j / lg);
@@ -242,7 +277,7 @@ export class DynamicTerrain {
         this.update(true);
         this._terrain.position.x = this._terrainCamera.globalPosition.x - this._terrainHalfSizeX + this.shiftFromCamera.x;
         this._terrain.position.z = this._terrainCamera.globalPosition.z - this._terrainHalfSizeZ + this.shiftFromCamera.z;
-            // initialize deltaSub to make on the map
+        // initialize deltaSub to make on the map
         let deltaNbSubX = (this._terrain.position.x - mapData[0]) / this._averageSubSizeX;
         let deltaNbSubZ = (this._terrain.position.z - mapData[2]) / this._averageSubSizeZ
         this._deltaSubX = (deltaNbSubX > 0) ? Math.floor(deltaNbSubX) : Math.ceil(deltaNbSubX);
@@ -252,28 +287,31 @@ export class DynamicTerrain {
             this.beforeUpdate(refreshEveryFrame);
             this.update(refreshEveryFrame);
             this.afterUpdate(refreshEveryFrame);
-        });  
-           
-        
-        // if SP data, populate the map quads
-        // mapQuads[mapIndex][partType] = [partIdx1 , partIdx2 ...] partIdx are particle indexes in SPmapData
+        });
+
+
+        // Solid Particles or Instances in the map
         const SPmapData = this._SPmapData;
+        const instanceMapData = this._instanceMapData;
         const dataStride = this._particleDataStride;
+        const typeSPS = this._typeSPS;
+        const typeInstance = this._typeInstance;
+        const mapSizeX = this._mapSizeX;
+        const mapSizeZ = this._mapSizeZ;
+        const mapSubX = this._mapSubX;
+        const mapSubZ = this._mapSubZ;
+        const quads = this._mapQuads;
+        // if SP data, populate the map quads
+        // mapQuads[mapIndex][typeSPS][partType] = [partIdx1 , partIdx2 ...] partIdx are particle indexes in SPmapData
         if (this._mapSPData) {
-            const mapSizeX = this._mapSizeX;
-            const mapSizeZ = this._mapSizeZ;
-            const mapSubX = this._mapSubX;
-            const mapSubZ = this._mapSubZ;
-            const quads = [];
-            this._mapQuads = quads;
             let x0 = mapData[0];
             let z0 = mapData[2];
-                
+
             for (let t = 0; t < SPmapData.length; t++) {
 
                 const data = SPmapData[t];
-                let nb = (data.length / dataStride)|0;
-                for (let pIdx = 0;  pIdx < nb; pIdx++) {
+                let nb = (data.length / dataStride) | 0;
+                for (let pIdx = 0; pIdx < nb; pIdx++) {
                     // particle position x, z in the map
                     let dIdx = pIdx * dataStride;
                     let x = data[dIdx];
@@ -285,14 +323,15 @@ export class DynamicTerrain {
                     let quadIdx = row * mapSubX + col;
                     if (quads[quadIdx] === undefined) {
                         quads[quadIdx] = [];
+                        quads[quadIdx][typeSPS] = [];
                     }
-                    if (quads[quadIdx][t] === undefined) {
-                        quads[quadIdx][t] = [];
+                    if (quads[quadIdx][typeSPS][t] === undefined) {
+                        quads[quadIdx][typeSPS][t] = [];
                     }
-                    let quad = quads[quadIdx][t];
+                    let quad = quads[quadIdx][typeSPS][t];
                     // push the particle index from the SPmapData array into the quads array
                     quad.push(pIdx);
-                } 
+                }
             }
 
             // update the sps
@@ -310,13 +349,11 @@ export class DynamicTerrain {
             this._spsTypeStartIndexes = spsTypeStartIndexes;
             const spsNbPerType = [];
             this._spsNbPerType = spsNbPerType;
-            const nbAvailablePerType = [];
-            this._nbAvailablePerType = nbAvailablePerType;
             const nbParticles = sps.nbParticles;
             const particles = sps.particles;
             let type = 0;
             spsTypeStartIndexes.push(type);
-            nbAvailablePerType.push(0);
+            nbAvailableParticlesPerType.push(0);
             let count = 1;
             for (var p = 1; p < nbParticles; p++) {
                 particles[p].isVisible = false;
@@ -324,13 +361,104 @@ export class DynamicTerrain {
                     type++;
                     spsTypeStartIndexes.push(p);
                     spsNbPerType.push(count);
-                    nbAvailablePerType.push(count);
+                    nbAvailableParticlesPerType.push(count);
                     count = 0;
                 }
                 count++;
             }
             spsNbPerType.push(count);
         }
+
+        // if instance data, populate the map quads
+        // mapQuads[mapIndex][typeInstances][instanceType] = [instanceIdx1 , instanceIdx2 ...] instanceIdx are instance indexes in instanceMapData
+        if (this._mapInstanceData) {
+            let x0 = mapData[0];
+            let z0 = mapData[2];
+            this._colorBuffers = [];
+            this._instanceWM = [];
+            var posVct = DynamicTerrain._pos;
+            var sclVct = DynamicTerrain._scl;
+            var mat = DynamicTerrain._mat;
+            var quat = DynamicTerrain._quat;
+            var composeToRef = DynamicTerrain._ComposeToRef;
+
+            for (let t = 0; t < instanceMapData.length; t++) {
+
+                const data = instanceMapData[t];
+                let nb = (data.length / dataStride) | 0;
+                if (this._precomputeInstances) {
+                    this._instanceWM[t] = new Float32Array(nb * 16);   // 16 floats per instance WM
+                    var instanceWM = this._instanceWM[t];
+                }
+                for (let pIdx = 0; pIdx < nb; pIdx++) {
+                    // instance position x, z in the map
+                    let dIdx = pIdx * dataStride;
+                    let x = data[dIdx];
+                    let y = data[dIdx + 1];
+                    let z = data[dIdx + 2];
+
+                    // precompute all the instance WM and store them
+                    if (this._precomputeInstances) {
+                        posVct.copyFromFloats(x, y, z);
+                        let rx = data[dIdx + 3];
+                        let ry = data[dIdx + 4];
+                        let rz = data[dIdx + 5];
+                        Quaternion.RotationYawPitchRollToRef(ry, rx, rz, quat);
+                        sclVct.copyFromFloats(data[dIdx + 6], data[dIdx + 7], data[dIdx + 8]);
+                        composeToRef(sclVct, quat, posVct, mat);
+                        let wmIndex = 16 * pIdx;
+                        instanceWM.set(mat, wmIndex);
+                    }
+
+                    x = x - Math.floor((x - x0) / mapSizeX) * mapSizeX;
+                    z = z - Math.floor((z - z0) / mapSizeZ) * mapSizeZ;
+                    let col = Math.floor((x - x0) * mapSubX / mapSizeX);
+                    let row = Math.floor((z - z0) * mapSubZ / mapSizeZ);
+                    let quadIdx = row * mapSubX + col;
+                    if (quads[quadIdx] === undefined) {
+                        quads[quadIdx] = [];
+                        quads[quadIdx][typeInstance] = [];
+                    }
+                    if (quads[quadIdx][typeInstance] === undefined) {
+                        quads[quadIdx][typeInstance] = [];
+                    }
+                    if (quads[quadIdx][typeInstance][t] === undefined) {
+                        quads[quadIdx][typeInstance][t] = [];
+                    }
+                    let quad = quads[quadIdx][typeInstance][t];
+                    // push the instance index from the instanceMapData array into the quads array
+                    quad.push(pIdx);
+                }
+            }
+            // store instance types and init instance buffers
+            const nbAvailableInstancesPerType = [];
+            this._nbAvailableInstancesPerType = nbAvailableInstancesPerType;
+            const typeNb = this._sourceMeshes.length;
+            let engine = this._scene.getEngine();
+            for (let t = 0; t < typeNb; t++) {
+                let mesh = this._sourceMeshes[t];
+                mesh.alwaysSelectAsActiveMesh = true;
+                let nb = mesh.instances.length;
+                nbAvailableInstancesPerType[t] = nb;
+                mesh.manualUpdateOfWorldMatrixInstancedBuffer = true;
+                for (let i = 0; i < mesh.instances.length; i++) {
+                    let instance = mesh.instances[i];
+                    instance.freezeWorldMatrix();
+                    instance.alwaysSelectAsActiveMesh = true;
+                    instance.doNotSyncBoundingInfo = true;
+                }
+                if (this._colorInstanceData) {
+                    let colorArray = new Float32Array(4 * (mesh.instances.length + 1));
+                    for (let c = 0; c < colorArray.length; c++) {
+                        colorArray[c] = 1;
+                    }
+                    let colorBuffer = new VertexBuffer(engine, colorArray, VertexBuffer.ColorKind, true, false, 4, true);
+                    mesh.setVerticesBuffer(colorBuffer);
+                    this._colorBuffers.push(colorBuffer);
+                }
+            }
+        }
+
         this.update(true); // recompute everything once the initial deltas are calculated 
     }
 
@@ -341,7 +469,7 @@ export class DynamicTerrain {
      * Returns the terrain.
      */
     public update(force: boolean): DynamicTerrain {
-    
+
         let needsUpdate = false;
         let updateLOD = false;
         const updateForced = (force) ? true : false;
@@ -355,32 +483,32 @@ export class DynamicTerrain {
         const subToleranceX = this._subToleranceX;
         const subToleranceZ = this._subToleranceZ;
         const mod = this._mod;
-        
+
         // current LOD
         let oldCorrection = this._cameraLODCorrection;
-        this._cameraLODCorrection = (this.updateCameraLOD(this._terrainCamera))|0;
+        this._cameraLODCorrection = (this.updateCameraLOD(this._terrainCamera)) | 0;
         updateLOD = (oldCorrection == this._cameraLODCorrection) ? false : true;
         let LODValue = this._initialLOD + this._cameraLODCorrection;
         LODValue = (LODValue > 0) ? LODValue : 1;
         this._LODValue = LODValue;
-        
+
         // threshold sizes on each axis to trigger the terrain update
         let mapShiftX = this._averageSubSizeX * subToleranceX * LODValue;
         let mapShiftZ = this._averageSubSizeZ * subToleranceZ * LODValue;
-        
-        let mapFlgtNb = 0|0;                       // number of map cells flought over by the camera in the delta shift
+
+        let mapFlgtNb = 0 | 0;                       // number of map cells flought over by the camera in the delta shift
         let deltaSubX = this._deltaSubX;
         let deltaSubZ = this._deltaSubZ;
         if (Math.abs(deltaX) > mapShiftX) {
             const signX = (deltaX > 0.0) ? -1 : 1;
-            mapFlgtNb = Math.abs(deltaX / mapShiftX)|0;
+            mapFlgtNb = Math.abs(deltaX / mapShiftX) | 0;
             terrainPosition.x += mapShiftX * signX * mapFlgtNb;
             deltaSubX += (subToleranceX * signX * LODValue * mapFlgtNb);
             needsUpdate = true;
         }
         if (Math.abs(deltaZ) > mapShiftZ) {
             const signZ = (deltaZ > 0.0) ? -1 : 1;
-            mapFlgtNb = Math.abs(deltaZ / mapShiftZ)|0;
+            mapFlgtNb = Math.abs(deltaZ / mapShiftZ) | 0;
             terrainPosition.z += mapShiftZ * signZ * mapFlgtNb;
             deltaSubZ += (subToleranceZ * signZ * LODValue * mapFlgtNb);
             needsUpdate = true;
@@ -388,7 +516,7 @@ export class DynamicTerrain {
         const updateSize = updateLOD || updateForced;       // must the terrain size be updated ?
         if (needsUpdate || updateSize) {
             this._deltaSubX = mod(deltaSubX, this._mapSubX);
-            this._deltaSubZ = mod(deltaSubZ, this._mapSubZ); 
+            this._deltaSubZ = mod(deltaSubZ, this._mapSubZ);
             this._updateTerrain(updateSize);
         }
 
@@ -403,10 +531,10 @@ export class DynamicTerrain {
 
     // private : updates the underlying ribbon
     private _updateTerrain(updateSize: boolean): void {
-        let stepJ = 0|0;
-        let stepI = 0|0;
-        let LODLimitDown = 0|0;
-        let LODLimitUp = 0|0;
+        let stepJ = 0 | 0;
+        let stepI = 0 | 0;
+        let LODLimitDown = 0 | 0;
+        let LODLimitUp = 0 | 0;
         let LODValue = this._LODValue;          // terrain LOD value
         let axisLODValue = LODValue;            // current axis computed LOD value
         let lodI = LODValue;                    // LOD X
@@ -428,6 +556,9 @@ export class DynamicTerrain {
         const SPmapData = this._SPmapData;
         const SPcolorData = this._SPcolorData;
         const SPuvData = this._SPuvData;
+        const mapInstanceData = this._mapInstanceData;
+        const instanceMapData = this._instanceMapData;
+        const instanceColorData = this._instanceColorData;
         const dataStride = this._particleDataStride;
         const colorStride = this._particleColorStride;
         const uvStride = this._particleUVStride;
@@ -456,78 +587,179 @@ export class DynamicTerrain {
         const particleMap = (mapSPData && quads);
         const particleColorMap = (particleMap && this._colorSPData);
         const particleUVMap = (particleMap && this._uvSPData);
+        const typeSPS = this._typeSPS;
+        const typeInstance = this._typeInstance;
+        const instanceMap = (mapInstanceData && quads);
+        const instanceColorMap = (instanceMap && this._colorInstanceData);
+        const precomputeInstances = this._precomputeInstances;
+        var sourceMeshes = this._sourceMeshes;
+        var nbAvailableInstancesPerType = this._nbAvailableInstancesPerType;
+        var composeToRef = DynamicTerrain._ComposeToRef;
+        var copyArrayValuesFromToRef = DynamicTerrain._CopyArrayValuesFromToRef;
+        var instanceWM = this._instanceWM;
+        var sclVct = DynamicTerrain._scl;
+        var posVct = DynamicTerrain._pos;
+        var quat = DynamicTerrain._quat;
+        var matZero = DynamicTerrain._matZero;
 
-        let l = 0|0;
-        let index = 0|0;          // current vertex index in the map data array
-        let posIndex1 = 0|0;      // current position index in the map data array
-        let posIndex2 = 0|0;
-        let posIndex3 = 0|0;
-        let colIndex = 0|0;       // current index in the map color array
-        let uvIndex = 0|0;        // current index in the map uv array
-        let terIndex = 0|0;       // current vertex index in the terrain map array when used as a data map
-        let ribbonInd = 0|0;      // current ribbon vertex index
-        let ribbonPosInd = 0|0;   // current ribbon position index (same than normal index)
-        let ribbonUVInd = 0|0;    // current ribbon UV index
-        let ribbonColInd = 0|0;   // current ribbon color index
-        let ribbonColInd1 = 0|0;   
-        let ribbonColInd2 = 0|0;   
-        let ribbonColInd3 = 0|0;   
-        let ribbonColInd4 = 0|0;   
-        let ribbonPosInd1 = 0|0;  
-        let ribbonPosInd2 = 0|0;
-        let ribbonPosInd3 = 0|0;
-            // note : all the indexes are explicitly set as integers for the js optimizer (store them all in the stack)
-        
+        let l = 0 | 0;
+        let index = 0 | 0;          // current vertex index in the map data array
+        let posIndex1 = 0 | 0;      // current position index in the map data array
+        let posIndex2 = 0 | 0;
+        let posIndex3 = 0 | 0;
+        let colIndex = 0 | 0;       // current index in the map color array
+        let uvIndex = 0 | 0;        // current index in the map uv array
+        let terIndex = 0 | 0;       // current vertex index in the terrain map array when used as a data map
+        let ribbonInd = 0 | 0;      // current ribbon vertex index
+        let ribbonPosInd = 0 | 0;   // current ribbon position index (same than normal index)
+        let ribbonUVInd = 0 | 0;    // current ribbon UV index
+        let ribbonColInd = 0 | 0;   // current ribbon color index
+        let ribbonColInd1 = 0 | 0;
+        let ribbonColInd2 = 0 | 0;
+        let ribbonColInd3 = 0 | 0;
+        let ribbonColInd4 = 0 | 0;
+        let ribbonPosInd1 = 0 | 0;
+        let ribbonPosInd2 = 0 | 0;
+        let ribbonPosInd3 = 0 | 0;
+        // note : all the indexes are explicitly set as integers for the js optimizer (store them all in the stack)
+
         if (updateSize) {
             this.updateTerrainSize();
         }
-        Vector3.FromFloatsToRef(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, bbMin); 
+        Vector3.FromFloatsToRef(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, bbMin);
         Vector3.FromFloatsToRef(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, bbMax);
 
+        // Object (solid particles or instances) map management
+        var x0 = mapData[0];
+        var z0 = mapData[2];
+        var terrainPos = terrain.position;
+        // if solid particle data
         if (particleMap) {
             var sps = this._sps;
             var particles = sps.particles;
             var spsTypeStartIndexes = this._spsTypeStartIndexes;
-            var nbAvailablePerType = this._nbAvailablePerType;
-            var x0 = mapData[0];
-            var z0 = mapData[2];
-            var terrainPos = terrain.position;
-
+            var nbAvailableParticlesPerType = this._nbAvailableParticlesPerType;
             // reset all the particles to invisible
             const nbParticles = sps.nbParticles;
             for (let p = 0; p < nbParticles; p++) {
                 particles[p].isVisible = false;
             }
         }
-        
-        for (let j = 0|0; j <= terrainSub; j++) {
+
+        // if instance data
+        if (instanceMap) {
+            var mat = DynamicTerrain._mat;
+            for (let t = 0; t < sourceMeshes.length; t++) {
+                let sourceMesh = sourceMeshes[t];
+                let instancedBuffer = sourceMesh.worldMatrixInstancedBuffer;
+                if (instancedBuffer) {
+                    let instances = sourceMesh.instances;
+                    let offset = 0;
+                    for (let i = 0; i < instances.length; i++) {
+                        instancedBuffer.set(matZero, offset);
+                        offset += 16;
+                    }
+                }
+            }
+        }
+
+
+        // Test map seam within the terrain
+        let seamX = false;
+        let seamZ = false;
+        let seamXIndex = 0 | 0;
+        let seamZIndex = 0 | 0;
+        let prevXIndex = mod(deltaSubX, mapSubX);
+        let prevZIndex = mod(deltaSubZ, mapSubZ);
+        let axisZLODValue = 0 | 0;
+        let axisXLODValue = 0 | 0;
+        let curXIndex = 0 | 0;
+        let curZIndex = 0 | 0;
+        let positionsLength = positions.length;
+        let uvsLength = uvs.length;
+        let colorsLength = colors.length;
+
+        for (let j = 1 | 0; j <= terrainSub; j++) {
+            axisZLODValue = LODValue;
+            axisXLODValue = LODValue;
+            for (l = 0; l < LODLimits.length; l++) {
+                LODLimitDown = LODLimits[l];
+                LODLimitUp = terrainSub - LODLimitDown - 1;
+                if ((LODngtvZ && j < LODLimitDown) || (LODpstvZ && j > LODLimitUp)) {
+                    axisZLODValue = l + 1 + LODValue;
+                }
+                if ((LODngtvX && j < LODLimitDown) || (LODpstvX && j > LODLimitUp)) {
+                    axisXLODValue = l + 1 + LODValue;
+                }
+                lodJ = axisZLODValue;
+                lodI = axisXLODValue;
+            }
+
+            stepJ += lodJ;
+            stepI += lodI;
+
+            // seam test
+            if (!seamX) {
+                curXIndex = mod(deltaSubX + stepI, mapSubX);
+                if (Math.abs(curXIndex - prevXIndex) > lodI) {
+                    seamX = true;
+                    seamXIndex = stepI;
+                }
+                else {
+                    prevXIndex = curXIndex;
+                }
+            }
+            if (!seamZ) {
+                curZIndex = mod(deltaSubZ + stepJ, mapSubZ);
+                if (Math.abs(curZIndex - prevZIndex) > lodJ) {
+                    seamZ = true;
+                    seamZIndex = stepJ;
+                }
+                else {
+                    prevZIndex = curZIndex;
+                }
+            }
+            if (seamZ && seamX) {
+                break;
+            }
+        }
+
+        stepI = 0 | 0;
+        stepJ = 0 | 0;
+        lodI = LODValue;
+        lodJ = LODValue;
+        let zIndex = 0 | 0;
+        let xIndex = 0 | 0;
+        for (let j = 0 | 0; j <= terrainSub; j++) {
             // LOD Z
             axisLODValue = LODValue;
             for (l = 0; l < LODLimits.length; l++) {
                 LODLimitDown = LODLimits[l];
-                LODLimitUp = terrainSub - LODLimitDown - 1; 
-                if ((LODngtvZ && j < LODLimitDown)  || (LODpstvZ && j > LODLimitUp)) {
+                LODLimitUp = terrainSub - LODLimitDown - 1;
+                if ((LODngtvZ && j < LODLimitDown) || (LODpstvZ && j > LODLimitUp)) {
                     axisLODValue = l + 1 + LODValue;
                 }
-                lodJ = axisLODValue; 
+                lodJ = axisLODValue;
             }
 
-            for (let i = 0|0; i <= terrainSub; i++) {
+            zIndex = mod(deltaSubZ + stepJ, mapSubZ);
+            for (let i = 0 | 0; i <= terrainSub; i++) {
                 // LOD X
                 axisLODValue = LODValue;
                 for (l = 0; l < LODLimits.length; l++) {
                     LODLimitDown = LODLimits[l];
-                    LODLimitUp = terrainSub - LODLimitDown - 1; 
+                    LODLimitUp = terrainSub - LODLimitDown - 1;
                     if ((LODngtvX && i < LODLimitDown) || (LODpstvX && i > LODLimitUp)) {
                         axisLODValue = l + 1 + LODValue;
-                    } 
+                    }
                     lodI = axisLODValue;
                 }
 
                 // map current index
-                index = mod(deltaSubZ + stepJ, mapSubZ) * mapSubX + mod(deltaSubX + stepI, mapSubX);
+                xIndex = mod(deltaSubX + stepI, mapSubX);
+                index = zIndex * mapSubX + xIndex;
                 terIndex = mod(deltaSubZ + stepJ, terrainIdx) * terrainIdx + mod(deltaSubX + stepI, terrainIdx);
-        
+
                 // related index in the array of positions (data map)
                 if (datamap) {
                     posIndex1 = 3 * index;
@@ -549,11 +781,11 @@ export class DynamicTerrain {
                 else {
                     colIndex = 3 * terIndex;
                 }
-                
+
                 //map indexes
                 posIndex2 = posIndex1 + 1;
                 posIndex3 = posIndex1 + 2;
-                
+
                 // ribbon indexes
                 ribbonPosInd = 3 * ribbonInd;
                 ribbonColInd = 4 * ribbonInd;
@@ -566,7 +798,7 @@ export class DynamicTerrain {
                 ribbonColInd3 = ribbonColInd + 2;
                 ribbonColInd4 = ribbonColInd + 3;
                 ribbonInd += 1;
-            
+
                 // geometry                  
                 positions[ribbonPosInd1] = averageSubSizeX * stepI;
                 positions[ribbonPosInd2] = mapData[posIndex2];
@@ -576,6 +808,74 @@ export class DynamicTerrain {
                     normals[ribbonPosInd1] = mapNormals[posIndex1];
                     normals[ribbonPosInd2] = mapNormals[posIndex2];
                     normals[ribbonPosInd3] = mapNormals[posIndex3];
+                }
+                // uv : the array _mapUVs is always populated
+                uvs[ribbonUVInd] = mapUVs[uvIndex];
+                uvs[ribbonUVInd + 1] = mapUVs[uvIndex + 1];
+
+                // color
+                if (colormap) {
+                    colors[ribbonColInd1] = mapColors[colIndex];
+                    colors[ribbonColInd2] = mapColors[colIndex + 1];
+                    colors[ribbonColInd3] = mapColors[colIndex + 2];
+                }
+
+                // seam test on Z
+                if (seamZ && (seamZIndex == stepJ || stepJ == seamZIndex + 1)) {
+                    let back3 = 3 * terrainSub + 3;
+                    let ind1 = mod(ribbonPosInd1 - back3, positionsLength);
+                    let ind2 = ind1 + 1;
+                    let ind3 = ind1 + 2;
+                    positions[ribbonPosInd1] = positions[ind1];
+                    positions[ribbonPosInd2] = positions[ind2];
+                    positions[ribbonPosInd3] = positions[ind3];
+                    if (dontComputeNormals) {
+                        normals[ribbonPosInd1] = normals[ind1];
+                        normals[ribbonPosInd2] = normals[ind2];
+                        normals[ribbonPosInd3] = normals[ind3];
+                    }
+                    let back2 = 2 * terrainSub + 2;
+                    let back4 = 2 * back2;
+                    if (stepJ == seamZIndex + 1) {
+                        let induv = mod(ribbonUVInd - back2, uvsLength);
+                        uvs[ribbonUVInd] = uvs[induv];
+                        uvs[ribbonUVInd + 1] = uvs[induv + 1];
+                        if (colormap) {
+                            let indcol = mod(ribbonColInd - back4, colorsLength);
+                            colors[ribbonColInd1] = colors[indcol];
+                            colors[ribbonColInd2] = colors[indcol + 1];
+                            colors[ribbonColInd3] = colors[indcol + 2];
+                        }
+                    }
+                }
+
+                // seam test on X
+                if (seamX && (seamXIndex == stepI || stepI == seamXIndex + 1)) {
+                    let back3 = 3;
+                    let ind1 = mod(ribbonPosInd1 - back3, positionsLength);
+                    let ind2 = ind1 + 1;
+                    let ind3 = ind1 + 2;
+                    positions[ribbonPosInd1] = positions[ind1];
+                    positions[ribbonPosInd2] = positions[ind2];
+                    positions[ribbonPosInd3] = positions[ind3];
+                    if (dontComputeNormals) {
+                        normals[ribbonPosInd1] = normals[ind1];
+                        normals[ribbonPosInd2] = normals[ind2];
+                        normals[ribbonPosInd3] = normals[ind3];
+                    }
+                    let back2 = 2;
+                    let back4 = 4;
+                    if (stepI == seamXIndex + 1) {
+                        let induv = mod(ribbonUVInd - back2, uvsLength);
+                        uvs[ribbonUVInd] = uvs[induv];
+                        uvs[ribbonUVInd + 1] = uvs[induv + 1];
+                        if (colormap) {
+                            let indcol = mod(ribbonColInd - back4, colorsLength);
+                            colors[ribbonColInd1] = colors[indcol];
+                            colors[ribbonColInd2] = colors[indcol + 1];
+                            colors[ribbonColInd3] = colors[indcol + 2];
+                        }
+                    }
                 }
 
                 // bbox internal update
@@ -597,16 +897,8 @@ export class DynamicTerrain {
                 if (positions[ribbonPosInd3] > bbMax.z) {
                     bbMax.z = positions[ribbonPosInd3];
                 }
-                // color
-                if (colormap) {
-                    colors[ribbonColInd1] = mapColors[colIndex];
-                    colors[ribbonColInd2] = mapColors[colIndex + 1];
-                    colors[ribbonColInd3] = mapColors[colIndex + 2];
-                }
-                // uv : the array _mapUVs is always populated
-                uvs[ribbonUVInd] = mapUVs[uvIndex];
-                uvs[ribbonUVInd + 1] = mapUVs[uvIndex + 1];
-                
+
+
                 // call to user custom function with the current updated vertex object
                 if (useCustomVertexFunction) {
                     const vertex = DynamicTerrain._vertex;
@@ -635,8 +927,9 @@ export class DynamicTerrain {
 
                 // SPS management
                 if (particleMap) {
-                    let quad = quads[index];
-                    if (quad) {         // if a quad contains some particles in the map
+                    // if a quad contains some objects in the map
+                    if (quads[index]) {
+                        let quad = quads[index][typeSPS];
                         for (let t = 0; t < quad.length; t++) {
                             let data = SPmapData[t];
                             let partIndexes = quad[t];
@@ -649,8 +942,8 @@ export class DynamicTerrain {
                             if (partIndexes) {
                                 let typeStartIndex = spsTypeStartIndexes[t];  // particle start index for a given type in the SPS
                                 const nbQuadParticles = partIndexes.length;
-                                let nbInSPS = nbPerType[t]; 
-                                let available = nbAvailablePerType[t];
+                                let nbInSPS = nbPerType[t];
+                                let available = nbAvailableParticlesPerType[t];
                                 const rem = nbInSPS - available;
                                 var used = (rem > 0) ? rem : 0;
                                 let min = (available < nbQuadParticles) ? available : nbQuadParticles;  // don't iterate beyond possible
@@ -695,23 +988,107 @@ export class DynamicTerrain {
                                     min = (available < nbQuadParticles) ? available : nbQuadParticles;
                                 }
                                 available = (available > 0) ? available : 0;
-                                nbAvailablePerType[t] = available;
+                                nbAvailableParticlesPerType[t] = available;
                             }
                         }
 
                     }
+                }
+
+                // Instance management
+                if (instanceMap) {
+                    // are there objects in this quad ?
+                    if (quads[index]) {
+                        let quad = quads[index][typeInstance];
+                        let colorBuffers = this._colorBuffers;
+                        let tmpCol = DynamicTerrain._col;
+                        for (let t = 0; t < quad.length; t++) {
+                            let sourceMesh = this._sourceMeshes[t];
+                            let instances = sourceMesh.instances;
+                            let instancedBuffer = sourceMesh.worldMatrixInstancedBuffer;
+                            let data = instanceMapData[t];
+                            let instanceIndexes = quad[t];
+                            let instWM = instanceWM[t];
+                            if (instanceColorMap) {
+                                var instance_colorData = instanceColorData[t];
+                                var colorBuffer = colorBuffers[t];
+                            }
+                            if (instanceIndexes && instancedBuffer) {
+                                const nbQuadInstances = instanceIndexes.length;
+                                let nbInstances = instances.length;
+                                let available = nbAvailableInstancesPerType[t];
+                                let rem = nbInstances - available;
+                                var used = (rem > 0) ? rem : 0;
+                                let min = (available < nbQuadInstances) ? available : nbQuadInstances; // don't iterate beyond possible
+                                for (let iIdx = 0; iIdx < min; iIdx++) {
+                                    let ix = instanceIndexes[iIdx];
+                                    let idm = ix * dataStride;
+                                    // set successive instance of this type
+                                    let nextFree = iIdx + used;
+                                    let bufferIndex = nextFree * 16; // the world matrix instanced buffer offset is 16
+
+                                    if (precomputeInstances) {
+                                        copyArrayValuesFromToRef(instWM, ix * 16, 16, mat);
+                                    }
+                                    else {
+                                        let x = data[idm];
+                                        let y = data[idm + 1];
+                                        let z = data[idm + 2];
+                                        x = x + Math.floor((terrainPos.x - x - x0) / mapSizeX) * mapSizeX;
+                                        z = z + Math.floor((terrainPos.z - z - z0) / mapSizeZ) * mapSizeZ;
+                                        posVct.copyFromFloats(x, y, z);
+                                        x = data[idm + 3];
+                                        y = data[idm + 4];
+                                        z = data[idm + 5];
+                                        Quaternion.RotationYawPitchRollToRef(y, x, z, quat);
+                                        sclVct.copyFromFloats(data[idm + 6], data[idm + 7], data[idm + 8]);
+                                        composeToRef(sclVct, quat, posVct, mat);
+                                    }
+                                    instancedBuffer.set(mat, bufferIndex);
+                                    if (instanceColorData) {
+                                        let idc = ix * colorStride;
+                                        let colorBufferIndex = nextFree * 4;  // the color instanced buffet offset is 4
+                                        tmpCol[0] = instance_colorData[idc]
+                                        tmpCol[1] = instance_colorData[idc + 1];
+                                        tmpCol[2] = instance_colorData[idc + 2];
+                                        tmpCol[3] = instance_colorData[idc + 3];
+                                        colorBuffer.updateDirectly(tmpCol, colorBufferIndex);
+                                    }
+
+                                    available = available - 1;
+                                    used = used + 1;
+                                    min = (available < nbQuadInstances) ? available : nbQuadInstances;
+                                }
+                                available = (available > 0) ? available : 0;
+                                this._nbAvailableInstancesPerType[t] = available;
+                            }
+                        }
+                    };
 
                 }
-                stepI += lodI;                    
+
+                stepI += lodI;
             }
-            stepI = 0;
+            if (seamX && seamXIndex + 1 == stepI) {
+                seamX = false;
+            }
+            if (seamZ && seamZIndex + 1 == stepJ) {
+                seamZ = false;
+            }
             stepJ += lodJ;
+            stepI = 0;
         }
 
         if (particleMap) {
             sps.setParticles();
-            for (let c = 0; c < nbAvailablePerType.length; c++) {
-                nbAvailablePerType[c] = nbPerType[c];
+            for (let c = 0; c < nbAvailableParticlesPerType.length; c++) {
+                nbAvailableParticlesPerType[c] = nbPerType[c];
+            }
+        }
+
+        if (instanceMap && nbAvailableInstancesPerType) {
+            for (let c = 0; c < nbAvailableInstancesPerType.length; c++) {
+                nbAvailableInstancesPerType[c] = this._sourceMeshes[c].instances.length;
             }
         }
 
@@ -719,10 +1096,10 @@ export class DynamicTerrain {
         terrain.updateVerticesData(VertexBuffer.PositionKind, positions, false, false);
         if (this._computeNormals) {
             VertexData.ComputeNormals(positions, this._indices, normals);
-        } 
+        }
         terrain.updateVerticesData(VertexBuffer.NormalKind, normals, false, false);
         terrain.updateVerticesData(VertexBuffer.UVKind, uvs, false, false);
-        terrain.updateVerticesData(VertexBuffer.ColorKind, colors, false, false);            
+        terrain.updateVerticesData(VertexBuffer.ColorKind, colors, false, false);
         terrain._boundingInfo.reConstruct(bbMin, bbMax, terrain._worldMatrix);
     };
 
@@ -735,10 +1112,10 @@ export class DynamicTerrain {
      * Updates the mesh terrain size according to the LOD limits and the camera position.
      * Returns the terrain.
      */
-    public updateTerrainSize(): DynamicTerrain { 
+    public updateTerrainSize(): DynamicTerrain {
         let remainder = this._terrainSub;                   // the remaining cells at the general current LOD value
-        let nb = 0|0;                                       // nb of cells in the current LOD limit interval
-        let next = 0|0;                                     // next cell index, if it exists
+        let nb = 0 | 0;                                       // nb of cells in the current LOD limit interval
+        let next = 0 | 0;                                     // next cell index, if it exists
         let LODValue = this._LODValue;
         let lod = LODValue + 1;                             // lod value in the current LOD limit interval
         let tsx = 0.0;                                      // current sum of cell sizes on x
@@ -746,8 +1123,8 @@ export class DynamicTerrain {
         const LODLimits = this._LODLimits;
         const averageSubSizeX = this._averageSubSizeX;
         const averageSubSizeZ = this._averageSubSizeZ;
-        for (let l = 0|0; l < LODLimits.length; l++) {
-            lod = LODValue + l + 1; 
+        for (let l = 0 | 0; l < LODLimits.length; l++) {
+            lod = LODValue + l + 1;
             next = (l >= LODLimits.length - 1) ? 0 : LODLimits[l + 1];
             nb = 2 * (LODLimits[l] - next);
             tsx += averageSubSizeX * lod * nb;
@@ -770,7 +1147,7 @@ export class DynamicTerrain {
      * @param {normal: Vector3} (optional)
      * If the optional object {normal: Vector3} is passed, then its property "normal" is updated with the normal vector value at the coordinates (x, z).  
      */
-    public getHeightFromMap(x: number, z: number, options?: {normal: Vector3} ): number {
+    public getHeightFromMap(x: number, z: number, options?: { normal: Vector3 }): number {
         return DynamicTerrain._GetHeightFromMap(x, z, this._mapData, this._mapSubX, this._mapSubZ, this._mapSizeX, this._mapSizeZ, options, this._inverted);
     }
 
@@ -784,14 +1161,14 @@ export class DynamicTerrain {
      * @param inverted (optional boolean) is the terrain inverted
      * If the optional object {normal: Vector3} is passed, then its property "normal" is updated with the normal vector value at the coordinates (x, z).  
      */
-    public static GetHeightFromMap(x: number, z: number, mapData: number[]| Float32Array, mapSubX: number, mapSubZ: number, options? : {normal: Vector3}, inverted?: boolean) : number {
+    public static GetHeightFromMap(x: number, z: number, mapData: number[] | Float32Array, mapSubX: number, mapSubZ: number, options?: { normal: Vector3 }, inverted?: boolean): number {
         let mapSizeX = Math.abs(mapData[(mapSubX - 1) * 3] - mapData[0]);
         let mapSizeZ = Math.abs(mapData[(mapSubZ - 1) * mapSubX * 3 + 2] - mapData[2]);
         return DynamicTerrain._GetHeightFromMap(x, z, mapData, mapSubX, mapSubZ, mapSizeX, mapSizeZ, options, inverted);
     }
 
     // Computes the height and optionnally the normal at the coordinates (x ,z) from the passed map
-    private static _GetHeightFromMap(x: number, z: number, mapData: number[]| Float32Array, mapSubX: number, mapSubZ: number, mapSizeX: number, mapSizeZ: number, options? : {normal: Vector3}, inverted?: boolean) : number {
+    private static _GetHeightFromMap(x: number, z: number, mapData: number[] | Float32Array, mapSubX: number, mapSubZ: number, mapSizeX: number, mapSizeZ: number, options?: { normal: Vector3 }, inverted?: boolean): number {
 
         let x0 = mapData[0];
         let z0 = mapData[2];
@@ -838,7 +1215,7 @@ export class DynamicTerrain {
             vB = v4;
             vC = v2;
             v = vA;
-        } 
+        }
         else {
             vB = v3;
             vC = v4;
@@ -867,10 +1244,10 @@ export class DynamicTerrain {
      * Static : Computes all the normals from the terrain data map  and stores them in the passed Float32Array reference.  
      * This passed array must have the same size than the mapData array.
      */
-     public static ComputeNormalsFromMapToRef(mapData: number[]| Float32Array, mapSubX: number, mapSubZ, normals: number[] | Float32Array, inverted: boolean): void {
+    public static ComputeNormalsFromMapToRef(mapData: number[] | Float32Array, mapSubX: number, mapSubZ, normals: number[] | Float32Array, inverted: boolean): void {
         const mapIndices = [];
-        const tmp1 = {normal: Vector3.Zero()};
-        const tmp2 = {normal: Vector3.Zero()};
+        const tmp1 = { normal: Vector3.Zero() };
+        const tmp2 = { normal: Vector3.Zero() };
         const normal1 = tmp1.normal;
         const normal2 = tmp2.normal;
         let l = mapSubX * (mapSubZ - 1);
@@ -880,7 +1257,7 @@ export class DynamicTerrain {
             mapIndices.push(i + mapSubX, i + 1, i + mapSubX + 1);
         }
         VertexData.ComputeNormals(mapData, mapIndices, normals);
-        
+
         // seam process
         let lastIdx = (mapSubX - 1) * 3;
         let colStart = 0;
@@ -898,23 +1275,23 @@ export class DynamicTerrain {
             normals[colEnd] = normal1.x;
             normals[colEnd + 1] = normal1.y;
             normals[colEnd + 2] = normal1.z;
-        }  
+        }
         // inverted terrain
         if (inverted) {
             for (i = 0; i < normals.length; i++) {
                 normals[i] = -normals[i];
             }
         }
-     }
+    }
 
-     /**
-      * Computes all the map normals from the current terrain data map and sets them to the terrain.  
-      * Returns the terrain.  
-      */
-      public computeNormalsFromMap(): DynamicTerrain {
-          DynamicTerrain.ComputeNormalsFromMapToRef(this._mapData, this._mapSubX, this._mapSubZ, this._mapNormals, this._inverted);
-          return this;
-      }
+    /**
+     * Computes all the map normals from the current terrain data map and sets them to the terrain.  
+     * Returns the terrain.  
+     */
+    public computeNormalsFromMap(): DynamicTerrain {
+        DynamicTerrain.ComputeNormalsFromMapToRef(this._mapData, this._mapSubX, this._mapSubZ, this._mapNormals, this._inverted);
+        return this;
+    }
 
     /**
      * Returns true if the World coordinates (x, z) are in the current terrain.
@@ -945,7 +1322,7 @@ export class DynamicTerrain {
      * `onReady` is an optional callback function, called once the map is computed. It's passed the computed map.  
      * `scene` is the Scene object whose database will store the downloaded image.  
      */
-    public static CreateMapFromHeightMap(heightmapURL: string, options: {width: number, height: number, subX: number, subZ: number, minHeight: number, maxHeight: number, offsetX: number, offsetZ: number, onReady?: (map: number[]|Float32Array, subX: number, subZ: number) => void, colorFilter?: Color3 }, scene: Scene): Float32Array {
+    public static CreateMapFromHeightMap(heightmapURL: string, options: { width: number, height: number, subX: number, subZ: number, minHeight: number, maxHeight: number, offsetX: number, offsetZ: number, onReady?: (map: number[] | Float32Array, subX: number, subZ: number) => void, colorFilter?: Color3 }, scene: Scene): Float32Array {
         const subX = options.subX || 100;
         const subZ = options.subZ || 100;
         const data = new Float32Array(subX * subZ * 3);
@@ -965,7 +1342,7 @@ export class DynamicTerrain {
      * `scene` is the Scene object whose database will store the downloaded image.  
      * The passed Float32Array must be the right size : 3 x subX x subZ.  
      */
-    public static CreateMapFromHeightMapToRef(heightmapURL: string, options: {width: number, height: number, subX: number, subZ: number, minHeight: number, maxHeight: number, offsetX: number, offsetZ: number, onReady?: (map: number[]|Float32Array, subX: number, subZ: number) => void, colorFilter?: Color3}, data: number[] | Float32Array, scene: Scene): void {
+    public static CreateMapFromHeightMapToRef(heightmapURL: string, options: { width: number, height: number, subX: number, subZ: number, minHeight: number, maxHeight: number, offsetX: number, offsetZ: number, onReady?: (map: number[] | Float32Array, subX: number, subZ: number) => void, colorFilter?: Color3 }, data: number[] | Float32Array, scene: Scene): void {
         const width = options.width || 300;
         const height = options.height || 300;
         const subX = options.subX || 100;
@@ -985,9 +1362,9 @@ export class DynamicTerrain {
             const bufferHeight = img.height;
             canvas.width = bufferWidth;
             canvas.height = bufferHeight;
-            context.drawImage(img, 0, 0);                
+            context.drawImage(img, 0, 0);
             // Cast is due to wrong definition in lib.d.ts from ts 1.3 - https://github.com/Microsoft/TypeScript/issues/949
-            const buffer = <Uint8Array>(<any>context.getImageData(0, 0, bufferWidth, bufferHeight).data);                
+            const buffer = <Uint8Array>(<any>context.getImageData(0, 0, bufferWidth, bufferHeight).data);
             let x = 0.0;
             let y = 0.0;
             let z = 0.0;
@@ -1013,18 +1390,18 @@ export class DynamicTerrain {
             }
         }
 
-        Tools.LoadImage(heightmapURL, onload, () => {}, scene.offlineProvider)
+        Tools.LoadImage(heightmapURL, onload, () => { }, scene.offlineProvider)
     }
-    
+
     /**
      * Static : Updates the passed arrays with UVs values to fit the whole map with subX points along its width and subZ points along its height.  
      * The passed array must be the right size : subX x subZ x 2.  
      */
-    public static CreateUVMapToRef(subX: number, subZ: number, mapUVs: number[]| Float32Array): void {
+    public static CreateUVMapToRef(subX: number, subZ: number, mapUVs: number[] | Float32Array): void {
         for (let h = 0; h < subZ; h++) {
             for (let w = 0; w < subX; w++) {
-                mapUVs[(h * subX + w) * 2] = w / subX;
-                mapUVs[(h * subX + w) * 2 + 1] = h / subZ;
+                mapUVs[(h * subX + w) * 2] = w / (subX - 1);
+                mapUVs[(h * subX + w) * 2 + 1] = h / (subZ - 1);
             }
         }
     }
@@ -1046,6 +1423,51 @@ export class DynamicTerrain {
         return this;
     }
 
+    /**
+     * Internal reimplementation of Matrix.ComposeToRef() in order to skip the former call to result._markAsUpdated(), so faster.
+     */
+    private static _ComposeToRef(scale: Vector3, rotation: Quaternion, translation: Vector3, m: Float32Array): void {
+        var x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
+        var x2 = x + x, y2 = y + y, z2 = z + z;
+        var xx = x * x2, xy = x * y2, xz = x * z2;
+        var yy = y * y2, yz = y * z2, zz = z * z2;
+        var wx = w * x2, wy = w * y2, wz = w * z2;
+
+        var sx = scale.x, sy = scale.y, sz = scale.z;
+
+        m[0] = (1 - (yy + zz)) * sx;
+        m[1] = (xy + wz) * sx;
+        m[2] = (xz - wy) * sx;
+        m[3] = 0;
+
+        m[4] = (xy - wz) * sy;
+        m[5] = (1 - (xx + zz)) * sy;
+        m[6] = (yz + wx) * sy;
+        m[7] = 0;
+
+        m[8] = (xz + wy) * sz;
+        m[9] = (yz - wx) * sz;
+        m[10] = (1 - (xx + yy)) * sz;
+        m[11] = 0;
+
+        m[12] = translation.x;
+        m[13] = translation.y;
+        m[14] = translation.z;
+        m[15] = 1;
+    }
+
+    /**
+     * 
+     * @param source Internal : copies a subpart of the source array to the target array
+     * @param start 
+     * @param nb 
+     * @param target 
+     */
+    private static _CopyArrayValuesFromToRef(source: Float32Array | Array<number>, start: number, nb: number, target: Float32Array | Array<number>) {
+        for (let i = 0; i < nb; i++) {
+            target[i] = source[start + i];
+        }
+    }
 
     // Getters / Setters
     /**
@@ -1178,30 +1600,30 @@ export class DynamicTerrain {
      * Current terrain size on the X axis.  
      * Returns a float.
      */
-     public get terrainSizeX(): number {
-         return this._terrainSizeX;
-     }
+    public get terrainSizeX(): number {
+        return this._terrainSizeX;
+    }
     /**
      * Current terrain half size on the X axis.  
      * Returns a float.
      */
-     public get terrainHalfSizeX(): number {
-         return this._terrainHalfSizeX;
-     }
+    public get terrainHalfSizeX(): number {
+        return this._terrainHalfSizeX;
+    }
     /**
      * Current terrain size on the Z axis.  
      * Returns a float.
      */
-     public get terrainSizeZ(): number {
-         return this._terrainSizeZ;
-     }
+    public get terrainSizeZ(): number {
+        return this._terrainSizeZ;
+    }
     /**
      * Current terrain half size on the Z axis.  
      * Returns a float.
      */
-     public get terrainHalfSizeZ(): number {
-         return this._terrainHalfSizeZ;
-     }
+    public get terrainHalfSizeZ(): number {
+        return this._terrainHalfSizeZ;
+    }
     /**
      * Current position of terrain center in its local space.  
      * Returns a Vector3. 
@@ -1225,7 +1647,7 @@ export class DynamicTerrain {
         return this._LODLimits;
     }
     public set LODLimits(ar: number[]) {
-        ar.sort((a,b) => {
+        ar.sort((a, b) => {
             return b - a;
         });
         this._LODLimits = ar;
@@ -1235,10 +1657,10 @@ export class DynamicTerrain {
      * A flat array (Float32Array recommeded) of successive 3D float coordinates (x, y, z).  
      * This property can be set only if a mapData array was passed at construction time.  
      */
-    public get mapData(): Float32Array|number[] {
+    public get mapData(): Float32Array | number[] {
         return this._mapData;
     }
-    public set mapData(val: Float32Array|number[]) {
+    public set mapData(val: Float32Array | number[]) {
         this._mapData = val;
         this._datamap = true;
         const mapSubX = this._mapSubX;
@@ -1277,10 +1699,10 @@ export class DynamicTerrain {
      * A flat array of successive floats between 0 and 1 as r,g,b values.  
      * This property can be set only if a mapColors array was passed at construction time.  
      */
-    public get mapColors(): Float32Array|number[] {
+    public get mapColors(): Float32Array | number[] {
         return this._mapColors;
     }
-    public set mapColors(val: Float32Array|number[]) {
+    public set mapColors(val: Float32Array | number[]) {
         this._colormap = true;
         this._mapColors = val;
     }
@@ -1289,10 +1711,10 @@ export class DynamicTerrain {
      * A flat array of successive floats between 0 and 1 as (u, v) values. 
      * This property can be set only if a mapUVs array was passed at construction time.   
      */
-    public get mapUVs(): Float32Array|number[] {
+    public get mapUVs(): Float32Array | number[] {
         return this._mapUVs;
     }
-    public set mapUVs(val: Float32Array|number[]) {
+    public set mapUVs(val: Float32Array | number[]) {
         this._uvmap = true;
         this._mapUVs = val;
     }
@@ -1300,10 +1722,10 @@ export class DynamicTerrain {
      * The map of normals.
      * A flat array of successive floats as normal vector coordinates (x, y, z) on each map point.  
      */
-    public get mapNormals(): Float32Array|number[] {
+    public get mapNormals(): Float32Array | number[] {
         return this._mapNormals;
     }
-    public set mapNormals(val: Float32Array|number[]) {
+    public set mapNormals(val: Float32Array | number[]) {
         this._mapNormals = val;
     }
     /**
@@ -1367,7 +1789,7 @@ export class DynamicTerrain {
      * This should return a positive integer or zero.  
      * Returns zero by default.  
      */
-     public updateCameraLOD(terrainCamera: Camera): number {
+    public updateCameraLOD(terrainCamera: Camera): number {
         // LOD value increases with camera altitude
         var camLOD = 0;
         return camLOD;
@@ -1388,5 +1810,4 @@ export class DynamicTerrain {
     public afterUpdate(refreshEveryFrame: boolean): void {
         return;
     }
-
 }

@@ -1,20 +1,16 @@
 import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
-import { FollowCamera } from '@babylonjs/core/Cameras/FollowCamera';
 import { UniversalCamera } from '@babylonjs/core/Cameras/UniversalCamera';
 import { Texture } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
-import { GridMaterial } from '@babylonjs/materials/grid';
-import { Scalar } from '@babylonjs/core/Maths/math.scalar';
 import { Ship } from './gravwell.ship';
 import { Star, Planet } from './gravwell.star';
 import { UI } from './gravwell.ui';
 import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
 import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
-import { IGravityContributor, GravityManager } from './gravwell.gravitymanager';
-import { number } from 'prop-types';
+import { GravityManager } from './gravwell.gravitymanager';
 import { Point } from '.';
 import { GameData } from "./GameData";
 
