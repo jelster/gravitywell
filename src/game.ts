@@ -6,7 +6,8 @@ import { Texture } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { Ship } from './gravwell.ship';
-import { Star, Planet } from './gravwell.star';
+import { Star } from './gravwell.star';
+import { Planet } from "./Planet";
 import { UI } from './gravwell.ui';
 import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
 import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
@@ -221,41 +222,6 @@ export class Game {
         this._skybox.layerMask = Game.MAIN_RENDER_MASK;        
         this._skybox.receiveShadows = false;
         this._skybox.infiniteDistance = true;
-        // this._floor = MeshBuilder.CreateGround("floor", {
-        //     width: gameData.gameWorldSizeX,
-        //     height: gameData.gameWorldSizeY,
-        //     subdivisionsX: gameData.gameWorldSizeX / gameData.gravUnit,
-        //     subdivisionsY: gameData.gameWorldSizeY / gameData.gravUnit,
-        //     updatable: true
-        // }, this._scene);
-
-        // this._floor.layerMask = Game.MAIN_RENDER_MASK;
-        // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
-        // this._floor.material = this._gridMat;
-        
-
-
-
-    }
-
-
-
-    private updateGridHeightMap(): void {
-        return;
-        
-        let gravManager = this._gravManager;
-       // let updatePositions = function () {
-        gravManager.updatePositions(gravManager.heightMap);
-        
-        
-       // };
-
-       // let updateNormalsAfterGravUpdate = false;
-       // this._gravManager.gravityMap.beforeUpdate = updatePositions;
-       // this._floor.updateMeshPositions(updatePositions, updateNormalsAfterGravUpdate);
-       // this._floor.refreshBoundingInfo();
-       // console.log('updated mesh positions. Check whether enabling/disabling update of normals might be needed. current value', updateNormalsAfterGravUpdate);
-
     }
 
     private createStar(): void {  
@@ -267,6 +233,7 @@ export class Game {
     private createPlanets(parentStar: Star): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
             var planet = new Planet(this._gameData);
+            planet.position.y = this._gravManager.computeGravitationalForceAtPoint(planet, planet.position).length();
             this._planets.push(planet);
             this._gravManager.gravWells.push(planet);
         }
@@ -405,9 +372,6 @@ export class Game {
         }
 
     }
-
-
-
     createScene(): Scene {
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
@@ -478,13 +442,14 @@ export class Game {
             gD.lastUpdate = new Date();
             gD.lastShipVelocity = this._ship.velocity;
             gD.lastShipGeForce = this._ship.geForce;   
-            var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 4;
-            if (this._ship.position.y <= terrHeight) {
-                this._ship.position.y = terrHeight;
-                this._ship.velocity.y *= -0.1;
-               // console.log('altitude warning', terrHeight, this._ship.normal);
-            }
+           
             if (!paused) {
+                var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 4;
+                if (this._ship.position.y <= terrHeight) {
+                    this._ship.position.y = terrHeight;
+                    this._ship.velocity.y *= -0.1;
+                   // console.log('altitude warning', terrHeight, this._ship.normal);
+                }
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();
                 //this.updateGridHeightMap();
