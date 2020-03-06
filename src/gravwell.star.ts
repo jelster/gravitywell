@@ -1,9 +1,13 @@
 import { Vector3, Mesh, Scene, MeshBuilder, StandardMaterial, Color3, PointLight } from "@babylonjs/core";
-import { IGravityContributor } from "./gravwell.gravitymanager";
+import { IGravityContributor, GravityManager } from "./gravwell.gravitymanager";
 import { GameData } from "./GameData";
 import { Game } from "./game";
 
 export class Star implements IGravityContributor {
+
+    public surfaceGravity: number;
+    public escapeVelocity: number;
+    public density: number;
 
     private _mesh: Mesh;
     public get mesh(): Mesh {
@@ -36,12 +40,17 @@ export class Star implements IGravityContributor {
 
     constructor(scene: Scene, opts: GameData) {
         let starPos = opts.initialStarPosition;
-
+        this.density = opts.starDensity;
         this.mass = opts.starMass;
         this.radius = opts.starRadius;
-
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
+        this.surfaceGravity = -(GravityManager.GRAV_CONST * this.mass) / Math.pow(this.radius, 2);
+        this.escapeVelocity = Math.sqrt(((2*GravityManager.GRAV_CONST*this.mass)/this.radius));
         this._mesh.position = starPos;
+        this.position.y = -this.escapeVelocity;
+        console.log('star params calculated', this);
+
+        
         let sphMat = new StandardMaterial("starMat", scene);
         sphMat.emissiveColor = Color3.FromInts(226, 213, 37);
         sphMat.diffuseColor = Color3.Yellow();
@@ -50,14 +59,14 @@ export class Star implements IGravityContributor {
 
         this._mesh.material = sphMat;
 
-
         this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
         this._light.diffuse = Color3.FromHexString('#FF8040');
         this._light.specular = Color3.Yellow();
         this._light.includeOnlyWithLayerMask = Game.MAIN_RENDER_MASK;
-        this._light.intensity = 5.5;
+        this._light.intensity = 6.5;
         this._light.parent = this._mesh;
-        this._light.range = opts.gameWorldSizeX * 0.95;
+        this._light.range = opts.gameWorldSizeX * 0.99;
+     //   this._light.position.y = this.surfaceGravity * -1;
 
     }
 }

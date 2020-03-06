@@ -6,6 +6,7 @@ import { Star } from "./gravwell.star";
 export class Planet implements IGravityContributor {
     private static _masterMesh: Mesh;
     private static _sphereMaterial: StandardMaterial;
+    density: number;
     public static InitializeMasterMesh(scene: Scene) {
         Planet._masterMesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 1 }, scene);
         Planet._masterMesh.rotation.x = Math.PI / 2;
@@ -27,6 +28,8 @@ export class Planet implements IGravityContributor {
     public totalElapsedTime: number;
     public orbitalPeriod: number; // TODO
     public orbitalSpeed: number;
+    public surfaceGravity: number;
+
     public get position(): Vector3 {
         return this._mesh.position;
     }
@@ -51,6 +54,7 @@ export class Planet implements IGravityContributor {
     private _currTheta: number;
     private _starMass: number;
     private _hillSphereMesh: Mesh;
+    
     public movePlanetInOrbit() {
         let angularVel = this.orbitalSpeed / this.orbitalRadius, timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 1000, dT = angularVel * timeSinceLastUpdate, angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
         this.position.set(this.orbitalRadius * Math.sin(angPos), this.position.y, Math.cos(angPos) * this.orbitalRadius);
@@ -65,15 +69,25 @@ export class Planet implements IGravityContributor {
         this.orbitalPeriod = Scalar.TwoPi * Math.sqrt(rCubed / gM);
     }
     constructor(opts: GameData) {
-        let starMass = opts.starMass, starRad = opts.starRadius, starPos = opts.initialStarPosition;
+        let starMass = opts.starMass, 
+            starRad = opts.starRadius, 
+            starPos = opts.initialStarPosition;
+        
+        this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
+
         this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
+
+        this.density = Scalar.RandomRange(500, opts.planetDensity);
         this.mass = starMass * starScaleFactor;
-        this.radius = opts.planetDensity * Math.sqrt(this.mass);
+        var vol = (this.mass / this.density) / ((4/3)*Math.PI);
+        var r = Math.cbrt(vol);
+        this.radius = r;
+        this.surfaceGravity = -(GravityManager.GRAV_CONST * this.mass) / Math.pow(this.radius, 2);
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
-        this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
+        this.position = new Vector3(starPos.x + this.orbitalRadius, this.surfaceGravity, starPos.z + this.orbitalRadius);
+
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);
-        this.position = new Vector3(starPos.x + this.orbitalRadius, -this.radius, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
         this.totalElapsedTime = 0.0;

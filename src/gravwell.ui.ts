@@ -1,5 +1,5 @@
 import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle, Ellipse, Checkbox } from "@babylonjs/gui";
-import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
+import { Scene, Vector3, Texture, Viewport, UniversalCamera } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -35,11 +35,19 @@ export class UI {
 
     constructor(game: Game, scene?: Scene) {
         this._game = game;
+
+        let uiCamera = new UniversalCamera("uiCam", Vector3.Zero(), scene);
+        
+        uiCamera.viewport = new Viewport(0,0,1,1);
+        uiCamera.layerMask = Game.UI_RENDER_MASK;
+        scene.activeCameras.push(uiCamera);
+        scene.cameraToUseForPointers = uiCamera;
+
         this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene, Texture.NEAREST_SAMPLINGMODE);
         this._baseStyle = new Style(this._advancedTexture);
         this._baseStyle.fontSize = "18pt";
 
-        this._advancedTexture.layer.layerMask = Game.MAIN_RENDER_MASK;
+        this._advancedTexture.layer.layerMask = Game.UI_RENDER_MASK;
         this._advancedTexture.renderAtIdealSize = true;
 
         var sp = new StackPanel("sp");
@@ -66,9 +74,14 @@ export class UI {
                     ctrl.isVisible = v;
                 };
             });
-        });
-        
+        });        
         sp.addControl(toggleViewCb);
+        
+        var swapCameraButton = Button.CreateSimpleButton("swapCameraButton", "Toggle View");
+        swapCameraButton.adaptWidthToChildren = true;
+        swapCameraButton.height = "120px";
+        swapCameraButton.onPointerClickObservable.add(() => game.swapViewports());
+        sp.addControl(swapCameraButton);
 
         var pauseButton = Button.CreateSimpleButton("pauseButton", "Pause");
         pauseButton.adaptWidthToChildren = true;
@@ -93,6 +106,7 @@ export class UI {
             game.resetGame();
         });
         sp.addControl(resetButton);
+
 
         var header = new StackPanel("header");
         header.isHitTestVisible = false;
@@ -139,11 +153,11 @@ export class UI {
             rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
             var planetView = 
-              "   Mass: " + planet.mass.toExponential(4) + "\n" 
-            + "Radius: " + planet.radius.toFixed(2) + "  \n"
-            + "  Orbit:  " + planet.orbitalRadius.toFixed(4) + "\n"
-            + "Period: " + planet.orbitalPeriod.toFixed(2) + " \n"
-            + " Speed:  " + planet.orbitalSpeed.toFixed(4);
+              "  Mass: " + planet.mass.toExponential(4) + "\n" 
+            + "Radius: " + planet.radius.toFixed(2) + "\n"
+            + " Orbit: " + planet.orbitalRadius.toFixed(4) + "\n"
+            + "Period: " + planet.orbitalPeriod.toFixed(2) + "\n"
+            + " Speed: " + planet.orbitalSpeed.toFixed(4);
 
             var rectTb = new TextBlock("", planetView);
             rectTb.left = rectTb.top = 0;
@@ -177,6 +191,6 @@ export class UI {
         this.geText.text = "GForce: " + this.formatVectorText(value);
     }
     private formatVectorText(vector: Vector3): string {
-        return vector.length().toFixed(4) + " - { x: " + vector.x.toFixed(4) + " y: " + vector.y.toFixed(4) + " z: " + vector.z.toFixed(4) + " }";
+        return vector.length().toFixed(4) + "{ x: " + vector.x.toFixed(4) + " y: " + vector.y.toFixed(4) + " z: " + vector.z.toFixed(4) + " }";
     }
 }
