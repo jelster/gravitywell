@@ -37,7 +37,7 @@ export class UI {
         this._game = game;
 
         let uiCamera = new UniversalCamera("uiCam", Vector3.Zero(), scene);
-        
+        uiCamera.maxZ = 1;
         uiCamera.viewport = new Viewport(0,0,1,1);
         uiCamera.layerMask = Game.UI_RENDER_MASK;
         scene.activeCameras.push(uiCamera);

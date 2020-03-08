@@ -50,36 +50,27 @@ export class GravityManager {
     }
 
     public computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero(), overwriteYPos: boolean = true): Vector3 {
-        let tmpY = testPoint.y;
-        
-        
         resultVector.setAll(0);
         
         let dCenter = Vector3.Distance(testPoint, gravSource.position);        
-        if (dCenter < gravSource.radius) {             
-            //resultVector.y = gravSource.surfaceGravity
+        if (dCenter <= gravSource.radius) {             
+            resultVector.y = gravSource.position.y;
             return resultVector; 
         }
         //testPoint.y = gravSource.position.y;
-        testPoint.y = 0;   
-        testPoint.subtractToRef(gravSource.position, resultVector);        
+        if (overwriteYPos) {
+            testPoint.y = 0;   
 
+        }
+        testPoint.subtractToRef(gravSource.position, resultVector);        
+        resultVector.normalize();
         let G = GravityManager.GRAV_CONST,
             rsq = Math.pow(dCenter, 2),
             m1 = testMass || 1,
             m2 = gravSource.mass || 100;
-       
-        // if (this.GravityWellMode === GravityMode.DistanceCubed) {
-        //     r = r * dCenter; // r^3 propagation, like electrical fields
-        // }
-        let f = -((G * m1 * m2) / rsq);
-        
-        if (overwriteYPos) {
-            testPoint.y = gravSource.position.y;
-        }
-        else { testPoint.y = tmpY; }
-        return resultVector.scaleInPlace(f);
 
+        let f = -((G * m1 * m2) / rsq);                
+        return resultVector.scaleInPlace(f);
     }
     public onUpdateShipStep(ship: Ship): void {
         
@@ -172,7 +163,7 @@ export class GravityManager {
             endColor = Color4.FromColor3(Color3.Red()),
             maxForceEncountered = 0.0;
         dynTerr.updateVertex = function (vertex, i, j) {
-            if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
+            if (vertex.lodX >= 6 || vertex.lodZ >= 6 || vertex.lodY >= 6) {
                 return;
             }
             forceVector.setAll(0);
