@@ -40,6 +40,7 @@ export class UI {
         uiCamera.maxZ = 1;
         uiCamera.viewport = new Viewport(0,0,1,1);
         uiCamera.layerMask = Game.UI_RENDER_MASK;
+        uiCamera.minZ = 0.01;
         scene.activeCameras.push(uiCamera);
         scene.cameraToUseForPointers = uiCamera;
 
@@ -49,6 +50,7 @@ export class UI {
 
         this._advancedTexture.layer.layerMask = Game.UI_RENDER_MASK;
         this._advancedTexture.renderAtIdealSize = true;
+        
 
         var sp = new StackPanel("sp");
         sp.style = this._baseStyle;
@@ -165,8 +167,10 @@ export class UI {
             rectTb.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.addControl(rectTb);
             this._advancedTexture.addControl(rect);
+            
             rect.linkWithMesh(planet.mesh);
-            rect.linkOffsetY = -planet.radius*0.55;
+            rect.linkOffsetY = planet.radius*1.55;
+            
           //  rect.linkOffsetX = 2* planet.radius + planet.position.x;
           
         });

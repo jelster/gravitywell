@@ -132,9 +132,9 @@ export class Game {
             this._flyCam.layerMask = Game.MAIN_RENDER_MASK;
             this._camera.layerMask = Game.MINIMAP_RENDER_MASK;
             this.inFirstPersonView = !this.inFirstPersonView;
-
+            
             //this._trailMesh.layerMask = Game.MAIN_RENDER_MASK;
-            this._gravManager.gravityMap.mesh.layerMask = Game.MAIN_RENDER_MASK
+            //this._gravManager.gravityMap.mesh.layerMask = Game.MAIN_RENDER_MASK
         }
         else {
 
@@ -144,7 +144,7 @@ export class Game {
             this._camera.layerMask = Game.MAIN_RENDER_MASK;
             this.inFirstPersonView = !this.inFirstPersonView;
             //this._trailMesh.layerMask = Game.MINIMAP_RENDER_MASK;
-            this._gravManager.gravityMap.mesh.layerMask = Game.MINIMAP_RENDER_MASK;
+            //this._gravManager.gravityMap.mesh.layerMask = Game.MINIMAP_RENDER_MASK;
         }
 
     }
@@ -227,6 +227,7 @@ export class Game {
         let gameData = this._gameData;
         var flyCam = new UniversalCamera("CockpitCam", gameData.flyCamRelativePosition, this._scene);
         flyCam.maxZ = gameData.flyCamMaxZ;
+        flyCam.fov = 1.65;
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = this.createPrimaryViewport();
 
@@ -448,7 +449,7 @@ export class Game {
         //deterministic steps for update loop
         this._scene.onBeforeRenderObservable.add(() => this.updateRunningGameState());
         // this.initializeGame(this._gameData);
-
+        
         return this._scene;
     }
 
@@ -460,7 +461,7 @@ export class Game {
         this._planets.forEach(planet => {
             planet.movePlanetInOrbit();
         });
-
+        //this._gravManager.onUpdateTerrain();
         //    this.updateGridHeightMap();
 
         if (this._ship.isAlive) {
@@ -481,12 +482,12 @@ export class Game {
             gD.lastShipVelocity = this._ship.velocity;
             gD.lastShipGeForce = this._ship.geForce;
 
-            if (!paused) {
+            if (!paused) {              
                 var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal }) + 4;
                 if (this._ship.position.y < terrHeight) {
                     this._ship.position.y = terrHeight + 10;
                     this._ship.velocity.y *= -0.00001;
-                    console.log('altitude warning', terrHeight, this._ship.position);
+                    //console.log('altitude warning', terrHeight, this._ship.position);
                 }
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();

@@ -47,7 +47,7 @@ export class Star implements IGravityContributor {
         this.surfaceGravity = -(GravityManager.GRAV_CONST * this.mass) / Math.pow(this.radius, 2);
         this.escapeVelocity = Math.sqrt(((2*GravityManager.GRAV_CONST*this.mass)/this.radius));
         this._mesh.position = starPos;
-        this.position.y = -this.escapeVelocity + this.radius;
+        this.position.y = (this.surfaceGravity);
         console.log('star params calculated', this);
 
         

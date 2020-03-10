@@ -7,6 +7,7 @@ export class Planet implements IGravityContributor {
     private static _masterMesh: Mesh;
     private static _sphereMaterial: StandardMaterial;
     density: number;
+    escapeVelocity: number;
     public static InitializeMasterMesh(scene: Scene) {
         Planet._masterMesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 1 }, scene);
         Planet._masterMesh.rotation.x = Math.PI / 2;
@@ -84,8 +85,9 @@ export class Planet implements IGravityContributor {
         var r = Math.cbrt(vol);
         this.radius = r;
         this.surfaceGravity = -(GravityManager.GRAV_CONST * this.mass) / Math.pow(this.radius, 2);
+        this.escapeVelocity = Math.sqrt(((2*GravityManager.GRAV_CONST*this.mass)/this.radius));
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
-        this.position = new Vector3(starPos.x + this.orbitalRadius, this.surfaceGravity, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, (this.surfaceGravity), starPos.z + this.orbitalRadius);
 
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
