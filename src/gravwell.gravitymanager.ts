@@ -54,14 +54,13 @@ export class GravityManager {
 
         if (overwriteYPos) {
             //testPoint.y = 0;
-            testPoint.y = gravSource.position.y;//+ gravSource.radius;
+            testPoint.y = gravSource.position.y;// - gravSource.radius;
         }
         let dCenter = Vector3.Distance(testPoint, gravSource.position);
-        if (dCenter <= gravSource.radius + this._gameData.gravUnit) {
+        if (dCenter <= (Math.ceil(gravSource.radius / GravityManager.GRAV_UNIT) * GravityManager.GRAV_UNIT)) {
             resultVector.y = gravSource.position.y;
             return resultVector;
         }
-
 
         testPoint.subtractToRef(gravSource.position, resultVector);
         resultVector.normalize();
@@ -126,7 +125,7 @@ export class GravityManager {
         //gridMat.needAlphaBlending = () => true;
 
 
-        
+
         var dynTerr = new DynamicTerrain("gravityHeightMap", {
             mapData: maps.heightMap,
             mapColors: maps.colorMap,
@@ -153,7 +152,7 @@ export class GravityManager {
         dynTerr.updateCameraLOD = function (terrainCamera) {
             //let terrAlt = dynTerr.getHeightFromMap(terrainCamera.globalPosition.x, terrainCamera.globalPosition.z);
             let camAlt = terrainCamera.globalPosition.y;
-            let camLOD = Math.floor(Math.abs(camAlt / (gU*1.5))) || 0;
+            let camLOD = Math.floor(Math.abs(camAlt / (gU * 1.5))) || 0;
             return camLOD;
         }
         dynTerr.update(false);
@@ -162,14 +161,14 @@ export class GravityManager {
         this.tmpVector = new Vector3();
 
         dynTerr.updateVertex = function (v, i, j) {
-            self.updateHeightMapVertice(v, i, j, self.tmpVector)
+            self.updateHeightMapVertice(v, i, j);
         };
         return dynTerr;
     }
-
+    maxForce = 0.0;
     public onUpdateTerrain() {
         let forceVector = new Vector3(),
-            tmpVector = new Vector3(),
+            tmpVector = this.tmpVector,
             posVector = new Vector3(),
             forceLength = 0.0;
 
@@ -177,15 +176,15 @@ export class GravityManager {
             forceLimit = 10000 * GravityManager.GRAV_UNIT;
 
 
-        // let baseColor = Color4.FromColor3(Color3.Blue()),
-        //     tmpColor = new Color4(1.0, 1.0, 1.0, 1.0),
-        //     endColor = Color4.FromColor3(Color3.Red()),
-        //     maxForceEncountered = 0.0;
+        let baseColor = Color4.FromColor3(Color3.Blue()),
+            tmpColor = new Color4(1.0, 1.0, 1.0, 1.0),
+            endColor = Color4.FromColor3(Color3.Red()),
+            maxForceEncountered = 0.0;
         // if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
         //     return;
         // }
 
-        for (let indexL = 0; indexL < this.gravityMap.mapData.length;indexL += 9) {
+        for (let indexL = 0; indexL < this.gravityMap.mapData.length; indexL += 9) {
             forceVector.setAll(0);
             tmpVector.setAll(0);
             forceLength = 0;
@@ -198,7 +197,7 @@ export class GravityManager {
 
             for (var gidx = 0; gidx < this.gravWells.length; gidx++) {
                 let gwA = this.gravWells[gidx];
-    
+
                 this.computeGravitationalForceAtPointToRef(gwA, posVector, 1, tmpVector);
                 forceVector.addInPlace(tmpVector);
             }
@@ -208,31 +207,33 @@ export class GravityManager {
 
 
     }
-    private updateHeightMapVertice(vertex: { position: Vector3, lodX: int, lodZ: int, worldPosition: Vector3, mapIndex: int }, i: int, j: int, tmpVector: Vector3) {
+    private updateHeightMapVertice(vertex: { position: Vector3, lodX: int, lodZ: int, worldPosition: Vector3, mapIndex: int, color: Color4 }, i: int, j: int) {
 
-        var forceVector = new Vector3(),        
-        forceLength = 0.0,
-        forceMinimum = 1/GravityManager.GRAV_UNIT,
-        forceLimit = 100000 * GravityManager.GRAV_UNIT;
-        //    tmpColor.set(1.0, 1.0, 1.0, 1.0);
-        //    vertex.color.set(1.0, 1.0, 1.0, 1.0);
+        let forceVector = new Vector3(),
+            forceLength = 0.0,
+            forceMinimum = 0.01,
+            forceLimit = 10000 * GravityManager.GRAV_UNIT;
+        
+        vertex.color.set(1.0, 1.0, 1.0, 1.0);
         let heightMapIdx = 3 * vertex.mapIndex + 1;
 
         for (var gidx = 0; gidx < this.gravWells.length; gidx++) {
-            let gwA = this.gravWells[gidx];
-
-            this.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 1, tmpVector);
-            forceVector.addInPlace(tmpVector);
+            const gwA = this.gravWells[gidx];
+            let vwp = vertex.worldPosition;
+            vwp.y = 0;
+            this.computeGravitationalForceAtPointToRef(gwA, vwp, 1, this.tmpVector);
+            //this.tmpVector.y = 0;
+            forceVector.addInPlace(this.tmpVector);
         }
 
-       forceLength = Scalar.Clamp(forceVector.length(), forceMinimum, forceLimit);
-        // if (forceLength > maxForceEncountered) {
-        //     maxForceEncountered = forceLength;
-        // }
-       this.gravityMap.mapData[heightMapIdx] = -forceLength;//-(forceLength * terrainGravScaleFactor);
-        //   var colorPerc = Scalar.RangeToPercent(Math.log(forceLength) - 1, 0, Math.log(maxForceEncountered) + 1);
-        //   Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
-        //   vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
+        forceLength = Scalar.Clamp(forceVector.length(), forceMinimum, forceLimit);
+        if (forceLength > this.maxForce) {
+            this.maxForce = forceLength;
+        }
+        this.gravityMap.mapData[heightMapIdx] = -forceLength;//-(forceLength * terrainGravScaleFactor);
+        var colorPerc = Scalar.RangeToPercent(forceLength, 0, this.maxForce);
+        Color4.LerpToRef(Color4.FromColor3(Color3.Blue(), 1.0), Color4.FromColor3(Color3.Red(), 1.0), colorPerc, vertex.color);
+        
 
     };
 
@@ -244,8 +245,8 @@ export class GravityManager {
 
         this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce, false);
 
-        //gForce.y = 0; // ship should follow the terrain's height
-        gForce.scaleInPlace(dTime);
+        gForce.y = 0; // ship should follow the terrain's height
+        //gForce.scaleInPlace(dTime);
 
     }
 

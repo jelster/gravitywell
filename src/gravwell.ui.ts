@@ -40,7 +40,7 @@ export class UI {
         uiCamera.maxZ = 1;
         uiCamera.viewport = new Viewport(0,0,1,1);
         uiCamera.layerMask = Game.UI_RENDER_MASK;
-        uiCamera.minZ = 0.01;
+        uiCamera.minZ = 1;
         scene.activeCameras.push(uiCamera);
         scene.cameraToUseForPointers = uiCamera;
 

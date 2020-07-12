@@ -39,24 +39,24 @@ export class GameData {
 
     public static createDefault(): GameData {
         var gameData = new GameData();
-        gameData.systemScaleFactor = 300000000;
+        gameData.systemScaleFactor = 3000000000;
         gameData.timeScaleFactor = 1000;
         gameData.gravUnit = 64;
 
         gameData.starMass = 1.9885e30 / gameData.systemScaleFactor; // 1 solar mass = 1.9885e30kg
-        gameData.starDensity = 9.0e9; // / gameData.systemScaleFactor; // units: kg/m^3
+        gameData.starDensity = 1.0e9; // / gameData.systemScaleFactor; // units: kg/m^3
         
         var vol = (gameData.starMass / gameData.starDensity) / ((4/3)*Math.PI);
         var r = Math.cbrt(vol);
         gameData.starRadius = r;
         //gameData.starRadius = (696342000 * 0.009)  * (1 / Math.sqrt(gameData.systemScaleFactor)); // solar radius, meters: 696342000 // / gameData.systemScaleFactor;
-        gameData.planetDensity = 105000000;// / gameData.systemScaleFactor; // ~5000 kg/m^3 avg earth density
+        gameData.planetDensity = 500000;// / gameData.systemScaleFactor; // ~5000 kg/m^3 avg earth density
         gameData.lowerOrbitalRadiiScale = 5;// 75 - ratio of solar radii:orbital radii 75; // inside orbit of mercury
-        gameData.upperOrbitalRadiiScale = 20;// / gameData.systemScaleFactor; // a bit outside of jupiter
+        gameData.upperOrbitalRadiiScale = 15;// / gameData.systemScaleFactor; // a bit outside of jupiter
         gameData.lowerPlanetaryMassScale = 3.0e-5; //gameData.starMass * 3.0032e-6;
         gameData.upperPlanetaryMassScale = 9.0e-4; //gameData.starMass * 9.5459e-4;
 
-        gameData.numberOfPlanets = 1;
+        gameData.numberOfPlanets = 0;
         gameData.starMap = [{ x: 0, y: 0 }];
         gameData.terrainSubCount = 256;
         var gravStd = gameData.gravUnit * gameData.terrainSubCount;

@@ -1,4 +1,4 @@
-import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
+import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture, StandardMaterial, TrailMesh, FollowCamera } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
 import { UniversalCamera } from '@babylonjs/core/Cameras/UniversalCamera';
@@ -80,7 +80,7 @@ export class Game {
     private _canvas: HTMLCanvasElement;
     private _engine: Engine;
     private _scene: Scene;
-    private _camera: UniversalCamera;
+    private _camera: FollowCamera;
 
     private _backgroundTexture: CubeTexture;
     private _floor: Mesh;
@@ -203,11 +203,16 @@ export class Game {
     private createMiniMapCamera(): void {
         let gameData = this._gameData,
             camPos = gameData.miniMapCameraPosition;
-        this._camera = new UniversalCamera('uniCam', camPos, this._scene);
+        this._camera = new FollowCamera('uniCam', camPos, this._scene, this._cameraDolly);
+        this._camera.heightOffset = camPos.y;
+        this._camera.lowerRotationOffsetLimit = -2*Math.PI;
+        this._camera.upperRotationOffsetLimit = 2*Math.PI;
+        this._camera.noRotationConstraint = true;
+        
         this._camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
         var fieldSize = gameData.gameWorldSizeX;
         this._camera.maxZ = gameData.miniMapMaxZ;
-
+        
        // var fieldSize = gameData.starRadius * gameData.upperOrbitalRadiiScale;
         this._camera.orthoTop = fieldSize / 2;
         this._camera.orthoBottom = -fieldSize / 2;
