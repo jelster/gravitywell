@@ -7,7 +7,9 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-dev": "npx webpack --mode development",
+    "build-prod": "npx webpack --mode production"
   },
   "author": "Josh Elster",
   "license": "ISC",
