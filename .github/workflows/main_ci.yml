@@ -36,7 +36,7 @@ jobs:
       run: |
         npm install
         npm version --no-git-tag-version $GitVersion_SemVer
-        npm build
+        npm run build-prod
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
