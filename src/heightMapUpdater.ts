@@ -2,7 +2,7 @@ import { IGravityContributor } from "./gravwell.gravitymanager";
 import { Vector3 } from "@babylonjs/core";
 
 const verticesUpdated = {
-    heightMap: new Float32Array(),
+    heightMap: new Float32Array(1),
     gravSources: new Array<IGravityContributor>()
 };
 let forceVector = new Vector3();
