@@ -1,15 +1,16 @@
 {
   "name": "gravwell",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "GravityWell game built using babylonjs",
   "main": "game.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo %npm_package_version%",
     "build-dev": "npx webpack --mode development",
-    "build-prod": "npx webpack --mode production"
+    "build-prod": "npx webpack --mode production",
+    "start": "npx webpack-dev-server"
   },
   "author": "Josh Elster",
   "license": "ISC",
@@ -23,6 +24,10 @@
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
     "webpack": "^4.41.6",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.11.0",
+    "semver": "^7.3.2"
+  },
+  "dependencies": {
+    
   }
 }
