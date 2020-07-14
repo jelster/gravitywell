@@ -9,8 +9,8 @@
   "scripts": {
     "test": "echo %npm_package_version%",
     "build": "npx webpack --mode",
-    "build-prod": "npm run build production",
-    "build-dev": "npm run build development",
+    "build-prod": "npm run 'build production'",
+    "build-dev": "npm run 'build development'",
     "start": "npx webpack-dev-server"
   },
   "author": "Josh Elster",
