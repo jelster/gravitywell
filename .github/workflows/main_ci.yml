@@ -34,6 +34,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: NPM scripts
       run: |
+        npm install -D webpack-cli
         npm install
         npm version --no-git-tag-version $GitVersion_SemVer
         npm run build-prod
