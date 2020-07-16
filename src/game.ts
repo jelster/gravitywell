@@ -264,7 +264,7 @@ export class Game {
     private createBackground(): void {
         let gameData = this._gameData;
 
-        this._backgroundTexture = new CubeTexture("textures/Space/space", this._scene);
+        this._backgroundTexture = new CubeTexture(gameData.skyboxImagePath, this._scene);
 
         this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
         this._skybox.layerMask = Game.MAIN_RENDER_MASK;
@@ -347,7 +347,7 @@ export class Game {
     private createExplosion(): void {
 
         this._explosionParticle = new ParticleSystem("explosion", 200, this._scene);
-        this._explosionParticle.particleTexture = new Texture("textures/explosion-3.png", this._scene);
+        this._explosionParticle.particleTexture = new Texture(this.gameData.explosionTexturePath, this._scene);
         this._explosionParticle.particleEmitterType = new SphereParticleEmitter(5, 0);
         this._explosionParticle.preventAutoStart = true;
         this._explosionParticle.disposeOnStop = false;

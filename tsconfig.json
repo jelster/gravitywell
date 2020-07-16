@@ -5,7 +5,6 @@
         "pretty": true,
         "sourceMap": true,
         "moduleResolution": "node",
-        "outDir": "dist/"
-    },
-    "include": ["src/**/*"]
+        "lib": ["DOM", "WebWorker", "ES6"]
+    }
 }

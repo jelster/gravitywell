@@ -1,6 +1,7 @@
 import { Vector3 } from '@babylonjs/core';
 import { Point } from './index';
 export class GameData {
+   
     public get gameHypotenuse(): number {
         return Math.sqrt((Math.pow(this.gameWorldSizeX, 2) + Math.pow(this.gameWorldSizeY, 2)));
     }
@@ -36,6 +37,9 @@ export class GameData {
     public timeScaleFactor: number;
     public shipMaxAngularVelocity: number;
     public shipMaxAcceleration: number;
+
+    public skyboxImagePath: string = "../textures/Space/space";
+    public explosionTexturePath: string = "../textures/explosion-3.png"
 
     public static createDefault(): GameData {
         var gameData = new GameData();

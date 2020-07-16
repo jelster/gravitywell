@@ -8,9 +8,9 @@
   },
   "scripts": {
     "test": "echo %npm_package_version%",
-    "build-prod": "npx webpack --mode production",
-    "build-dev": "npx webpack --mode development",
-    "start": "npx webpack-dev-server"
+    "build": "npx webpack --env=prod",
+    "start": "npx webpack-dev-server -d --open",
+    "devServer": "npx webpack-dev-server -d"
   },
   "author": "Josh Elster",
   "license": "ISC",
