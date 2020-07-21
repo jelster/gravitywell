@@ -1,0 +1,11 @@
+mode: ContinuousDeployment
+branches:
+  master: 
+    regex: ^main
+  pull-request:
+    source-branches: [ 'main', 'develop' ]
+  feature:
+    source-branches: [ 'main', 'develop' ]
+ignore:
+  sha: []
+merge-message-formats: {}
