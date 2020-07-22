@@ -12,8 +12,8 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
     return {
         context: __dirname,
         output: {
-            path: (isProd ? DIST_DIR : DEV_DIR) + "/scripts/",
-            publicPath: "www/",
+            path: (isProd ? DIST_DIR : DEV_DIR),
+           // publicPath: "www/",
             filename: "scripts/[name].js",
         },
         devtool: isProd ? "none" : "source-map",
