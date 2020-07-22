@@ -28,7 +28,7 @@
     "semver": "^7.3.2"
   },
   "dependencies": {
-    
+    "html-webpack-plugin": "^4.3.0"
   },
   "repository": {
     "type": "git",

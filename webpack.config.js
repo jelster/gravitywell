@@ -3,6 +3,9 @@ const path = require("path");
 var SRC_DIR = path.resolve(__dirname, "./src");
 var DIST_DIR = path.resolve(__dirname, "./www");
 var DEV_DIR = path.resolve(__dirname, "./.temp");
+var packageVersion = require('./package.json').version;
+
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 
  var buildConfig = function(env) {
     var isProd = env === "prod";
@@ -10,8 +13,8 @@ var DEV_DIR = path.resolve(__dirname, "./.temp");
         context: __dirname,
         output: {
             path: (isProd ? DIST_DIR : DEV_DIR) + "/scripts/",
-            publicPath: "www/scripts/",
-            filename: "[name].js",
+            publicPath: "www/",
+            filename: "scripts/[name].js",
         },
         devtool: isProd ? "none" : "source-map",
         devServer: {
@@ -28,9 +31,16 @@ var DEV_DIR = path.resolve(__dirname, "./.temp");
             {
                 test: /\.css$/,
                 use: ["style-loader", "css-loader"],
-            }]
+            }
+        ]
         },
-        mode: isProd ? "production" : "development"
+        mode: isProd ? "production" : "development",
+        plugins: [ new HtmlWebpackPlugin({
+            template: SRC_DIR + '/index.html',
+            title: "Gravity Well - " + packageVersion,
+            filename: 'index.html'
+            
+        })]
     };
  }
 
