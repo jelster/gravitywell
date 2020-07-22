@@ -43,7 +43,7 @@ export class GameData {
 
     public static createDefault(): GameData {
         var gameData = new GameData();
-        gameData.systemScaleFactor = 3000000000;
+        gameData.systemScaleFactor = 30000000;
         gameData.timeScaleFactor = 1000;
         gameData.gravUnit = 64;
 
@@ -79,7 +79,7 @@ export class GameData {
 
         gameData.initialShipPosition = new Vector3(gameData.starRadius * 10, 0, 0);
         gameData.initialStarPosition = new Vector3(0, 0, 0); // 274 m/s^2 == sol gravity
-        gameData.shipMaxAcceleration = 200;
+        gameData.shipMaxAcceleration = 50;
         gameData.shipMaxAngularVelocity = 0.1;
 
         return gameData;
