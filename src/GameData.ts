@@ -62,7 +62,7 @@ export class GameData {
 
         gameData.numberOfPlanets = 0;
         gameData.starMap = [{ x: 0, y: 0 }];
-        gameData.terrainSubCount = 256;
+        gameData.terrainSubCount = 128;
         var gravStd = gameData.gravUnit * gameData.terrainSubCount;
         gameData.gameWorldSizeX =  gravStd * (Math.ceil((gameData.upperOrbitalRadiiScale * gameData.starRadius / gravStd)));
         gameData.gameWorldSizeY = gameData.gameWorldSizeX;//gameData.gravUnit * gameData.terrainSubCount;
