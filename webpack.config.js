@@ -12,7 +12,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
     return {
         context: __dirname,
         output: {
-            path: (isProd ? DIST_DIR : DEV_DIR),
+            path: DIST_DIR,
            // publicPath: "www/",
             filename: "scripts/[name].js",
         },

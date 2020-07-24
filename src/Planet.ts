@@ -79,7 +79,7 @@ export class Planet implements IGravityContributor {
         this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
 
-        this.density = Scalar.RandomRange(500, opts.planetDensity);
+        this.density = Scalar.RandomRange(opts.planetDensity/100, opts.planetDensity);
         this.mass = starMass * starScaleFactor;
         var vol = (this.mass / this.density) / ((4/3)*Math.PI);
         var r = Math.cbrt(vol);
