@@ -13,12 +13,12 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
         context: __dirname,
         output: {
             path: DIST_DIR,
-           // publicPath: "www/",
+            publicPath: DIST_DIR,
             filename: "scripts/[name].js",
         },
         devtool: isProd ? "none" : "source-map",
         devServer: {
-            openPage: '/www'
+            openPage: '.'
         },
         resolve: {
             extensions: [".ts", ".js"]
