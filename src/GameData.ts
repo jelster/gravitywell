@@ -56,11 +56,11 @@ export class GameData {
         //gameData.starRadius = (696342000 * 0.009)  * (1 / Math.sqrt(gameData.systemScaleFactor)); // solar radius, meters: 696342000 // / gameData.systemScaleFactor;
         gameData.planetDensity = 500000;// / gameData.systemScaleFactor; // ~5000 kg/m^3 avg earth density
         gameData.lowerOrbitalRadiiScale = 5;// 75 - ratio of solar radii:orbital radii 75; // inside orbit of mercury
-        gameData.upperOrbitalRadiiScale = 15;// / gameData.systemScaleFactor; // a bit outside of jupiter
+        gameData.upperOrbitalRadiiScale = 10;// / gameData.systemScaleFactor; // a bit outside of jupiter
         gameData.lowerPlanetaryMassScale = 3.0e-5; //gameData.starMass * 3.0032e-6;
         gameData.upperPlanetaryMassScale = 9.0e-4; //gameData.starMass * 9.5459e-4;
 
-        gameData.numberOfPlanets = 0;
+        gameData.numberOfPlanets = 1;
         gameData.starMap = [{ x: 0, y: 0 }];
         gameData.terrainSubCount = 64;
         var gravStd = gameData.gravUnit * gameData.terrainSubCount;
