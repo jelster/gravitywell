@@ -41,13 +41,13 @@ jobs:
           api_location: "" # Api source code path - optional
           app_artifact_location: "www" # Built app content directory - optional
           app_build_command: |
-            cp textures/ -R www/textures
-            cp models/ -R www/models
-            cp img/ -R www/img
             npm version --no-git-tag-version $GitVersion_SemVer
             npm install -D webpack-cli
             npm install
             npm run build
+            cp textures/ -R www/textures
+            cp models/ -R www/models
+            cp img/ -R www/img
             
           ###### End of Repository/Build Configurations ######
 
