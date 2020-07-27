@@ -1,20 +1,20 @@
 const path = require("path");
 
-var SRC_DIR = path.resolve(__dirname, "./src");
-var DIST_DIR = path.resolve(__dirname, "./www");
-var DEV_DIR = path.resolve(__dirname, "./.temp");
+var SRC_DIR = path.join(__dirname, "./src");
+var DIST_DIR = path.join(__dirname, "./www");
 var packageVersion = require('./package.json').version;
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var HtmlWebpackHarddiskPlugin = require('html-webpack-harddisk-plugin');
 
- var buildConfig = function(env) {
+var buildConfig = function (env) {
     var isProd = env === "prod";
     return {
         context: __dirname,
         output: {
             path: DIST_DIR,
-            publicPath: DIST_DIR,
-            filename: "scripts/[name].js",
+            publicPath: '',
+            filename: "[name].js",
         },
         devtool: isProd ? "none" : "source-map",
         devServer: {
@@ -32,16 +32,19 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
                 test: /\.css$/,
                 use: ["style-loader", "css-loader"],
             }
-        ]
+            ]
         },
         mode: isProd ? "production" : "development",
-        plugins: [ new HtmlWebpackPlugin({
-            template: SRC_DIR + '/index.html',
-            title: "Gravity Well - " + packageVersion,
-            filename: 'index.html'
-            
-        })]
+        plugins: [
+            new HtmlWebpackPlugin({
+                alwaysWriteToDisk: true,
+                template: path.join(SRC_DIR, 'index.html'),
+                title: "Gravity Well - " + packageVersion,
+                filename: path.join(DIST_DIR, 'index.html')
+            }),
+            new HtmlWebpackHarddiskPlugin()
+        ]
     };
- }
+}
 
 module.exports = buildConfig;
