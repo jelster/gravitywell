@@ -1,7 +1,7 @@
 import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, KeyboardEventTypes, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
-import { UniversalCamera } from '@babylonjs/core/Cameras/UniversalCamera';
+import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Texture } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
