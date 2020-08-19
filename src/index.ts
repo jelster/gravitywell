@@ -26,9 +26,9 @@ export class GravityWellGameManager {
         game.initializeGame();
         gravGui.registerPlanetaryDisplays(game);
         scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
-     //   var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
+        var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
         
-     //   optimizer.onNewOptimizationAppliedObservable.add((ev) => console.log(ev));
+        optimizer.onNewOptimizationAppliedObservable.add((ev) => console.log(ev));
         
         // Start render loop.
         game.doRender();
