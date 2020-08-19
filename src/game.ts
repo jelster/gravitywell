@@ -1,21 +1,15 @@
-import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, GlowLayer, KeyboardEventTypes, BackgroundMaterial, EnvironmentHelper, Material, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
+import { Scene, ParticleSystem, TransformNode, Camera, SphereParticleEmitter, KeyboardEventTypes, CubeTexture, StandardMaterial, TrailMesh } from '@babylonjs/core';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, Color3, Viewport, Color4 } from '@babylonjs/core/Maths/math';
-import { FollowCamera } from '@babylonjs/core/Cameras/FollowCamera';
 import { UniversalCamera } from '@babylonjs/core/Cameras/UniversalCamera';
 import { Texture } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
-import { GridMaterial } from '@babylonjs/materials/grid';
-import { Scalar } from '@babylonjs/core/Maths/math.scalar';
 import { Ship } from './gravwell.ship';
 import { Star, Planet } from './gravwell.star';
-import { UI } from './gravwell.ui';
 import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
 import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
-import { IGravityContributor, GravityManager } from './gravwell.gravitymanager';
-import { number } from 'prop-types';
-import { Point } from '.';
+import { GravityManager } from './gravwell.gravitymanager';
 import { GameData } from "./GameData";
 
 
@@ -85,7 +79,6 @@ export class Game {
     private _camera: UniversalCamera;
 
     private _backgroundTexture: CubeTexture;
-    private _floor: Mesh;
     private _skybox: Mesh;
 
     private _ship: Ship;
@@ -93,7 +86,6 @@ export class Game {
 
     private _stars: Array<Star>;
     private _planets: Array<Planet>;
-    private _starMap: Array<Point>;
 
     private _explosionParticle: ParticleSystem;
     private _respawnTimeLimit: number;
@@ -112,7 +104,6 @@ export class Game {
     private _numberOfPlanets: number;
     private _gameData: GameData;
     private _trailMesh: TrailMesh;
-    private _miniMapMeshMaterial: Material;
 
     public initializeGame(gameData?: GameData) {
         if (!this._scene) {
@@ -132,7 +123,6 @@ export class Game {
         this._gravManager = new GravityManager(gameData);
         
 
-        this._starMap = gameData.starMap;
         this._numberOfPlanets = gameData.numberOfPlanets;
         this.gameWorldSizeX = gameData.gameWorldSizeX;
         this.gameWorldSizeY = gameData.gameWorldSizeY;
@@ -142,7 +132,7 @@ export class Game {
         this.isPaused = true;
         this.resetShip();
         this.createStar();
-        this.createPlanets(this._stars[0]);
+        this.createPlanets();
         
         this._gravManager.generateDynamicTerrain(this._scene);
         
@@ -161,7 +151,6 @@ export class Game {
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
-        this._starMap = [];
     }
 
     private createMiniMapCamera(): void {
@@ -244,23 +233,6 @@ export class Game {
 
 
 
-    private updateGridHeightMap(): void {
-        return;
-        
-        let gravManager = this._gravManager;
-       // let updatePositions = function () {
-        gravManager.updatePositions(gravManager.heightMap);
-        
-        
-       // };
-
-       // let updateNormalsAfterGravUpdate = false;
-       // this._gravManager.gravityMap.beforeUpdate = updatePositions;
-       // this._floor.updateMeshPositions(updatePositions, updateNormalsAfterGravUpdate);
-       // this._floor.refreshBoundingInfo();
-       // console.log('updated mesh positions. Check whether enabling/disabling update of normals might be needed. current value', updateNormalsAfterGravUpdate);
-
-    }
 
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
@@ -268,7 +240,7 @@ export class Game {
         this._gravManager.gravWells.push(star);        
     }
 
-    private createPlanets(parentStar: Star): void {
+    private createPlanets(): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
             var planet = new Planet(this._gameData);
             this._planets.push(planet);
@@ -317,21 +289,6 @@ export class Game {
         }
     }
 
-    private updateShipPositionOverflow(): void {
-        let gameData = this._gameData;
-        if (this._ship.position.x > gameData.skyBoxScale / 2) {
-            this._ship.position.x = -gameData.skyBoxScale / 2;
-        }
-        if (this._ship.position.x < -gameData.skyBoxScale / 2) {
-            this._ship.position.x = gameData.skyBoxScale / 2;
-        }
-        if (this._ship.position.z > gameData.skyBoxScale / 2) {
-            this._ship.position.z = -gameData.skyBoxScale / 2;
-        }
-        if (this._ship.position.z < -gameData.skyBoxScale / 2) {
-            this._ship.position.z = gameData.skyBoxScale / 2;
-        }
-    }
 
     private createExplosion(): void {
 
@@ -403,12 +360,6 @@ export class Game {
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
 
-    private moveCamera(): void {
-        if (!this.isPaused) {
-            this._cameraDolly.position = this._ship.position;
-        }
-
-    }
 
 
 
@@ -426,7 +377,6 @@ export class Game {
         this._scene.gravity = Vector3.Zero();
         var miniMat = new StandardMaterial("miniMap", this._scene);
         miniMat.emissiveColor = Color3.Teal();
-        this._miniMapMeshMaterial = miniMat;
         this.createShip();
         this.createCameraDolly();
         this.createBackground();
