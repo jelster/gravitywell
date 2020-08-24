@@ -3,9 +3,6 @@ import { IGravityContributor, GravityManager } from "./gravwell.gravitymanager";
 import { GameData } from "./GameData";
 import { Game } from "./game";
 
-
-
-
 export class Planet implements IGravityContributor {
     private static _masterMesh: Mesh;
     private static _sphereMaterial: StandardMaterial;
@@ -33,6 +30,8 @@ export class Planet implements IGravityContributor {
     public totalElapsedTime: number;
     public orbitalPeriod: number; // TODO
     public orbitalSpeed: number;
+    public escapeVelocity: number;
+    public gMu: number;
 
     public get position(): Vector3 {
         return this._mesh.position;
@@ -90,14 +89,17 @@ export class Planet implements IGravityContributor {
         let starMass = opts.starMass, starRad = opts.starRadius, starPos = opts.initialStarPosition
         this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
+        
         this.mass = starMass * starScaleFactor;
         this.radius = opts.planetDensity * Math.sqrt(this.mass);
+        this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
+        this.escapeVelocity = GravityManager.computeEscapeVelocity(this);
 
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);       
 
-        this.position = new Vector3(starPos.x + this.orbitalRadius, -this.radius, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, this.escapeVelocity, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -106,7 +108,7 @@ export class Planet implements IGravityContributor {
         this.CalculateAndSetOrbitalVelocity();
         console.log('planetary params calculated', this);
 
-        var hillSphere = MeshBuilder.CreateSphere("", { diameterX: this.hillSphereRadius, diameterY: this.hillSphereRadius, diameterZ: this.hillSphereRadius }, this._mesh.getScene());
+        var hillSphere = MeshBuilder.CreateSphere("hillSphere", { diameterX: this.hillSphereRadius, diameterY: this.hillSphereRadius, diameterZ: this.hillSphereRadius }, this._mesh.getScene());
         //hillSphere.rotation.x = Math.PI / 2;
         hillSphere.position = this.position;
        // hillSphere.parent = this._mesh;
@@ -122,6 +124,10 @@ export class Planet implements IGravityContributor {
 export class Star implements IGravityContributor {
 
     private _mesh: Mesh;
+
+    public escapeVelocity: number;
+    public gMu:number;
+    
     public get mesh(): Mesh {
         return this._mesh;
     }
@@ -155,7 +161,10 @@ export class Star implements IGravityContributor {
 
         this.mass = opts.starMass;
         this.radius = opts.starRadius;
-
+        this.gMu = this.mass * GravityManager.GRAV_CONST;
+        this.escapeVelocity = GravityManager.computeEscapeVelocity(this);
+        starPos.y = this.escapeVelocity;
+        
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;
         let sphMat = new StandardMaterial("starMat", scene);

@@ -237,7 +237,8 @@ export class Game {
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
         this._stars.push(star);
-        this._gravManager.gravWells.push(star);        
+        this._gravManager.gravWells.push(star);
+        this._gravManager.primaryStar = star;        
     }
 
     private createPlanets(): void {
