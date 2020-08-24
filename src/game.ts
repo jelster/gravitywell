@@ -243,7 +243,7 @@ export class Game {
 
     private createPlanets(): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
-            var planet = new Planet(this._gameData);
+            var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
             this._planets.push(planet);
             this._gravManager.gravWells.push(planet);
         }

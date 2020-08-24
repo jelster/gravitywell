@@ -85,7 +85,7 @@ export class Planet implements IGravityContributor {
         this.orbitalPeriod = Scalar.TwoPi * Math.sqrt(rCubed / gM);
     }
 
-    constructor(opts: GameData) {
+    constructor(opts: GameData, star: Star) {
         let starMass = opts.starMass, starRad = opts.starRadius, starPos = opts.initialStarPosition
         this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
@@ -99,7 +99,7 @@ export class Planet implements IGravityContributor {
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);       
 
-        this.position = new Vector3(starPos.x + this.orbitalRadius, this.escapeVelocity, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -127,7 +127,7 @@ export class Star implements IGravityContributor {
 
     public escapeVelocity: number;
     public gMu:number;
-    
+
     public get mesh(): Mesh {
         return this._mesh;
     }

@@ -47,7 +47,7 @@ export class GameData {
         gameData.gameWorldSizeX = gameData.gravUnit * 240;
         gameData.gameWorldSizeY = gameData.gravUnit * 240;
         gameData.terrainSubCount = 240;
-        gameData.terrainScaleFactor = 1.5;
+        gameData.terrainScaleFactor = gameData.gravUnit;
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
