@@ -1,18 +1,20 @@
-import { FloatArray, Vector3, DebugLayer, Logger, Scalar, _forceTransformFeedbackToBundle, Scene, Color3, Color4, StandardMaterial, MultiMaterial, MaterialFlags } from '@babylonjs/core';
+import { Vector3, Scalar, _forceTransformFeedbackToBundle, Scene, Color3, Color4, StandardMaterial, Vector2 } from '@babylonjs/core';
 import { Game } from './game';
 import { GameData } from "./GameData";
 import { Ship } from './gravwell.ship';
 
 
- import './babylon.dynamicTerrain';
+import './babylon.dynamicTerrain';
 import { DynamicTerrain } from './babylon.dynamicTerrain';
 import { GridMaterial } from '@babylonjs/materials/grid';
-import { MaterialAlphaMode } from 'babylonjs-gltf2interface';
 
 export interface IGravityContributor {
     mass: number;
     radius: number;
     position: Vector3;
+    escapeVelocity: number;
+    gMu: number;
+
 }
 
 export class GravityManager {
@@ -23,8 +25,18 @@ export class GravityManager {
     private _gameData: GameData;
     private _gravWells: Array<IGravityContributor>;
     private tmpVector: Vector3;
-    private _gridMat: GridMaterial;
+    private test2d: Vector2 = Vector2.Zero();
+    private gwell2d: Vector2 = Vector2.Zero();
+    private _primaryStar: IGravityContributor;
 
+    public get primaryStar():IGravityContributor {
+        return this._primaryStar;
+    }
+
+    public set primaryStar(s: IGravityContributor) {
+        this._primaryStar = s;
+    }
+    
     public get gravWells(): Array<IGravityContributor> {
         return this._gravWells;
     }
@@ -41,92 +53,14 @@ export class GravityManager {
         this.gravWells = new Array<IGravityContributor>();
         
     }
-
-
-    public computeGravitationalForceAtPoint(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number): Vector3 {
-        return this.computeGravitationalForceAtPointToRef(gravSource, testPoint, testMass);
-        
-    }    
-    
-    public updatePositions(positions): void {
-
-        let  
-            gravWells = this._gravWells,
-            zeroVector = this.ZERO_VECTOR,
-            positionVector = this.ZERO_VECTOR,
-            forceVector = this.tmpVector,
-            gridMeshPadding = GravityManager.GRAV_UNIT,
-            szX = this._gameData.gameWorldSizeX,
-            szZ = this._gameData.gameWorldSizeY,
-            forceLength = 0;
-
-        for (var idx = 0; idx < positions; idx += 3) {
-            Vector3.FromFloatsToRef(positions[idx + 0], positions[idx + 1], positions[idx + 2], positionVector);
-            // if (Scalar.WithinEpsilon(Math.abs(positionVector.x), szX/2, gridMeshPadding) || Scalar.WithinEpsilon(Math.abs(positionVector.z), szZ/2, gridMeshPadding)) {
-            //     positionVector.y = 0;
-            //     continue;
-            // }
-            forceVector.setAll(0);
-            for (var gidx = 0; gidx < gravWells.length; gidx++) {
-                let gwA = gravWells[gidx];
-                
-                // if (positionVector.equalsWithEpsilon(gwA.position, gwA.radius*0.98)) {
-                //     positionVector.y = (gwA.mass*GravityManager.GRAV_CONST)/gwA.radius;
-                // }
-                // else {
-                //     positionVector.y = gwA.position.y;
-                // }
-                positionVector.y = gwA.position.y;
-                this.computeGravitationalForceAtPointToRef(gwA, positionVector, 1, zeroVector)
-                 
-                forceVector.addInPlace(zeroVector);
-
-            }
-            forceLength = Scalar.Clamp(forceVector.length(), GravityManager.GRAV_UNIT/8, 1000 * GravityManager.GRAV_UNIT);
-            positions[idx + 1] = -forceLength;
-            //positions[idx + 0] += forces.length();
-            //positions[idx + 2] += forces.z;
-        }
-        
-    }    
-    public computeGravitationalForceAtPointToRef(gravSource: IGravityContributor, testPoint: Vector3, testMass?: number, resultVector: Vector3 = Vector3.Zero(), overwriteYPos: boolean = true): Vector3 {
-        if (overwriteYPos) {
-            if (testPoint.equalsWithEpsilon(gravSource.position, gravSource.radius*0.67)) {
-                testPoint.y = gravSource.position.y + gravSource.radius;//(gravSource.mass*GravityManager.GRAV_CONST)/gravSource.radius;
-            }
-            else {
-                testPoint.y = 0;
-            }
-        }
-        
-        //testPoint.y = gravSource.position.y;
-        let dCenter = Vector3.Distance(testPoint, gravSource.position);
-        //testPoint.y = gravSource.position.y;
-        //testPoint.y = 0;
-        resultVector.setAll(0);
-
-        if (dCenter === 0 ) { return resultVector; }
-
-        let G = GravityManager.GRAV_CONST,
-            r = Math.pow(dCenter, 2),
-
-            m1 = testMass || 1,
-            m2 = gravSource.mass || 100;
-        testPoint.subtractToRef(gravSource.position, resultVector);
-        // if (this.GravityWellMode === GravityMode.DistanceCubed) {
-        //     r = r * dCenter; // r^3 propagation, like electrical fields
-        // }
-        let f = -(G * (m1 * m2)) / (r);
-        return resultVector.scaleInPlace(f);
-
-    }
+   
     public onUpdateShipStep(ship: Ship): void {
         let self = this,
             timeScale = this._gameData.timeScaleFactor;
         ship.geForce.setAll(0);
-        this.gravWells.forEach(gravWell => {
-            self.applyGravitationalForceToShip(gravWell, ship);
-        });
+        let dS = this.computeGravGradientAt(ship.position, ship.geForce);
+       // ship.geForce.scaleInPlace(dS);
+ 
         if (ship.thrustersFiring === true) {
             ship.geForce.addInPlace(ship.mesh.forward.scale(ship.maxAcceleration));
             ship.thrustersFiring = false;
@@ -146,7 +80,16 @@ export class GravityManager {
             numberOfDivisionsZ = wsZ / gU,
             numberOfTerrainTiles = this._gameData.terrainSubCount,
             terrainGravScaleFactor = this._gameData.terrainScaleFactor,
-            maps = this.generateHeightMap({ gU: gU, wsX: wsX, wsZ: wsZ, mapSubX: numberOfDivisionsX, mapSubZ: numberOfDivisionsZ});
+            terrainOpts = { 
+                gU: gU, 
+                wsX: wsX, 
+                wsZ: wsZ, 
+                mapSubX: numberOfDivisionsX, 
+                mapSubZ: numberOfDivisionsZ,
+                stellarEscapeVelocity: this.primaryStar.escapeVelocity,
+                computeForces: true
+            },
+            maps = this.generateHeightMap(terrainOpts);
         
         var gridMat  = new GridMaterial("gridMat", scene);
         gridMat.gridRatio = gU;
@@ -189,7 +132,7 @@ export class GravityManager {
         dynTerr.LODLimits = [1,1,1,1];
         dynTerr.mesh.material = gridMat;
         this.tmpVector = new Vector3();
-        var forceVector = new Vector3(), 
+        let forceVector = new Vector3(), 
             self = this, 
             forceLength = 0.0,
             forceMinimum = gU/256,
@@ -198,59 +141,41 @@ export class GravityManager {
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = false;
         dynTerr.computeNormals = true;
-        var baseColor = Color4.FromColor3(Color3.Blue()), 
-            tmpColor = new Color4(1.0, 1.0, 1.0, 1.0),
-            endColor = Color4.FromColor3(Color3.Red()),
-            maxForceEncountered = 0.0;
-        dynTerr.updateVertex = function(vertex, i, j) {
+        var tmpColor = new Color4(1.0, 1.0, 1.0, 1.0);
+
+        dynTerr.updateVertex = function(vertex) {
             if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
                 return;
             }
+            let vertexColor: Color4 = vertex.color;
             forceVector.setAll(0);
             self.tmpVector.setAll(0);
             forceLength = 0;
             tmpColor.set(1.0,1.0,1.0,1.0);
-            vertex.color.set(1.0, 1.0, 1.0, 1.0);
+            vertexColor.set(1.0, 1.0, 1.0, 1.0);
             let heightMapIdx = 3*vertex.mapIndex + 1;
             
-            for (var gidx = 0; gidx < self.gravWells.length; gidx++) {
-                let gwA = self.gravWells[gidx];
-                
-                self.computeGravitationalForceAtPointToRef(gwA, vertex.worldPosition, 1, self.tmpVector);                 
-                forceVector.addInPlace(self.tmpVector);
-            }
-
-            forceLength = Scalar.Clamp(forceVector.length(), forceMinimum, forceLimit);
-            if (forceLength > maxForceEncountered) {
-                maxForceEncountered = forceLength;
-            }        
-            self.gravityMap.mapData[heightMapIdx] = -(forceLength * terrainGravScaleFactor);
-           // var colorPerc = Scalar.RangeToPercent(Math.log(forceLength)-1, 0, Math.log(maxForceEncountered)+1);
-           // Color4.LerpToRef(baseColor, endColor, colorPerc, tmpColor);
-            //vertex.color.set(tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.a);
+            self.gravityMap.mapData[heightMapIdx] = self.computeGravGradientAt(vertex.worldPosition, forceVector);
+            vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
 
         };
         return dynTerr;
     }
-    private applyGravitationalForceToShip(gravSource: IGravityContributor, ship: Ship): void {
-        let sV = ship.velocity, 
-            gForce = ship.geForce, 
-            tScale = this._gameData.timeScaleFactor,
-            dTime = ship.mesh.getEngine().getDeltaTime()/tScale;
 
-        this.computeGravitationalForceAtPointToRef(gravSource, ship.position, 1, gForce, false);
-        
-       // gForce.y = 0; // ship should follow the terrain's height
-        gForce.scaleInPlace(dTime);
-       
+    private applyScalingToHeightMap(rawHeightValue: number) {
+        return rawHeightValue * this._gameData.terrainScaleFactor;
     }
+    
 
     private generateHeightMap(options): any {
         let 
             gU = options.gU,  
             numberOfDivisionsX = options.mapSubX,
             numberOfDivisionsZ = options.mapSubZ,
-            arrayLength = numberOfDivisionsX * numberOfDivisionsZ * 3;
+            arrayLength = numberOfDivisionsX * numberOfDivisionsZ * 3,
+            systemGravMax = options.stellarEscapeVelocity,
+            computeForces = options.computeForces || false,
+            tmpVector = new Vector3(0,0,0);
 
         var mapData = new Float32Array(arrayLength);
         var colorData = new Float32Array(arrayLength);
@@ -261,15 +186,52 @@ export class GravityManager {
                 idy = idx + 1,
                 idz = idx + 2;
                 mapData[idx] = (w - numberOfDivisionsX * 0.5) * gU;
-                mapData[idy] = 0;
+                mapData[idy] = systemGravMax;
                 mapData[idz] = (l - numberOfDivisionsZ * 0.5) * gU;
                 var color = Color3.White();
                 colorData[idx] = color.r;
                 colorData[idy] = color.g;
                 colorData[idz] = color.b;
+                if (computeForces === true) {
+                    const vertWPos = tmpVector.set(mapData[idx], mapData[idy], mapData[idz]);
+                    let gf = this.computeGravGradientAt(vertWPos);
+                    mapData[idy] = gf;
+                }
             }
         }
         return { heightMap: mapData, colorMap: colorData};
+    }
+
+    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = null): number {
+        const gravSources = this._gravWells;
+        let resV = 0;
+        let test2d = this.test2d;
+        let gwell2d = this.gwell2d;
+        test2d.set(vwpos.x, vwpos.z);
+        
+        for (var gidx = 0; gidx < gravSources.length; gidx++) {
+            const gwA = gravSources[gidx];
+            gwell2d.set(gwA.position.x, gwA.position.z);
+            let dCenter = Vector2.Distance(gwell2d, test2d);
+            let vEsc = GravityManager.computeEscapeVelocity(gwA, dCenter);
+            resV += vEsc;
+            if (summedVecRef) {
+                gwell2d.subtractInPlace(test2d).normalize();
+                summedVecRef.addInPlaceFromFloats(gwell2d.x, 0, gwell2d.y);
+            }
+        }
+        return this.applyScalingToHeightMap(resV);
+    }
+
+    
+    public static computeEscapeVelocity(gravSource, distance = 0): number {
+         
+        if (!distance || distance < gravSource.radius || distance <= 0) {
+            distance = gravSource.radius;
+        }
+        let twoGM = 2 * gravSource.gMu;
+        let vEscape = Math.sqrt(twoGM / distance);
+        return -vEscape;
     }
 
     
