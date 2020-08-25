@@ -44,9 +44,9 @@ export class GameData {
         gameData.gravUnit = 16;
         gameData.numberOfPlanets = 3;
         gameData.starMap = [{ x: 0, y: 0 }];
-        gameData.gameWorldSizeX = 8192;
-        gameData.gameWorldSizeY = 8192;
-        gameData.terrainSubCount = 256;
+        gameData.gameWorldSizeX = 16384;
+        gameData.gameWorldSizeY = 16384;
+        gameData.terrainSubCount = 512;
         gameData.terrainScaleFactor = 16;//gameData.gravUnit;
         gameData.respawnTimeLimit = 4000;
         
