@@ -9,8 +9,7 @@ export class Planet implements IGravityContributor {
 
     public static InitializeMasterMesh(scene: Scene) {
         Planet._masterMesh = MeshBuilder.CreateSphere("planet", { segments: 16, diameter: 1 }, scene);
-        Planet._masterMesh.rotation.x = Math.PI / 2;
-        Planet._masterMesh.bakeCurrentTransformIntoVertices();
+        
         var plantMat = new StandardMaterial("planetMat", scene);
         var planColor = Color3.Random();
         plantMat.diffuseColor = planColor;
@@ -98,8 +97,8 @@ export class Planet implements IGravityContributor {
 
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);       
-
-        this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity, starPos.z + this.orbitalRadius);
+        
+        this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity - this.radius, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -163,7 +162,7 @@ export class Star implements IGravityContributor {
         this.radius = opts.starRadius;
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.escapeVelocity = GravityManager.computeEscapeVelocity(this);
-        starPos.y = this.escapeVelocity;
+        starPos.y = this.escapeVelocity - this.radius;
         
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;
