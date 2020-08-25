@@ -51,8 +51,8 @@ export class GameData {
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
-        gameData.miniMapMaxZ = 1.5 * gameData.gameHypotenuse;
-        gameData.flyCamRelativePosition = new Vector3(0, 100, -120);
+        gameData.miniMapMaxZ = 2 * gameData.gameHypotenuse;
+        gameData.flyCamRelativePosition = new Vector3(0, 10, -10);
         gameData.flyCamMaxZ = gameData.gameHypotenuse * 0.467;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
         
