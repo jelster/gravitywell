@@ -107,7 +107,7 @@ export class GravityManager {
 
         stdMat.wireframe = true;
         stdMat.disableLighting = true;
-        //gridMat.needAlphaBlending = () => true;
+        gridMat.needAlphaBlending = () => true;
        
             
        // this.heightMap = heightMap;
@@ -135,20 +135,22 @@ export class GravityManager {
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = false;
         dynTerr.computeNormals = true;
-        var tmpColor = new Color4(1.0, 1.0, 1.0, 1.0);
+        
         
         dynTerr.updateVertex = function(vertex) {
+            let vertexColor: Color4 = vertex.color;
+            vertexColor.a = Scalar.Lerp(1, 0, 1/(vertex.lodX || 1));
             if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
                 return;
             }
-            let vertexColor: Color4 = vertex.color;
+            
             forceVector.setAll(0);          
-            tmpColor.set(1.0,1.0,1.0,1.0);
-            vertexColor.set(1.0, 1.0, 1.0, 1.0);
+         
+            
             let heightMapIdx = 3*vertex.mapIndex + 1;
             let gE = self.computeGravGradientAt(vertex.worldPosition);
             self.gravityMap.mapData[heightMapIdx] = self.applyScalingToHeightMap(gE);
-            vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
+           // vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
 
         };
         return dynTerr;

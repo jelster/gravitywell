@@ -46,26 +46,26 @@ export class GameData {
         gameData.starMap = [{ x: 0, y: 0 }];
         gameData.gameWorldSizeX = 16384;
         gameData.gameWorldSizeY = 16384;
-        gameData.terrainSubCount = 512;
+        gameData.terrainSubCount = 256;
         gameData.terrainScaleFactor = 1;//gameData.gravUnit;
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
         gameData.miniMapMaxZ = 2 * gameData.gameHypotenuse;
         gameData.flyCamRelativePosition = new Vector3(0, 10, -10);
-        gameData.flyCamMaxZ = gameData.gameHypotenuse * 0.467;
+        gameData.flyCamMaxZ = gameData.gameWorldSizeX  / 2;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
         
         gameData.starMass = 4.3637e17;
         gameData.starDensity = 0.00000225;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
         gameData.planetDensity = (0.00000221 / gameData.systemScaleFactor);
-        gameData.lowerOrbitalRadiiScale = 3;
-        gameData.upperOrbitalRadiiScale = 6;
+        gameData.lowerOrbitalRadiiScale = 4;
+        gameData.upperOrbitalRadiiScale = 17;
         gameData.lowerPlanetaryMassScale = 0.1;
         gameData.upperPlanetaryMassScale = 0.5;
 
-        gameData.initialShipPosition = new Vector3(gameData.starRadius * 4, 0, 0);
+        gameData.initialShipPosition = new Vector3(gameData.starRadius * 5, 0, 0);
         gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
         gameData.shipMaxAcceleration = 20;
         gameData.shipMaxAngularVelocity = 0.1;
