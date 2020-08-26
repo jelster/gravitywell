@@ -96,7 +96,7 @@ export class Planet implements IGravityContributor {
         this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
 
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
-        this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);       
+        this.mesh.scalingDeterminant = 2*this.radius;       
         
         this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
