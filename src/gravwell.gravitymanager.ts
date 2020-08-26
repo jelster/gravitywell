@@ -94,7 +94,7 @@ export class GravityManager {
         gridMat.lineColor = Color3.White();
         gridMat.mainColor = Color3.Black();   
         gridMat.minorUnitVisibility = 0.85;
-        gridMat.opacity = 0.78;
+        //gridMat.opacity = 0.78;
         gridMat.majorUnitFrequency = 1;
         //gridMat.alpha = 0.78;
         //gridMat.alphaMode = 1;
@@ -127,12 +127,11 @@ export class GravityManager {
         dynTerr.subToleranceX = 1;
         dynTerr.subToleranceZ = 1;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits = [1,1,1,1];
+        dynTerr.LODLimits = [1,1,1,1,2];
         dynTerr.mesh.material = gridMat;
         this.tmpVector = new Vector3();
         let forceVector = new Vector3(), 
             self = this;
-        
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = false;
         dynTerr.computeNormals = true;

@@ -93,12 +93,12 @@ export class Planet implements IGravityContributor {
         this.radius = opts.planetDensity * Math.sqrt(this.mass);
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
-        this.escapeVelocity = GravityManager.computeEscapeVelocity(this);
+        this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
 
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scaling = new Vector3(this.radius, this.radius, this.radius);       
         
-        this.position = new Vector3(starPos.x + this.orbitalRadius, -star.escapeVelocity + -this.escapeVelocity + this.radius, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -161,8 +161,8 @@ export class Star implements IGravityContributor {
         this.mass = opts.starMass;
         this.radius = opts.starRadius;
         this.gMu = this.mass * GravityManager.GRAV_CONST;
-        this.escapeVelocity = GravityManager.computeEscapeVelocity(this);
-        starPos.y = -this.escapeVelocity + this.radius;
+        this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
+        starPos.y = this.escapeVelocity;
         
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;

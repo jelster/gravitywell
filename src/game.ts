@@ -181,6 +181,7 @@ export class Game {
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1,1 );
         flyCam.rotation.x = 0.28;
+        flyCam.fov = 1.6; // ~92deg
         this._flyCam = flyCam;
         this._scene.activeCameras.push(this._flyCam);
         this._scene.cameraToUseForPointers = this._flyCam;
