@@ -39,7 +39,7 @@ export class GameData {
 
     public static createDefault(): GameData {
         var gameData = new GameData();
-        gameData.systemScaleFactor = 2;
+        gameData.systemScaleFactor = 6;
         gameData.timeScaleFactor = 1000;
         gameData.gravUnit = 16;
         gameData.numberOfPlanets = 3;
@@ -56,19 +56,19 @@ export class GameData {
         gameData.flyCamMaxZ = gameData.gameWorldSizeX  / 2;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
         
-        gameData.starMass = 4.3637e17;
+        gameData.starMass = 1.963e19;
         gameData.starDensity = 0.00000225;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
         gameData.planetDensity = (0.00000221 / gameData.systemScaleFactor);
         gameData.lowerOrbitalRadiiScale = 4;
-        gameData.upperOrbitalRadiiScale = 17;
-        gameData.lowerPlanetaryMassScale = 0.1;
-        gameData.upperPlanetaryMassScale = 0.5;
+        gameData.upperOrbitalRadiiScale = 10;
+        gameData.lowerPlanetaryMassScale = 0.01;
+        gameData.upperPlanetaryMassScale = 0.25;
 
-        gameData.initialShipPosition = new Vector3(gameData.starRadius * 5, 0, 0);
+        gameData.initialShipPosition = new Vector3(gameData.starRadius * 10, 0, 0);
         gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
         gameData.shipMaxAcceleration = 20;
-        gameData.shipMaxAngularVelocity = 0.1;
+        gameData.shipMaxAngularVelocity = .1;
 
         return gameData;
     }

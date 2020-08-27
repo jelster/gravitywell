@@ -24,9 +24,9 @@ export class GravityManager {
     public static GRAV_CONST: number = 6.67259e-11;
     private _gameData: GameData;
     private _gravWells: Array<IGravityContributor>;
-    private tmpVector: Vector3;
+ 
     private test2d: Vector2 = Vector2.Zero();
-    private gwell2d: Vector2 = Vector2.Zero();
+ 
     private temp2d: Vector2 = Vector2.Zero();
     private _primaryStar: IGravityContributor;
 
@@ -66,7 +66,7 @@ export class GravityManager {
         }
         let dT = ship.mesh.getEngine().getDeltaTime()/timeScale,
             dV = ship.geForce;
-        //ship.geForce.y = 0;
+        ship.geForce.y = 0;
         dV.scaleAndAddToRef(dT, ship.velocity);
         
     }
@@ -107,7 +107,7 @@ export class GravityManager {
 
         stdMat.wireframe = true;
         stdMat.disableLighting = true;
-        gridMat.needAlphaBlending = () => true;
+        //gridMat.needAlphaBlending = () => true;
        
             
        // this.heightMap = heightMap;
@@ -127,9 +127,9 @@ export class GravityManager {
         dynTerr.subToleranceX = 1;
         dynTerr.subToleranceZ = 1;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits = [1,1,1,1,2];
+        dynTerr.LODLimits =  [2, 2, 4, 8];
         dynTerr.mesh.material = gridMat;
-        this.tmpVector = new Vector3();
+         
         let forceVector = new Vector3(), 
             self = this;
         dynTerr.refreshEveryFrame = true;
@@ -140,9 +140,9 @@ export class GravityManager {
         dynTerr.updateVertex = function(vertex) {
             let vertexColor: Color4 = vertex.color;
             vertexColor.a = Scalar.Lerp(1, 0, 1/(vertex.lodX || 1));
-            if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
-                return;
-            }
+            // if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
+            //     return;
+            // }
             
             forceVector.setAll(0);          
          

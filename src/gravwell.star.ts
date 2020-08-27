@@ -26,7 +26,7 @@ export class Planet implements IGravityContributor {
     public mass: number;
     public radius: number;
     public orbitalRadius: number;
-    public totalElapsedTime: number;
+    
     public orbitalPeriod: number; // TODO
     public orbitalSpeed: number;
     public escapeVelocity: number;
@@ -60,10 +60,11 @@ export class Planet implements IGravityContributor {
     private _currTheta: number;
     private _starMass: number;
     private _hillSphereMesh: Mesh;
+    private _gameData: GameData;
 
     public movePlanetInOrbit() {
         let angularVel = this.orbitalSpeed / this.orbitalRadius,
-            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / 1000,
+            timeSinceLastUpdate = this._mesh.getEngine().getDeltaTime() / this._gameData.timeScaleFactor,
             dT = angularVel * timeSinceLastUpdate,
             angPos = Scalar.Repeat(this._currTheta + (dT), Scalar.TwoPi);
 
@@ -102,7 +103,7 @@ export class Planet implements IGravityContributor {
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
-        this.totalElapsedTime = 0.0;
+         
 
         this.CalculateAndSetOrbitalVelocity();
         console.log('planetary params calculated', this);
@@ -117,6 +118,7 @@ export class Planet implements IGravityContributor {
        // hillSphere.parent = this._mesh;
         hillSphere.material = Planet._sphereMaterial;
         this._hillSphereMesh = hillSphere;
+        this._gameData = opts;
     }
 }
 
