@@ -88,16 +88,16 @@ export class GravityManager {
                 computeForces: true
             },
             maps = this.generateHeightMap(terrainOpts);
-        
+        console.log("height map generated:", { options: terrainOpts, numberOfTiles: numberOfTerrainTiles });
         var gridMat  = new GridMaterial("gridMat", scene);
         gridMat.gridRatio = gU;
         gridMat.lineColor = Color3.White();
         gridMat.mainColor = Color3.Black();   
         gridMat.minorUnitVisibility = 0.85;
-        //gridMat.opacity = 0.78;
+        //gridMat.opacity = 0.8;
         gridMat.majorUnitFrequency = 1;
         //gridMat.alpha = 0.78;
-        //gridMat.alphaMode = 1;
+        gridMat.alphaMode = 1;
                 // this._gridMat = gridMat;
         
         var stdMat = new StandardMaterial("std", scene);
@@ -127,7 +127,8 @@ export class GravityManager {
         dynTerr.subToleranceX = 1;
         dynTerr.subToleranceZ = 1;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits =  [2, 2, 4, 8];
+        dynTerr.LODLimits =  [0, 1, 1, 2, 2];
+       
         dynTerr.mesh.material = gridMat;
          
         let forceVector = new Vector3(), 
@@ -139,16 +140,18 @@ export class GravityManager {
         
         dynTerr.updateVertex = function(vertex) {
             let vertexColor: Color4 = vertex.color;
-            vertexColor.a = Scalar.Lerp(1, 0, 1/(vertex.lodX || 1));
-            // if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
-            //     return;
-            // }
+            // vertexColor.a = Scalar.Lerp(1, 0, 1/(vertex.lodX || 1));
+            if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
+                return;
+            }
             
             forceVector.setAll(0);          
          
             
             let heightMapIdx = 3*vertex.mapIndex + 1;
-            let gE = self.computeGravGradientAt(vertex.worldPosition);
+            let gE = self.computeGravGradientAt(vertex.worldPosition, forceVector);
+            forceVector.normalize();
+            vertexColor.set(forceVector.x, forceVector.y, forceVector.z, gE / terrainOpts.stellarEscapeVelocity);
             self.gravityMap.mapData[heightMapIdx] = self.applyScalingToHeightMap(gE);
            // vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
 
@@ -182,14 +185,16 @@ export class GravityManager {
                 mapData[idx] = (w - numberOfDivisionsX * 0.5) * gU;
                 mapData[idy] = systemGravMax;
                 mapData[idz] = (l - numberOfDivisionsZ * 0.5) * gU;
-                var color = Color3.White();
-                colorData[idx] = color.r;
-                colorData[idy] = color.g;
-                colorData[idz] = color.b;
+               
                 if (computeForces === true) {
                     const vertWPos = tmpVector.set(mapData[idx], mapData[idy], mapData[idz]);
-                    let gf = this.computeGravGradientAt(vertWPos);
+                    let gf = this.computeGravGradientAt(vertWPos, tmpVector);
                     mapData[idy] = this.applyScalingToHeightMap(gf);
+
+                    var color = new Color3(tmpVector.x/gf, tmpVector.y/gf, tmpVector.z/gf);
+                    colorData[idx] = color.r;
+                    colorData[idy] = color.g;
+                    colorData[idz] = color.b;
                 }
             }
         }

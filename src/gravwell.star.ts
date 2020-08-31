@@ -86,7 +86,8 @@ export class Planet implements IGravityContributor {
     }
 
     constructor(opts: GameData, star: Star) {
-        let starMass = opts.starMass, starRad = opts.starRadius, starPos = opts.initialStarPosition
+        this.parentStar = star;
+        let starMass = star.mass, starRad = star.radius, starPos = star.position;
         this._starMass = starMass;
         var starScaleFactor = Scalar.RandomRange(opts.lowerPlanetaryMassScale, opts.upperPlanetaryMassScale);
         
@@ -99,7 +100,8 @@ export class Planet implements IGravityContributor {
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
         this.mesh.scalingDeterminant = 2*this.radius;       
         
-        this.position = new Vector3(starPos.x + this.orbitalRadius, star.escapeVelocity + this.escapeVelocity, starPos.z + this.orbitalRadius);
+        let vSolarEsc = -GravityManager.computeEscapeVelocity(star, this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, vSolarEsc +  this.escapeVelocity, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -108,7 +110,7 @@ export class Planet implements IGravityContributor {
         this.CalculateAndSetOrbitalVelocity();
         console.log('planetary params calculated', this);
 
-        var hillSphere = MeshBuilder.CreateSphere("hillSphere", { diameterX: this.hillSphereRadius, diameterY: this.hillSphereRadius, diameterZ: this.hillSphereRadius }, this._mesh.getScene());
+        var hillSphere = MeshBuilder.CreateSphere("hillSphere", { diameterX: this.hillSphereRadius, diameterY: Math.abs(this.escapeVelocity), diameterZ: this.hillSphereRadius }, this._mesh.getScene());
         //hillSphere.rotation.x = Math.PI / 2;
         hillSphere.position = this.position;
        // hillSphere.parent = this._mesh;
@@ -177,11 +179,11 @@ export class Star implements IGravityContributor {
         this._mesh.material = sphMat;
 
 
-        this._light = new PointLight("starLight", new Vector3(0, 0, 0), scene);
+        this._light = new PointLight("starLight", new Vector3(0, Math.abs(this.escapeVelocity), 0), scene);
         this._light.diffuse = Color3.FromHexString('#FF8040');
         this._light.specular = Color3.Yellow();
         this._light.includeOnlyWithLayerMask = Game.MAIN_RENDER_MASK;
-        this._light.intensity = 5.5;
+        this._light.intensity = 100;
         this._light.parent = this._mesh;
         this._light.range = opts.gameWorldSizeX * 0.95;
 

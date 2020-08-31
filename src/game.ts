@@ -240,14 +240,12 @@ export class Game {
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
         this._gravManager.primaryStar = star;
-        star.position.y = this._gravManager.applyScalingToHeightMap(star.position.y);
         console.log(star);        
     }
 
     private createPlanets(): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
             var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
-            planet.position.y = this._gravManager.applyScalingToHeightMap(planet.position.y);   
             this._planets.push(planet);
             this._gravManager.gravWells.push(planet);
         }
@@ -428,8 +426,9 @@ export class Game {
     //    this.updateGridHeightMap();
         let terrainHeight = gMan.gravityMap.getHeightFromMap(ship.position.x, ship.position.z, { normal: ship.normal});
         let camAltitude = terrainHeight + gameData.flyCamRelativePosition.y;
-        ship.position.y = terrainHeight + gameData.gravUnit;
-        ship.mesh.rotation.set(ship.normal.x, ship.rotation, ship.normal.z);
+        ship.position.y = camAltitude;
+        ship.mesh.rotation.z = ship.normal.z;
+        ship.mesh.rotation.x = ship.normal.x;
         if (this._ship.isAlive) {
             gMan.onUpdateShipStep(ship);
             ship.onUpdate();
