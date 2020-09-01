@@ -39,15 +39,15 @@ export class GameData {
 
     public static createDefault(): GameData {
         var gameData = new GameData();
-        gameData.systemScaleFactor = 32;
-        gameData.timeScaleFactor = 1000;
-        gameData.gravUnit = 32;
+        gameData.systemScaleFactor = 64;
+        gameData.timeScaleFactor = 2000;
+        gameData.gravUnit = 64;
         gameData.numberOfPlanets = 2;
         gameData.starMap = [{ x: 0, y: 0 }];
         gameData.gameWorldSizeX = 19200;
         gameData.gameWorldSizeY = 19200;
         gameData.terrainSubCount = 256;
-        gameData.terrainScaleFactor = 1;//gameData.gravUnit / 2;
+        gameData.terrainScaleFactor = 1;
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
@@ -56,19 +56,19 @@ export class GameData {
         gameData.flyCamMaxZ = gameData.gameWorldSizeX  / 2;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
         
-        gameData.starMass = 7.963e19;
+        gameData.starMass = 1.963e20;
         gameData.starDensity = 0.00000225;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
         gameData.planetDensity = (0.00000221 / gameData.systemScaleFactor);
-        gameData.lowerOrbitalRadiiScale = 4;
-        gameData.upperOrbitalRadiiScale = 12;
-        gameData.lowerPlanetaryMassScale = 0.01;
-        gameData.upperPlanetaryMassScale = 0.25;
+        gameData.lowerOrbitalRadiiScale = 3;
+        gameData.upperOrbitalRadiiScale = 20;
+        gameData.lowerPlanetaryMassScale = 0.05;
+        gameData.upperPlanetaryMassScale = 0.3;
 
         gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2.1, 0, 0);
         gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
-        gameData.shipMaxAcceleration = 100;
-        gameData.shipMaxAngularVelocity = .1;
+        gameData.shipMaxAcceleration = 50;
+        gameData.shipMaxAngularVelocity = .15;
 
         return gameData;
     }

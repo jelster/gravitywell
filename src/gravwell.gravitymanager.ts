@@ -1,4 +1,4 @@
-import { Vector3, Scalar, _forceTransformFeedbackToBundle, Scene, Color3, Color4, StandardMaterial, Vector2 } from '@babylonjs/core';
+import { Vector3, Scalar, _forceTransformFeedbackToBundle, Scene, Color3, Color4, StandardMaterial, Vector2, AlphaState } from '@babylonjs/core';
 import { Game } from './game';
 import { GameData } from "./GameData";
 import { Ship } from './gravwell.ship';
@@ -104,9 +104,10 @@ export class GravityManager {
         stdMat.diffuseColor = Color3.Gray();
         stdMat.ambientColor = Color3.Gray();
         stdMat.emissiveColor = Color3.Gray();
-
+        stdMat.alphaMode = 0;
         stdMat.wireframe = true;
         stdMat.disableLighting = true;
+  
         //gridMat.needAlphaBlending = () => true;
        
             
@@ -127,7 +128,7 @@ export class GravityManager {
         dynTerr.subToleranceX = 1;
         dynTerr.subToleranceZ = 1;
         dynTerr.mesh.layerMask = Game.MAIN_RENDER_MASK;
-        dynTerr.LODLimits =  [0, 1, 1, 2, 2];
+        dynTerr.LODLimits =  [1, 1, 1, 2, 2];
        
         dynTerr.mesh.material = gridMat;
          
@@ -142,6 +143,7 @@ export class GravityManager {
             let vertexColor: Color4 = vertex.color;
             // vertexColor.a = Scalar.Lerp(1, 0, 1/(vertex.lodX || 1));
             if (vertex.lodX >= 6 || vertex.lodZ >= 6) {
+                vertexColor.a = 0;
                 return;
             }
             
@@ -151,7 +153,7 @@ export class GravityManager {
             let heightMapIdx = 3*vertex.mapIndex + 1;
             let gE = self.computeGravGradientAt(vertex.worldPosition, forceVector);
             forceVector.normalize();
-            vertexColor.set(forceVector.x, forceVector.y, forceVector.z, gE / terrainOpts.stellarEscapeVelocity);
+            vertexColor.set(forceVector.x, forceVector.y, forceVector.z, 1.0);
             self.gravityMap.mapData[heightMapIdx] = self.applyScalingToHeightMap(gE);
            // vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
 

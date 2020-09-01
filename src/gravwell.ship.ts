@@ -69,7 +69,7 @@ export class Ship {
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime()/this._gameData.timeScaleFactor, 
             dV = this.velocity.scaleToRef(dTime, this.tempVector);        
-       // this.mesh.setDirection(this.normal, this.rotation);
+        this.mesh.up.set(this.normal.x, this.normal.y, this.normal.z);//, this.rotation);
         this.rotation = Scalar.NormalizeRadians(this.rotation + dTime * this.angularVelocity);
         this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.98));
         this.mesh.moveWithCollisions(dV);        
