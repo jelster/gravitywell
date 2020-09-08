@@ -21,6 +21,29 @@
             touch-action: none;
         }
 
+        #instructionPlate {
+            display: block;
+            position: absolute;                         
+            bottom: 33%;
+            z-index: 100000;
+            background: rgba(255,255,255,0.78);
+            font-family: courier;
+            margin: 0 20px;
+            padding: 0 20px;
+        }
+
+        #instructionPlate ul {
+            list-style-type: square;
+        }
+
+        #instructionPlate ul li {
+
+        }
+
+        #instructionPlate pre {
+            display: inline-block;
+        }
+
     </style>
 
 
@@ -35,7 +58,14 @@
    
     <canvas id="renderCanvas"></canvas>
 
-
+<div id="instructionPlate">
+    <h2>Controls</h2>
+    <ul>
+        <li>Rotate right: <pre>D</pre> or <pre>&rightarrow;</pre></li>
+        <li>Rotate left: <pre>A</pre> or <pre>&leftarrow;</pre></li>
+        <li>Apply forward thrust: <pre>W</pre> or <pre>&uparrow;</pre></li>
+    </ul>
+</div>
 
 </body>
 
