@@ -61,7 +61,16 @@ export class UI {
 
         pauseButton.adaptWidthToChildren = true;
         pauseButton.height = "120px";
-        pauseButton.onPointerClickObservable.add(() => game.togglePause());
+        pauseButton.onPointerClickObservable.add(() => {
+            let helpText = document.getElementById("instructionPlate");
+            if (helpText.style.display) { 
+                helpText.style.display = null;
+            }
+            else {
+                helpText.style.display = 'none';
+            }
+            game.togglePause();}
+        );
         sp.addControl(pauseButton);
         this._pauseButton = pauseButton;
 
@@ -103,6 +112,7 @@ export class UI {
         header.addControl(speedView);
 
         var geView = new TextBlock("geView", this.formatVectorText(Vector3.Zero()));
+        geView.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         geView.resizeToFit = true;
         header.addControl(geView);
 
@@ -110,7 +120,7 @@ export class UI {
     }
     public registerPlanetaryDisplays(current: Game) {
         current.planets.forEach(planet => {
-            var rect = new Rectangle();
+            var rect = new Rectangle(planet.mesh.name + "-disp");
             rect.isHitTestVisible = false;
             rect.isPointerBlocker = false;
             rect.height = .1;
