@@ -59,11 +59,11 @@ export class GameData {
         gameData.starMass = 1.963e20;
         gameData.starDensity = 0.00000225;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
-        gameData.planetDensity = (0.00000221 / gameData.systemScaleFactor);
-        gameData.lowerOrbitalRadiiScale = 3;
-        gameData.upperOrbitalRadiiScale = 20;
+        gameData.planetDensity = (0.00000521 / gameData.systemScaleFactor);
+        gameData.lowerOrbitalRadiiScale = 5;
+        gameData.upperOrbitalRadiiScale = 18;
         gameData.lowerPlanetaryMassScale = 0.05;
-        gameData.upperPlanetaryMassScale = 0.3;
+        gameData.upperPlanetaryMassScale = 0.25;
 
         gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2.1, 0, 0);
         gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
