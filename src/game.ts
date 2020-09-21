@@ -226,10 +226,6 @@ export class Game {
         // this._floor.layerMask = Game.MAIN_RENDER_MASK;
         // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
         // this._floor.material = this._gridMat;
-        
-
-
-
     }
 
 
@@ -442,10 +438,6 @@ export class Game {
             let alive = this._ship.isAlive, 
                 paused = this.isPaused,
                 gD = this._gameData;
-                
-
-            
-
            
             if (!paused) {
                 //this.updateShipPositionOverflow();
@@ -474,8 +466,7 @@ export class Game {
                     }
 
                 }
-            }
-           
+            }           
        
             this._scene.render();
 
