@@ -64,7 +64,7 @@ export class UI {
         pauseButton.onPointerClickObservable.add(() => {
             let helpText = document.getElementById("instructionPlate");
             if (!game.isPaused) { 
-                helpText.style.display = null;
+                helpText.style.display = 'block';
             }
             else {
                 helpText.style.display = 'none';
@@ -135,10 +135,10 @@ export class UI {
             rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
             var planetView = 
-              "   Mass: " + planet.mass.toExponential(4) + "\n" 
-            + "Radius: " + planet.radius.toFixed(2) + "  \n"
-            + "  Orbit:  " + planet.orbitalRadius.toFixed(4) + "\n"
-            + "Period: " + planet.orbitalPeriod.toFixed(2) + " \n"
+              "   Mass: " + planet.mass.toExponential(4) + "kg \n" 
+            + "Radius: " + planet.radius.toFixed(2) + "m \n"
+            + "  Orbit:  " + planet.orbitalRadius.toFixed(4) + "m \n"
+            + "Period: " + planet.orbitalPeriod.toFixed(2) + "s \n"
             + " Speed:  " + planet.orbitalSpeed.toFixed(4);
 
             var rectTb = new TextBlock("", planetView);

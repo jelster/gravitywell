@@ -52,6 +52,7 @@ export class GravityManager {
         this._gameData = opts;
         GravityManager.GRAV_UNIT = opts.gravUnit;
         this.gravWells = new Array<IGravityContributor>();
+        GravityManager.GRAV_CONST = opts.terrainScaleFactor * GravityManager.GRAV_CONST
         
     }
    
@@ -162,7 +163,7 @@ export class GravityManager {
     }
 
     public applyScalingToHeightMap(rawHeightValue: number) {
-        return rawHeightValue * this._gameData.terrainScaleFactor;
+        return rawHeightValue * 1; //this._gameData.terrainScaleFactor;
     }
     
 
