@@ -63,7 +63,7 @@ export class UI {
         pauseButton.height = "120px";
         pauseButton.onPointerClickObservable.add(() => {
             let helpText = document.getElementById("instructionPlate");
-            if (helpText.style.display) { 
+            if (!game.isPaused) { 
                 helpText.style.display = null;
             }
             else {
