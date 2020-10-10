@@ -181,6 +181,7 @@ export class Game {
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1,1 );
         flyCam.rotation.x = 0.28;
+        flyCam.fov = 1.6; // ~92deg
         this._flyCam = flyCam;
         this._scene.activeCameras.push(this._flyCam);
         this._scene.cameraToUseForPointers = this._flyCam;
@@ -225,10 +226,6 @@ export class Game {
         // this._floor.layerMask = Game.MAIN_RENDER_MASK;
         // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
         // this._floor.material = this._gridMat;
-        
-
-
-
     }
 
 
@@ -237,12 +234,14 @@ export class Game {
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
         this._stars.push(star);
-        this._gravManager.gravWells.push(star);        
+        this._gravManager.gravWells.push(star);
+        this._gravManager.primaryStar = star;
+        console.log(star);        
     }
 
     private createPlanets(): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
-            var planet = new Planet(this._gameData);
+            var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
             this._planets.push(planet);
             this._gravManager.gravWells.push(planet);
         }
@@ -405,19 +404,31 @@ export class Game {
     }
 
     private updateRunningGameState() {       
+        let gMan = this._gravManager;
+        let gameData = this._gameData;
+        let ship = this._ship;
+    
+        
         if (this.isPaused) {
             return;
         }
-        
+        gameData.lastUpdate = new Date();
+        gameData.lastShipVelocity = ship.velocity;
+        gameData.lastShipGeForce = ship.geForce;  
         this._planets.forEach(planet => {
             planet.movePlanetInOrbit();
+            planet.position.y = gMan.gravityMap.getHeightFromMap(planet.position.x, planet.position.z);
         });
         
     //    this.updateGridHeightMap();
-
+        let terrainHeight = gMan.gravityMap.getHeightFromMap(ship.position.x, ship.position.z, { normal: ship.normal});
+        let camAltitude = terrainHeight + gameData.flyCamRelativePosition.y;
+        ship.position.y = camAltitude;
+        ship.mesh.rotation.z = ship.normal.z;
+        ship.mesh.rotation.x = ship.normal.x;
         if (this._ship.isAlive) {
-            this._gravManager.onUpdateShipStep(this._ship);
-            this._ship.onUpdate();
+            gMan.onUpdateShipStep(ship);
+            ship.onUpdate();
         }
         
     }
@@ -427,17 +438,8 @@ export class Game {
         this._engine.runRenderLoop(() => {
             let alive = this._ship.isAlive, 
                 paused = this.isPaused,
-                gD = this._gameData,
-                gMan = this._gravManager;
-            gD.lastUpdate = new Date();
-            gD.lastShipVelocity = this._ship.velocity;
-            gD.lastShipGeForce = this._ship.geForce;   
-            var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 4;
-            if (this._ship.position.y <= terrHeight) {
-                this._ship.position.y = terrHeight;
-                this._ship.velocity.y *= -0.1;
-               // console.log('altitude warning', terrHeight, this._ship.normal);
-            }
+                gD = this._gameData;
+           
             if (!paused) {
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();
@@ -465,8 +467,7 @@ export class Game {
                     }
 
                 }
-            }
-           
+            }           
        
             this._scene.render();
 

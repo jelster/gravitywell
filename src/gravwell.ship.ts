@@ -44,7 +44,7 @@ export class Ship {
         this._gameData = opts;
         this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8, tessellation: 2 }, scene);
         this.geForce = new Vector3();
-        this.mesh.rotation.x = Math.PI / 2;
+        //this.mesh.rotation.x = Math.PI / 2;
         //this.mesh.rotation.z = -Math.PI / 2;
         //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
@@ -68,9 +68,9 @@ export class Ship {
 
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime()/this._gameData.timeScaleFactor, 
-            dV = this.velocity.scaleToRef(dTime, this.tempVector);        
-       
-        this.rotation += dTime * this.angularVelocity;
+            dV = this.velocity.scale(dTime);        
+        this.mesh.up.set(this.normal.x, this.normal.y, this.normal.z);//, this.rotation);
+        this.rotation = Scalar.NormalizeRadians(this.rotation + dTime * this.angularVelocity);
         this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.98));
         this.mesh.moveWithCollisions(dV);        
     }

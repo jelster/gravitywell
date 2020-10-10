@@ -39,36 +39,36 @@ export class GameData {
 
     public static createDefault(): GameData {
         var gameData = new GameData();
-        gameData.systemScaleFactor = 36;
+        gameData.systemScaleFactor = 1;
         gameData.timeScaleFactor = 1000;
-        gameData.gravUnit = 64;
-        gameData.numberOfPlanets = 3;
+        gameData.gravUnit = 16;
+        gameData.numberOfPlanets = 2;
         gameData.starMap = [{ x: 0, y: 0 }];
-        gameData.gameWorldSizeX = gameData.gravUnit * 240;
-        gameData.gameWorldSizeY = gameData.gravUnit * 240;
-        gameData.terrainSubCount = 240;
-        gameData.terrainScaleFactor = 1.5;
+        gameData.gameWorldSizeX = 22400;
+        gameData.gameWorldSizeY = 22400;
+        gameData.terrainSubCount = 300;
+        gameData.terrainScaleFactor = 128;
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
-        gameData.miniMapMaxZ = 1.5 * gameData.gameHypotenuse;
-        gameData.flyCamRelativePosition = new Vector3(0, 10, -12);
-        gameData.flyCamMaxZ = gameData.gameHypotenuse * 0.467;
+        gameData.miniMapMaxZ = 2 * gameData.gameHypotenuse;
+        gameData.flyCamRelativePosition = new Vector3(0, 10, -10);
+        gameData.flyCamMaxZ = gameData.gameWorldSizeX  / 2;
         gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
         
-        gameData.starMass = 4.9181e17 / gameData.systemScaleFactor;
-        gameData.starDensity = 0.000225;
+        gameData.starMass = 1.963e15;
+        gameData.starDensity = 0.0000125;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
-        gameData.planetDensity = (0.000241 / gameData.systemScaleFactor);
-        gameData.lowerOrbitalRadiiScale = 3;
-        gameData.upperOrbitalRadiiScale = 10;
+        gameData.planetDensity = (0.00000921 / gameData.systemScaleFactor);
+        gameData.lowerOrbitalRadiiScale = 8;
+        gameData.upperOrbitalRadiiScale = 0.5 *  Math.floor(( gameData.gameWorldSizeX) / gameData.starRadius);
         gameData.lowerPlanetaryMassScale = 0.1;
-        gameData.upperPlanetaryMassScale = 0.5;
+        gameData.upperPlanetaryMassScale = 0.25;
 
-        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2 + gameData.gravUnit, 0, 0);
+        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2.1, 0, 0);
         gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
-        gameData.shipMaxAcceleration = 20;
-        gameData.shipMaxAngularVelocity = 0.1;
+        gameData.shipMaxAcceleration = 50;
+        gameData.shipMaxAngularVelocity = .15;
 
         return gameData;
     }
