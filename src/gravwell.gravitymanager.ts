@@ -52,7 +52,7 @@ export class GravityManager {
         this._gameData = opts;
         GravityManager.GRAV_UNIT = opts.gravUnit;
         this.gravWells = new Array<IGravityContributor>();
-        GravityManager.GRAV_CONST = opts.terrainScaleFactor * GravityManager.GRAV_CONST
+        //GravityManager.GRAV_CONST = opts.terrainScaleFactor * GravityManager.GRAV_CONST
         
     }
    
@@ -60,7 +60,7 @@ export class GravityManager {
         let timeScale = this._gameData.timeScaleFactor;
         ship.geForce.setAll(0);
         let dS = this.computeGravGradientAt(ship.position, ship.geForce);
-
+        ship.geForce.scaleInPlace(-dS);
         if (ship.thrustersFiring === true) {
             ship.geForce.addInPlace(ship.mesh.forward.scale(ship.maxAcceleration));
             ship.thrustersFiring = false;
@@ -68,6 +68,7 @@ export class GravityManager {
         let dT = ship.mesh.getEngine().getDeltaTime()/timeScale,
             dV = ship.geForce;
         ship.geForce.y = 0;
+        
         dV.scaleAndAddToRef(dT, ship.velocity);
         
     }
@@ -163,7 +164,7 @@ export class GravityManager {
     }
 
     public applyScalingToHeightMap(rawHeightValue: number) {
-        return rawHeightValue * 1; //this._gameData.terrainScaleFactor;
+        return rawHeightValue * this._gameData.terrainScaleFactor;
     }
     
 
@@ -194,7 +195,7 @@ export class GravityManager {
                     let gf = this.computeGravGradientAt(vertWPos, tmpVector);
                     mapData[idy] = this.applyScalingToHeightMap(gf);
 
-                    var color = new Color3(tmpVector.x/gf, tmpVector.y/gf, tmpVector.z/gf);
+                    var color = new Color3(tmpVector.x, tmpVector.y, tmpVector.z);
                     colorData[idx] = color.r;
                     colorData[idy] = color.g;
                     colorData[idz] = color.b;
@@ -228,6 +229,9 @@ export class GravityManager {
                 summedVecRef.addInPlaceFromFloats(direction.x, 0, direction.y);
             }
             
+        }
+        if (summedVecRef) {
+            summedVecRef.normalize();
         }
         return resV;
     }

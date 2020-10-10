@@ -417,6 +417,7 @@ export class Game {
         gameData.lastShipGeForce = ship.geForce;  
         this._planets.forEach(planet => {
             planet.movePlanetInOrbit();
+            planet.position.y = gMan.gravityMap.getHeightFromMap(planet.position.x, planet.position.z);
         });
         
     //    this.updateGridHeightMap();

@@ -40,14 +40,14 @@ export class GameData {
     public static createDefault(): GameData {
         var gameData = new GameData();
         gameData.systemScaleFactor = 1;
-        gameData.timeScaleFactor = 2000;
+        gameData.timeScaleFactor = 1000;
         gameData.gravUnit = 16;
         gameData.numberOfPlanets = 2;
         gameData.starMap = [{ x: 0, y: 0 }];
-        gameData.gameWorldSizeX = 9600;
-        gameData.gameWorldSizeY = 9600;
+        gameData.gameWorldSizeX = 22400;
+        gameData.gameWorldSizeY = 22400;
         gameData.terrainSubCount = 300;
-        gameData.terrainScaleFactor = 1000;
+        gameData.terrainScaleFactor = 128;
         gameData.respawnTimeLimit = 4000;
         
         gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
@@ -59,10 +59,10 @@ export class GameData {
         gameData.starMass = 1.963e15;
         gameData.starDensity = 0.0000125;
         gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
-        gameData.planetDensity = (0.00000521 / gameData.systemScaleFactor);
-        gameData.lowerOrbitalRadiiScale = 2;
+        gameData.planetDensity = (0.00000921 / gameData.systemScaleFactor);
+        gameData.lowerOrbitalRadiiScale = 8;
         gameData.upperOrbitalRadiiScale = 0.5 *  Math.floor(( gameData.gameWorldSizeX) / gameData.starRadius);
-        gameData.lowerPlanetaryMassScale = 0.05;
+        gameData.lowerPlanetaryMassScale = 0.1;
         gameData.upperPlanetaryMassScale = 0.25;
 
         gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2.1, 0, 0);
