@@ -1,4 +1,5 @@
-import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar, Space, Axis, Quaternion } from '@babylonjs/core';
+import { Matrix2D } from '@babylonjs/gui';
 import { GameData } from './GameData';
 
 export class Ship {
@@ -21,16 +22,6 @@ export class Ship {
         this._isAlive = v;
     }
 
-    public get rotation(): number {
-        return this.mesh.rotation.y;
-    }
-    public set rotation(r: number) {
-       
-       // this.mesh.rotation.x = 0;
-        this.mesh.rotation.y = r;
-      //  this.mesh.rotation.z = 0;
-    }
-
     public get position(): Vector3 {
         return this.mesh.position;
     }
@@ -48,7 +39,7 @@ export class Ship {
         //this.mesh.rotation.z = -Math.PI / 2;
         //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
-        this.mesh.bakeCurrentTransformIntoVertices();
+        this.mesh.rotation = new Vector3();
         this.maxAcceleration = opts.shipMaxAcceleration
         this.maxAngularVelocity = opts.shipMaxAngularVelocity;
         this.velocity = new Vector3();
@@ -68,9 +59,10 @@ export class Ship {
 
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime()/this._gameData.timeScaleFactor, 
-            dV = this.velocity.scale(dTime);        
-        this.mesh.up.set(this.normal.x, this.normal.y, this.normal.z);//, this.rotation);
-        this.rotation = Scalar.NormalizeRadians(this.rotation + dTime * this.angularVelocity);
+            dV = this.velocity.scale(dTime),
+            dVa = Scalar.NormalizeRadians(dTime * this.angularVelocity);
+
+        this.mesh.rotate(Axis.Y, dVa, Space.LOCAL);
         this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.98));
         this.mesh.moveWithCollisions(dV);        
     }

@@ -424,8 +424,6 @@ export class Game {
         let terrainHeight = gMan.gravityMap.getHeightFromMap(ship.position.x, ship.position.z, { normal: ship.normal});
         let camAltitude = terrainHeight + gameData.flyCamRelativePosition.y;
         ship.position.y = camAltitude;
-        ship.mesh.rotation.z = ship.normal.z;
-        ship.mesh.rotation.x = ship.normal.x;
         if (this._ship.isAlive) {
             gMan.onUpdateShipStep(ship);
             ship.onUpdate();
