@@ -13,6 +13,17 @@ import { GravityManager } from './gravwell.gravitymanager';
 import { GameData } from "./GameData";
 
 
+/*
+Includes for loading assets
+*/
+const space_nx = require('../textures/Space/space_nx.jpg');
+const space_ny = require('../textures/Space/space_ny.jpg');
+const space_nz = require('../textures/Space/space_nz.jpg');
+const space_px = require('../textures/Space/space_px.jpg');
+const space_py = require('../textures/Space/space_py.jpg');
+const space_pz = require('../textures/Space/space_pz.jpg');
+
+const explosionImage = require('../textures/explosion-3.png');
 //import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
 
 
@@ -292,7 +303,7 @@ export class Game {
     private createExplosion(): void {
 
         this._explosionParticle = new ParticleSystem("explosion", 200, this._scene);
-        this._explosionParticle.particleTexture = new Texture("textures/explosion-3.png", this._scene);
+        this._explosionParticle.particleTexture = new Texture(explosionImage, this._scene);
         this._explosionParticle.particleEmitterType = new SphereParticleEmitter(5, 0);
         this._explosionParticle.preventAutoStart = true;
         this._explosionParticle.disposeOnStop = false;

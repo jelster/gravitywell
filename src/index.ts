@@ -1,13 +1,16 @@
-
+ 
 // TODO: load game data from TBD
 import { Game } from './game';
 import { UI } from './gravwell.ui';
-import { SceneOptimizer, SceneOptimizerOptions } from '@babylonjs/core';
+
 import { GameData } from './GameData';
+
+import {version } from '../package.json';
 
 window.addEventListener("DOMContentLoaded", () => {
 
-   var game = GravityWellGameManager.createGame();
+    document.title = 'GravWell - v' + version;
+    var game = GravityWellGameManager.createGame();
 
 });
 
@@ -26,10 +29,7 @@ export class GravityWellGameManager {
         game.initializeGame();
         gravGui.registerPlanetaryDisplays(game);
         scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
-        //var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
-        
-       // optimizer.onNewOptimizationAppliedObservable.add((ev) => console.log(ev));
-        
+
         // Start render loop.
         game.doRender();
         

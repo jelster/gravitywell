@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "module": "esnext",
+        "module": "es6",
         "pretty": true,
         "sourceMap": true,
         "moduleResolution": "node",
-        "outDir": "dist/"
+        "outDir": "dist/",
+        "skipLibCheck": true,
+        "sourceRoot": "src/",
+        "resolveJsonModule": true
     },
     "include": ["src/**/*"]
 }
