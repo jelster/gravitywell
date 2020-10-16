@@ -14,7 +14,7 @@ import { GameData } from "./GameData";
 
 
 /*
-Includes for loading assets
+Includes for loading assets - side effects or not
 */
 const space_nx = require('../textures/Space/space_nx.jpg');
 const space_ny = require('../textures/Space/space_ny.jpg');
@@ -24,14 +24,9 @@ const space_py = require('../textures/Space/space_py.jpg');
 const space_pz = require('../textures/Space/space_pz.jpg');
 
 const explosionImage = require('../textures/explosion-3.png');
-//import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
-
-
-export enum GravityMode {
-    DistanceSquared = 1,
-    DistanceCubed = 2
-}
-
+/*
+    Load assets above this line
+*/
 
 export class Game {
     toggleDebugLayer(): any {
@@ -64,7 +59,7 @@ export class Game {
         this._gravManager.gravityMap.updateVertex = null;
         this._scene.removeMesh(this._gravManager.gravityMap.mesh, true);
         this._gravManager.gravityMap.mesh.dispose();
-        this.initializeGame(GameData.createDefault());
+        this.initializeGame(GameData.create());
     }
 
     public get gameData(): GameData {
@@ -124,7 +119,7 @@ export class Game {
             this._gameData = gameData;
         }
         else {
-            gameData = this._gameData || GameData.createDefault();
+            gameData = this._gameData || GameData.create();
         }
         
         gameData.startTime = new Date();

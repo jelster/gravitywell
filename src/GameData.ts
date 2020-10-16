@@ -57,13 +57,13 @@ export class GameData {
 
         return gameData;
     }
-    public static createDefault(settings = null): GameData {
+    public static create(settings = null): GameData {
         var gameData = new GameData();
         settings = settings || {};
         gameData.systemScaleFactor = settings.systemScaleFactor || 1;
         gameData.timeScaleFactor = settings.timeScaleFactor || 1000;
         gameData.gravUnit =  settings.gravUnit || 16;
-        gameData.numberOfPlanets = settings.numberOfPlanets || 2;
+        gameData.numberOfPlanets = settings.numberOfPlanets ?? 2;
         gameData.starMap = settings.starMap || [{ x: 0, y: 0 }];
         gameData.gameWorldSizeX = settings.gameWorldSizeX || 22400;
         gameData.gameWorldSizeY = settings.gameWorldSizeY || 22400;

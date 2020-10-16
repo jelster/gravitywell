@@ -6,7 +6,7 @@ import { UI } from './gravwell.ui';
 import { GameData } from './GameData';
 
 import {version } from '../package.json';
-
+import * as Data from '../default-gameData.json';
 window.addEventListener("DOMContentLoaded", () => {
 
     document.title = 'GravWell - v' + version;
@@ -20,7 +20,7 @@ export class Point {
 }
 export class GravityWellGameManager {
     public static createGame(): Game {
-        var instanceData = GameData.createDefault();
+        var instanceData = GameData.create(Data);
         // Create the game using the 'renderCanvas'.
         let game = new Game('renderCanvas', instanceData);
         // Create the scene.
