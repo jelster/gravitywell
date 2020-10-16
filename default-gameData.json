@@ -14,12 +14,6 @@
     "systemScaleFactor": 1,
     "timeScaleFactor": 1000,
     "numberOfPlanets": 0,
-    "starMap": [
-        {
-            "x": 0,
-            "y": 0
-        }
-    ],
     "gameWorldSizeX": 22400,
     "gameWorldSizeY": 22400,
     "terrainSubCount": 300,

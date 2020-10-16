@@ -101,7 +101,6 @@ export class Game {
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
 
-    public GravityWellMode: GravityMode;
     public isPaused: boolean;
 
     private _flyCam: UniversalCamera;

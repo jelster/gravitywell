@@ -3,7 +3,7 @@
 import { Game } from './game';
 import { UI } from './gravwell.ui';
 
-import { GameData } from './GameData';
+import { GameData, IScenarioData } from './GameData';
 
 import {version } from '../package.json';
 import * as Data from '../default-gameData.json';
@@ -14,13 +14,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
 });
 
-export class Point {
-    public x: number;
-    public y: number;
-}
 export class GravityWellGameManager {
     public static createGame(): Game {
-        var instanceData = GameData.create(Data);
+        let scenario = {} as IScenarioData;
+        Object.assign(scenario, Data);
+        var instanceData = GameData.create(scenario);
         // Create the game using the 'renderCanvas'.
         let game = new Game('renderCanvas', instanceData);
         // Create the scene.

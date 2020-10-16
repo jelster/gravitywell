@@ -1,38 +1,47 @@
 import { Vector3 } from '@babylonjs/core';
-import { Point } from './index';
-export class GameData {
-    public get gameHypotenuse() : number {
+
+export interface IScenarioData {
+    numberOfPlanets: number;
+    gameWorldSizeX: number;
+    gameWorldSizeY: number;
+    gravUnit: number;
+    respawnTimeLimit: number;
+    starMass: number;
+    planetDensity: number;
+    starDensity: number;
+    lowerOrbitalRadiiScale: number;
+    upperOrbitalRadiiScale: number;
+    lowerPlanetaryMassScale: number;
+    upperPlanetaryMassScale: number;
+    initialShipPosition: Vector3;
+    initialStarPosition: Vector3;
+    systemScaleFactor: number;
+    terrainSubCount: number;
+    terrainScaleFactor: number;
+    timeScaleFactor: number;
+    shipMaxAngularVelocity: number;
+    shipMaxAcceleration: number;
+}
+export class GameData implements IScenarioData {
+    public get gameHypotenuse(): number {
         return Math.sqrt((Math.pow(this.gameWorldSizeX, 2) + Math.pow(this.gameWorldSizeY, 2)));
     }
 
-    public starMap: Array<Point>;
+    
     public numberOfPlanets: number;
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
     public gravUnit: number = 64;
     public respawnTimeLimit: number;
     public starMass: number;
-    public miniMapMaxZ: number;
-    public miniMapCameraPosition: Vector3;
-    public flyCamRelativePosition: Vector3;
-    public flyCamMaxZ: number;
-    public skyBoxScale: number;
+    
     public initialShipPosition: Vector3;
     public planetDensity: number;
-    public starDensity: number;
-    public starRadius: number;
-    public initialStarPosition: Vector3;
-    public lowerOrbitalRadiiScale: number;
-    public upperOrbitalRadiiScale: number;
+    public starDensity: number;    
+    
+    public lowerOrbitalRadiiScale: number;    
     public lowerPlanetaryMassScale: number;
-    public upperPlanetaryMassScale: number;
-
-    public isStarted: boolean = false;
-    public startTime: Date;
-    public lastUpdate: Date;
-    public lastShipVelocity: Vector3 = new Vector3();
-    public lastShipGeForce: Vector3 = new Vector3();
-
+    public upperPlanetaryMassScale: number;    
     public systemScaleFactor: number;
     public terrainSubCount: number;
     public terrainScaleFactor: number;
@@ -40,31 +49,44 @@ export class GameData {
     public shipMaxAngularVelocity: number;
     public shipMaxAcceleration: number;
 
-    private static computeValuesFromSettingsData(gameData: GameData) : GameData {
+    public miniMapMaxZ: number;
+    public miniMapCameraPosition: Vector3;
+    public flyCamRelativePosition: Vector3;
+    public flyCamMaxZ: number;
+    public skyBoxScale: number;
+    public starRadius: number;
+    public upperOrbitalRadiiScale: number;
+    public initialStarPosition: Vector3;
 
-        gameData.miniMapCameraPosition = new Vector3(0, gameData.gameHypotenuse, 0);
-        gameData.miniMapMaxZ = 2 * gameData.gameHypotenuse;
-        gameData.flyCamRelativePosition = new Vector3(0, 15, -15);
-        gameData.flyCamMaxZ = gameData.gameWorldSizeX  / 2;
-        gameData.skyBoxScale = gameData.gameWorldSizeX + (0.15 * gameData.gameWorldSizeX);
+    public isStarted: boolean = false;
+    public startTime: Date;
+    public lastUpdate: Date;
+    public lastShipVelocity: Vector3 = new Vector3();
+    public lastShipGeForce: Vector3 = new Vector3();
 
-        gameData.starRadius = (gameData.starDensity / gameData.systemScaleFactor) * Math.sqrt(gameData.starMass);
-        gameData.planetDensity = (0.00000921 / gameData.systemScaleFactor);
-        gameData.upperOrbitalRadiiScale = 0.5 *  Math.floor(( gameData.gameWorldSizeX) / gameData.starRadius);
+    private computeValuesFromSettingsData(scenarioData: IScenarioData): GameData {
+        const gameHypotenuse = this.gameHypotenuse;
+        this.miniMapCameraPosition = new Vector3(0, gameHypotenuse, 0);
+        this.miniMapMaxZ = 2 * gameHypotenuse;
+        this.flyCamRelativePosition = new Vector3(0, 15, -15);
+        this.flyCamMaxZ = scenarioData.gameWorldSizeX / 2;
+        this.skyBoxScale = scenarioData.gameWorldSizeX + (0.15 * scenarioData.gameWorldSizeX);
+        this.starRadius = (scenarioData.starDensity / scenarioData.systemScaleFactor) * Math.sqrt(scenarioData.starMass);
+        scenarioData.planetDensity = (0.00000921 / scenarioData.systemScaleFactor);
+        scenarioData.upperOrbitalRadiiScale = 0.5 * Math.floor((scenarioData.gameWorldSizeX) / this.starRadius);
 
-        gameData.initialShipPosition = new Vector3(gameData.gameWorldSizeX / 2.1, 0, 0);
-        gameData.initialStarPosition = new Vector3(0, -gameData.starRadius, 0);
+        this.initialShipPosition = scenarioData.initialShipPosition || new Vector3(scenarioData.gameWorldSizeX / 2.1, 0, 0);
+        this.initialStarPosition = scenarioData.initialStarPosition || new Vector3(0, -this.starRadius, 0);
 
-        return gameData;
+        return this;
     }
-    public static create(settings = null): GameData {
+    public static create(settings?: IScenarioData): GameData {
         var gameData = new GameData();
-        settings = settings || {};
+        settings = settings || {} as IScenarioData;
         gameData.systemScaleFactor = settings.systemScaleFactor || 1;
         gameData.timeScaleFactor = settings.timeScaleFactor || 1000;
-        gameData.gravUnit =  settings.gravUnit || 16;
+        gameData.gravUnit = settings.gravUnit || 16;
         gameData.numberOfPlanets = settings.numberOfPlanets ?? 2;
-        gameData.starMap = settings.starMap || [{ x: 0, y: 0 }];
         gameData.gameWorldSizeX = settings.gameWorldSizeX || 22400;
         gameData.gameWorldSizeY = settings.gameWorldSizeY || 22400;
         gameData.terrainSubCount = settings.terrainSubCount || 300;
@@ -75,9 +97,9 @@ export class GameData {
         gameData.lowerOrbitalRadiiScale = settings.lowerOrbitalRadiiScale || 8;
         gameData.lowerPlanetaryMassScale = settings.lowerPlanetaryMassScale || 0.01;
         gameData.upperPlanetaryMassScale = settings.upperPlanetaryMassScale || 0.25;
-        gameData.shipMaxAcceleration = settings.shipMaxAccelleration || 50;
+        gameData.shipMaxAcceleration = settings.shipMaxAcceleration || 50;
         gameData.shipMaxAngularVelocity = settings.shipMaxAngularVelocity || .15;
 
-        return GameData.computeValuesFromSettingsData(gameData);
+        return gameData.computeValuesFromSettingsData(settings);
     }
 }
