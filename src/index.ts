@@ -26,7 +26,7 @@ export class GravityWellGameManager {
         let gravGui = new UI(game, scene);
         game.initializeGame();
         gravGui.registerPlanetaryDisplays(game);
-        scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
+        scene.onAfterStepObservable.add(() => gravGui.updateControls(game.gameData.stateData));
 
         // Start render loop.
         game.doRender();

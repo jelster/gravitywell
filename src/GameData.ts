@@ -22,26 +22,44 @@ export interface IScenarioData {
     shipMaxAngularVelocity: number;
     shipMaxAcceleration: number;
 }
+
+export interface IGameStateData {
+    isPaused: boolean;
+    isStarted: boolean;
+    startTime: Date;
+    lastUpdate: Date;
+    lastShipVelocity: Vector3;
+    lastShipGeForce: Vector3;
+}
+export class GameState implements IGameStateData {
+    isPaused: boolean;
+    isStarted: boolean;
+    startTime: Date;
+    lastUpdate: Date;
+    lastShipVelocity: Vector3 = Vector3.Zero();
+    lastShipGeForce: Vector3 = Vector3.Zero();
+    
+}
+
 export class GameData implements IScenarioData {
     public get gameHypotenuse(): number {
         return Math.sqrt((Math.pow(this.gameWorldSizeX, 2) + Math.pow(this.gameWorldSizeY, 2)));
     }
 
-    
     public numberOfPlanets: number;
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
     public gravUnit: number = 64;
     public respawnTimeLimit: number;
     public starMass: number;
-    
+
     public initialShipPosition: Vector3;
     public planetDensity: number;
-    public starDensity: number;    
-    
-    public lowerOrbitalRadiiScale: number;    
+    public starDensity: number;
+
+    public lowerOrbitalRadiiScale: number;
     public lowerPlanetaryMassScale: number;
-    public upperPlanetaryMassScale: number;    
+    public upperPlanetaryMassScale: number;
     public systemScaleFactor: number;
     public terrainSubCount: number;
     public terrainScaleFactor: number;
@@ -58,11 +76,14 @@ export class GameData implements IScenarioData {
     public upperOrbitalRadiiScale: number;
     public initialStarPosition: Vector3;
 
-    public isStarted: boolean = false;
-    public startTime: Date;
-    public lastUpdate: Date;
-    public lastShipVelocity: Vector3 = new Vector3();
-    public lastShipGeForce: Vector3 = new Vector3();
+    public stateData: IGameStateData;
+
+    public isPaused(): boolean { return this.stateData.isPaused; };
+    public isStarted(): boolean { return this.stateData.isStarted ?? false; };
+    public startTime(): Date { return this.stateData.startTime; };
+    public lastUpdate(): Date { return this.stateData.lastUpdate; };
+    public lastShipVelocity(): Vector3 { return this.stateData.lastShipVelocity ?? Vector3.Zero(); };
+    public lastShipGeForce(): Vector3 { return this.stateData.lastShipGeForce ?? Vector3.Zero(); };
 
     private computeValuesFromSettingsData(scenarioData: IScenarioData): GameData {
         const gameHypotenuse = this.gameHypotenuse;
@@ -72,15 +93,15 @@ export class GameData implements IScenarioData {
         this.flyCamMaxZ = scenarioData.gameWorldSizeX / 2;
         this.skyBoxScale = scenarioData.gameWorldSizeX + (0.15 * scenarioData.gameWorldSizeX);
         this.starRadius = (scenarioData.starDensity / scenarioData.systemScaleFactor) * Math.sqrt(scenarioData.starMass);
-        scenarioData.planetDensity = (0.00000921 / scenarioData.systemScaleFactor);
-        scenarioData.upperOrbitalRadiiScale = 0.5 * Math.floor((scenarioData.gameWorldSizeX) / this.starRadius);
+        this.planetDensity = (0.00000921 / scenarioData.systemScaleFactor);
+        this.upperOrbitalRadiiScale = 0.5 * Math.floor((scenarioData.gameWorldSizeX) / this.starRadius);
 
         this.initialShipPosition = scenarioData.initialShipPosition || new Vector3(scenarioData.gameWorldSizeX / 2.1, 0, 0);
         this.initialStarPosition = scenarioData.initialStarPosition || new Vector3(0, -this.starRadius, 0);
 
         return this;
     }
-    public static create(settings?: IScenarioData): GameData {
+    public static create(settings?: IScenarioData, gameState?: IGameStateData): GameData {
         var gameData = new GameData();
         settings = settings || {} as IScenarioData;
         gameData.systemScaleFactor = settings.systemScaleFactor || 1;
@@ -100,6 +121,9 @@ export class GameData implements IScenarioData {
         gameData.shipMaxAcceleration = settings.shipMaxAcceleration || 50;
         gameData.shipMaxAngularVelocity = settings.shipMaxAngularVelocity || .15;
 
-        return gameData.computeValuesFromSettingsData(settings);
+        gameData.computeValuesFromSettingsData(settings);
+        gameData.stateData = gameState || new GameState();
+
+        return gameData;
     }
 }

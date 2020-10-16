@@ -3,7 +3,7 @@ import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import { GameData } from "./GameData";
+import { GameData, IGameStateData } from "./GameData";
 import { GravityWellGameManager } from ".";
 import { HemisphericLightPropertyGridComponent } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/lights/hemisphericLightPropertyGridComponent";
 
@@ -153,10 +153,10 @@ export class UI {
           
         });
     }
-    public updateControls(current: Game): void {
-        let data = current.gameData;
-        this.setSpeedText(data.lastShipVelocity);
-        this.setGeForceText(data.lastShipGeForce);
+    public updateControls(current: IGameStateData): void {
+        
+        this.setSpeedText(current.lastShipVelocity);
+        this.setGeForceText(current.lastShipGeForce);
 
         if (current.isPaused) {
             this._pauseButton.textBlock.text = "Resume";
