@@ -13,7 +13,7 @@
     },
     "systemScaleFactor": 1,
     "timeScaleFactor": 1000,
-    "numberOfPlanets": 0,
+    "numberOfPlanets": 1,
     "gameWorldSizeX": 22400,
     "gameWorldSizeY": 22400,
     "terrainSubCount": 300,
