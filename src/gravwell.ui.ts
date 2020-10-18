@@ -87,7 +87,13 @@ export class UI {
         resetButton.adaptWidthToChildren = true;
         resetButton.height = "120px";
         resetButton.onPointerClickObservable.add(() => {
+            let planetDisplays = this._advancedTexture.getDescendants(true, ctrl => ctrl.name.endsWith('-disp'));
+            if (planetDisplays && planetDisplays.length > 0) {
+                planetDisplays.forEach(pd => this._advancedTexture.removeControl(pd));
+            }
+
             game.resetGame();
+            this.registerPlanetaryDisplays(game);
         });
         sp.addControl(resetButton);
 
@@ -104,7 +110,7 @@ export class UI {
         header.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
         this._advancedTexture.addControl(header);
 
-        var speedView = new TextBlock("speedView", "Speed: 0.0");
+        var speedView = new TextBlock("speedView", "Speed: 0.0 m/s");
         speedView.width = "160px";
         speedView.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         // speedView.height = "7%";
@@ -135,11 +141,12 @@ export class UI {
             rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
             var planetView = 
-              "Mass: " + planet.mass.toExponential(4) + "kg \n" 
-            + "Radius: " + planet.radius.toFixed(2) + "m \n"
-            + "Orbit: " + planet.orbitalRadius.toFixed(4) + "m \n"
-            + "Period: " + planet.orbitalPeriod.toFixed(2) + "s \n"
-            + "Speed: " + planet.orbitalSpeed.toFixed(4) + "m/s";
+              "Mass: " + planet.mass.toExponential(4) + " kg\n" 
+            + "Radius: " + planet.radius.toFixed(2) + " m\n"
+            + "Orbit: " + planet.orbitalRadius.toFixed(2) + " m\n"
+            + "Period: " + planet.orbitalPeriod.toFixed(2) + "s\n"
+            + "Speed: " + planet.orbitalSpeed.toFixed(2) + " m/s\n"
+            + "Vesc: " + planet.escapeVelocity.toFixed(2) + " m/s";
 
             var rectTb = new TextBlock("", planetView);
             rectTb.left = rectTb.top = 0;
@@ -167,10 +174,10 @@ export class UI {
     }
 
     private setSpeedText(value) {
-        this.speedText.text = "Speed: " + this.formatVectorText(value);
+        this.speedText.text = "Speed (m/s): " + this.formatVectorText(value);
     }
     private setGeForceText(value) {
-        this.geText.text = "GForce: " + this.formatVectorText(value);
+        this.geText.text = "GForce (N): " + this.formatVectorText(value);
     }
     private formatVectorText(vector: Vector3): string {
         return vector.length().toFixed(4) + " - { x: " + vector.x.toFixed(4) + " y: " + vector.y.toFixed(4) + " z: " + vector.z.toFixed(4) + " }";

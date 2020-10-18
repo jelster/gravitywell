@@ -13,7 +13,7 @@ module.exports = env => {
         entry: [
             './src/index.ts'
         ],
-        devtool: env.production ? 'none' : 'source-map',
+        devtool: env && env.production ? 'none' : 'source-map',
         devServer: {
             contentBase: './dist'
         },

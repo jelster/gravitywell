@@ -59,7 +59,7 @@ export class Game {
         this._gravManager.gravityMap.updateVertex = null;
         this._scene.removeMesh(this._gravManager.gravityMap.mesh, true);
         this._gravManager.gravityMap.mesh.dispose();
-        this.initializeGame(GameData.create());
+        this.initializeGame();
     }
 
     public get gameData(): GameData {
