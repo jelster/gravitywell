@@ -31,6 +31,7 @@ export class Planet implements IGravityContributor {
     public orbitalSpeed: number;
     public escapeVelocity: number;
     public gMu: number;
+    public surfaceGravity: number;
 
     public get position(): Vector3 {
         return this._mesh.position;
@@ -83,6 +84,7 @@ export class Planet implements IGravityContributor {
 
         this.orbitalSpeed = Math.sqrt((gM) / r);
         this.orbitalPeriod = Scalar.TwoPi * Math.sqrt(rCubed / gM);
+        this.surfaceGravity = -gM / Math.pow(this.radius, 2);
     }
 
     constructor(opts: GameData, star: Star) {
@@ -130,6 +132,7 @@ export class Star implements IGravityContributor {
 
     public escapeVelocity: number;
     public gMu:number;
+    public surfaceGravity: number;
 
     public get mesh(): Mesh {
         return this._mesh;
@@ -166,7 +169,8 @@ export class Star implements IGravityContributor {
         this.radius = opts.starRadius;
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
-        starPos.y = this.escapeVelocity * opts.terrainScaleFactor;
+        this.surfaceGravity = -this.gMu / Math.pow(this.radius, 2);
+        starPos.y = this.surfaceGravity * opts.terrainScaleFactor;
         
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;

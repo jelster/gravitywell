@@ -141,12 +141,13 @@ export class UI {
             rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
             var planetView = 
-              "Mass: " + planet.mass.toExponential(4) + " kg\n" 
+              "Mass: " + planet.mass.toExponential(3) + " kg\n" 
             + "Radius: " + planet.radius.toFixed(2) + " m\n"
             + "Orbit: " + planet.orbitalRadius.toFixed(2) + " m\n"
             + "Period: " + planet.orbitalPeriod.toFixed(2) + "s\n"
             + "Speed: " + planet.orbitalSpeed.toFixed(2) + " m/s\n"
-            + "Vesc: " + planet.escapeVelocity.toFixed(2) + " m/s";
+            + "Vesc: " + planet.escapeVelocity.toFixed(2) + " m/s\n"
+            + "GSurf: " + planet.surfaceGravity.toFixed(3) + " m/s^2";
 
             var rectTb = new TextBlock("", planetView);
             rectTb.left = rectTb.top = 0;
