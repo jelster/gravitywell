@@ -14,6 +14,7 @@ export interface IGravityContributor {
     position: Vector3;
     escapeVelocity: number;
     gMu: number;
+    surfaceGravity: number;
 
 }
 
@@ -205,7 +206,7 @@ export class GravityManager {
         return { heightMap: mapData, colorMap: colorData};
     }
 
-    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = null): number {
+    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = Vector3.Zero()): number {
         const gravSources = this._gravWells;
         let resV = 0;
         let test2d = this.test2d;
@@ -219,13 +220,19 @@ export class GravityManager {
             let gwA = gravSources[gidx];
             temp2d.set(gwA.position.x, gwA.position.z);
             let direction = temp2d.subtract(test2d);
-            let dCenter = Vector2.Distance(temp2d, test2d);
-        //    let distanceSquared = direction.lengthSquared();
-           // let magnitude = -(gwA.gMu / distanceSquared);
-            let vEsc = -GravityManager.computeEscapeVelocity(gwA, dCenter);
-            resV = resV + vEsc;
+            let distance = direction.length();
+            
+            let force = 0;
+            if (!distance || distance < gwA.radius || distance <= 0) {
+                distance = gwA.radius;
+            }            
+            let distanceSquared = Math.pow(distance,2 ); 
+            force = direction.normalize().scaleInPlace(gwA.mass * 1/distanceSquared).length();
+                  
+                        
+            resV = resV + force;
             if (summedVecRef !== null) {
-                direction.normalize();
+                
                 summedVecRef.addInPlaceFromFloats(direction.x, 0, direction.y);
             }
             
@@ -233,7 +240,7 @@ export class GravityManager {
         if (summedVecRef) {
             summedVecRef.normalize();
         }
-        return resV;
+        return -GravityManager.GRAV_CONST * resV;
     }
 
     

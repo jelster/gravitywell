@@ -14,7 +14,7 @@ import { GameData } from "./GameData";
 
 
 /*
-Includes for loading assets
+Includes for loading assets - side effects or not
 */
 const space_nx = require('../textures/Space/space_nx.jpg');
 const space_ny = require('../textures/Space/space_ny.jpg');
@@ -24,14 +24,9 @@ const space_py = require('../textures/Space/space_py.jpg');
 const space_pz = require('../textures/Space/space_pz.jpg');
 
 const explosionImage = require('../textures/explosion-3.png');
-//import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
-
-
-export enum GravityMode {
-    DistanceSquared = 1,
-    DistanceCubed = 2
-}
-
+/*
+    Load assets above this line
+*/
 
 export class Game {
     toggleDebugLayer(): any {
@@ -64,7 +59,7 @@ export class Game {
         this._gravManager.gravityMap.updateVertex = null;
         this._scene.removeMesh(this._gravManager.gravityMap.mesh, true);
         this._gravManager.gravityMap.mesh.dispose();
-        this.initializeGame(GameData.createDefault());
+        this.initializeGame();
     }
 
     public get gameData(): GameData {
@@ -106,8 +101,13 @@ export class Game {
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
 
-    public GravityWellMode: GravityMode;
-    public isPaused: boolean;
+    public get isPaused(): boolean {
+        return this._gameData.stateData.isPaused;
+    };    
+    public set isPaused(v : boolean) {
+        this._gameData.stateData.isPaused = v;
+    }
+    
 
     private _flyCam: UniversalCamera;
     private _cameraTarget: TransformNode;
@@ -117,28 +117,26 @@ export class Game {
     private _trailMesh: TrailMesh;
 
     public initializeGame(gameData?: GameData) {
+        let instanceData = this._gameData || gameData || GameData.create();
+
         if (!this._scene) {
             this.createScene();
         }
-        if (gameData) {
-            this._gameData = gameData;
-        }
-        else {
-            gameData = this._gameData || GameData.createDefault();
-        }
         
-        gameData.startTime = new Date();
+        this._gameData = instanceData;
+        
+        this._gameData.stateData.startTime = new Date();
         this._planets = [];//.splice(0, this._planets.length);
         this._stars = [];//.splice(0, this._stars.length);
 
-        this._gravManager = new GravityManager(gameData);
+        this._gravManager = new GravityManager(instanceData);
         
 
-        this._numberOfPlanets = gameData.numberOfPlanets;
-        this.gameWorldSizeX = gameData.gameWorldSizeX;
-        this.gameWorldSizeY = gameData.gameWorldSizeY;
+        this._numberOfPlanets = instanceData.numberOfPlanets;
+        this.gameWorldSizeX = instanceData.gameWorldSizeX;
+        this.gameWorldSizeY = instanceData.gameWorldSizeY;
      
-        this._respawnTimeLimit = gameData.respawnTimeLimit;
+        this._respawnTimeLimit = instanceData.respawnTimeLimit;
 
         this.isPaused = true;
         this.resetShip();
@@ -418,14 +416,15 @@ export class Game {
         let gMan = this._gravManager;
         let gameData = this._gameData;
         let ship = this._ship;
+        let gameState = gameData.stateData;
     
         
         if (this.isPaused) {
             return;
         }
-        gameData.lastUpdate = new Date();
-        gameData.lastShipVelocity = ship.velocity;
-        gameData.lastShipGeForce = ship.geForce;  
+        gameState.lastUpdate = new Date();
+        gameState.lastShipVelocity = ship.velocity;
+        gameState.lastShipGeForce = ship.geForce;  
         this._planets.forEach(planet => {
             planet.movePlanetInOrbit();
             planet.position.y = gMan.gravityMap.getHeightFromMap(planet.position.x, planet.position.z);
