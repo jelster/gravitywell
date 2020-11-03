@@ -205,13 +205,13 @@ export class GravityManager {
         return { heightMap: mapData, colorMap: colorData};
     }
 
-    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = null): number {
+    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = Vector3.Zero()): number {
         const gravSources = this._gravWells;
         let resV = 0;
         let test2d = this.test2d;
         let temp2d = this.temp2d;
 
-        
+
         test2d.set(vwpos.x, vwpos.z);
         
         for (var gidx = 0; gidx < gravSources.length; gidx++) {
@@ -219,21 +219,24 @@ export class GravityManager {
             let gwA = gravSources[gidx];
             temp2d.set(gwA.position.x, gwA.position.z);
             let direction = temp2d.subtract(test2d);
-            let dCenter = Vector2.Distance(temp2d, test2d);
-        //    let distanceSquared = direction.lengthSquared();
-           // let magnitude = -(gwA.gMu / distanceSquared);
-            let vEsc = -GravityManager.computeEscapeVelocity(gwA, dCenter);
-            resV = resV + vEsc;
+            let distance = Vector2.Distance(temp2d, test2d);
+            if (distance < gwA.radius || distance <= 0) {
+                distance = gwA.radius;
+            }
+            let distanceSquared = Math.pow(distance, 2);
+            let magnitude = direction.normalize().scaleInPlace(gwA.mass * (1/distanceSquared)).length();
+            resV = resV + magnitude;
             if (summedVecRef !== null) {
-                direction.normalize();
                 summedVecRef.addInPlaceFromFloats(direction.x, 0, direction.y);
             }
             
         }
         if (summedVecRef) {
+            resV = summedVecRef.length();
             summedVecRef.normalize();
         }
-        return resV;
+        return -(resV * GravityManager.GRAV_CONST);
+        
     }
 
     
