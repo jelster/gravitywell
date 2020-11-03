@@ -144,7 +144,10 @@ export class Game {
         this.createPlanets();
         
         this._gravManager.generateDynamicTerrain(this._scene);
-        
+ 
+        //this._stars.forEach(star => star.position.y = this._gravManager.computeGravGradientAt(star.position));
+        //this._planets.forEach(planet => planet.position.y = this._gravManager.computeGravGradientAt(planet.position));
+
         //this._gravManager.gravityMap.mesh.material = this._gridMat;
 
     }
@@ -245,6 +248,7 @@ export class Game {
         this._stars.push(star);
         this._gravManager.gravWells.push(star);
         this._gravManager.primaryStar = star;
+       
         console.log(star);        
     }
 
@@ -252,6 +256,7 @@ export class Game {
         for (var i = 0; i < this._numberOfPlanets; i++) {
             var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
             this._planets.push(planet);
+            
             this._gravManager.gravWells.push(planet);
         }
     }
@@ -425,10 +430,7 @@ export class Game {
         gameState.lastUpdate = new Date();
         gameState.lastShipVelocity = ship.velocity;
         gameState.lastShipGeForce = ship.geForce;  
-        this._planets.forEach(planet => {
-            planet.movePlanetInOrbit();
-            planet.position.y = gMan.gravityMap.getHeightFromMap(planet.position.x, planet.position.z);
-        });
+       
         
     //    this.updateGridHeightMap();
         let terrainHeight = gMan.gravityMap.getHeightFromMap(ship.position.x, ship.position.z, { normal: ship.normal});

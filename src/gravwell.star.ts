@@ -31,6 +31,7 @@ export class Planet implements IGravityContributor {
     public orbitalSpeed: number;
     public escapeVelocity: number;
     public gMu: number;
+    public surfaceGravity: number;
 
     public get position(): Vector3 {
         return this._mesh.position;
@@ -96,12 +97,12 @@ export class Planet implements IGravityContributor {
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.orbitalRadius = Scalar.RandomRange(this.radius + opts.lowerOrbitalRadiiScale * starRad, this.radius + opts.upperOrbitalRadiiScale * starRad) + starRad;
         this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
-
+        this.surfaceGravity = -(this.gMu / Math.pow(this.radius, 2));
         this._mesh = Planet._masterMesh.createInstance("PlanetInstance");
-        this.mesh.scalingDeterminant = 2*this.radius;       
+        this.mesh.scaling.setAll(2*this.radius);       
         
         let vSolarEsc = -GravityManager.computeEscapeVelocity(star, this.orbitalRadius);
-        this.position = new Vector3(starPos.x + this.orbitalRadius, vSolarEsc +  this.escapeVelocity, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, this.surfaceGravity * opts.terrainScaleFactor, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -130,6 +131,7 @@ export class Star implements IGravityContributor {
 
     public escapeVelocity: number;
     public gMu:number;
+    public surfaceGravity: number;
 
     public get mesh(): Mesh {
         return this._mesh;
@@ -166,7 +168,8 @@ export class Star implements IGravityContributor {
         this.radius = opts.starRadius;
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
-        starPos.y = this.escapeVelocity * opts.terrainScaleFactor;
+        this.surfaceGravity = -(this.gMu / Math.pow(this.radius, 2));
+        starPos.y = this.surfaceGravity * opts.terrainScaleFactor;
         
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;

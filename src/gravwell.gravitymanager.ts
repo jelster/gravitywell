@@ -14,6 +14,7 @@ export interface IGravityContributor {
     position: Vector3;
     escapeVelocity: number;
     gMu: number;
+    surfaceGravity: number;
 
 }
 
@@ -205,7 +206,7 @@ export class GravityManager {
         return { heightMap: mapData, colorMap: colorData};
     }
 
-    private computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = Vector3.Zero()): number {
+    public computeGravGradientAt(vwpos: Vector3, summedVecRef:Vector3 = Vector3.Zero()): number {
         const gravSources = this._gravWells;
         let resV = 0;
         let test2d = this.test2d;
