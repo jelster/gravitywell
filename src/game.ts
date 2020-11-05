@@ -11,6 +11,7 @@ import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug 
 import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
 import { GravityManager } from './gravwell.gravitymanager';
 import { GameData } from "./GameData";
+import { UI } from './gravwell.ui';
 
 
 /*
@@ -152,8 +153,8 @@ export class Game {
 
     }
 
-    constructor(canvasElement: string, gameData: GameData) {
-        this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
+    constructor(canvasElement: HTMLCanvasElement, gameData: GameData) {
+        this._canvas = canvasElement;
         this._engine = new Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
@@ -163,6 +164,16 @@ export class Game {
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
+
+        this._scene = this.createScene();
+        
+       
+        this.initializeGame();
+        let gravGui = new UI(this, this._scene);
+        gravGui.registerPlanetaryDisplays(this);
+        this._scene.onAfterStepObservable.add(() => gravGui.updateControls(this.gameData.stateData));
+
+        
     }
 
     private createMiniMapCamera(): void {
