@@ -111,7 +111,7 @@ export class GravityManager {
         stdMat.wireframe = true;
         stdMat.disableLighting = true;
   
-        //gridMat.needAlphaBlending = () => true;
+        gridMat.needAlphaBlending = () => true;
        
             
        // this.heightMap = heightMap;
@@ -139,7 +139,7 @@ export class GravityManager {
             self = this;
         dynTerr.refreshEveryFrame = true;
         dynTerr.useCustomVertexFunction = false;
-        dynTerr.computeNormals = true;
+        dynTerr.computeNormals = false;
         
         
         dynTerr.updateVertex = function(vertex) {
