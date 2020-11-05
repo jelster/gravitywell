@@ -7,14 +7,13 @@ import { GameData, IScenarioData } from './GameData';
 
 import {version } from '../package.json';
 import * as Data from '../default-gameData.json';
-window.addEventListener("DOMContentLoaded", () => {
 
-    document.title = 'GravWell - v' + version;
-    var game = GravityWellGameManager.createGame();
-
-});
 
 export class GravityWellGameManager {
+    constructor() {
+        document.title = 'GravWell - v' + version;
+        let gameInstance = GravityWellGameManager.createGame();
+    }
     public static createGame(): Game {
         let scenario = {} as IScenarioData;
         Object.assign(scenario, Data);
@@ -34,5 +33,6 @@ export class GravityWellGameManager {
         return game;
     }
 }
+new GravityWellGameManager();
 
 
