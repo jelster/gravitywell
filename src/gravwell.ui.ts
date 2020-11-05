@@ -1,11 +1,9 @@
-import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle, Ellipse } from "@babylonjs/gui";
-import { Scene, Vector3, Texture, Viewport } from "@babylonjs/core";
+import { AdvancedDynamicTexture, Button, StackPanel, Control, TextBlock, Style, Rectangle } from "@babylonjs/gui";
+import { Scene, Vector3, Texture } from "@babylonjs/core";
 import { Game } from './game';
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import { GameData, IGameStateData } from "./GameData";
-import { GravityWellGameManager } from ".";
-import { HemisphericLightPropertyGridComponent } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/lights/hemisphericLightPropertyGridComponent";
+import { IGameStateData } from "./GameData";
 
 export class UI {
 
@@ -28,13 +26,10 @@ export class UI {
 
     private _advancedTexture: AdvancedDynamicTexture;
     private _pauseButton: Button;
-    private _debugButton: Button;
 
     private _baseStyle: Style;
-    private _game: Game;
 
     constructor(game: Game, scene?: Scene) {
-        this._game = game;
         this._advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene, Texture.NEAREST_SAMPLINGMODE);
         this._baseStyle = new Style(this._advancedTexture);
         this._baseStyle.fontSize = "18pt";
@@ -81,7 +76,6 @@ export class UI {
             game.toggleDebugLayer();
         });
         sp.addControl(debugButton);
-        this._debugButton = debugButton;
 
         var resetButton = Button.CreateSimpleButton("reset", "Restart");
         resetButton.adaptWidthToChildren = true;

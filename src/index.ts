@@ -7,32 +7,40 @@ import { GameData, IScenarioData } from './GameData';
 
 import {version } from '../package.json';
 import * as Data from '../default-gameData.json';
+import { Scene } from '@babylonjs/core';
 
 
-export class GravityWellGameManager {
+export class IndexPage {
+    private _game: Game;
+    private _scene: Scene;
+    
     constructor() {
         document.title = 'GravWell - v' + version;
-        let gameInstance = GravityWellGameManager.createGame();
+        this._game = this._createGame();
+
+        this._scene = this._game.createScene();
+        
+        let gravGui = new UI(this._game, this._scene);
+        this._game.initializeGame();
+        
+        gravGui.registerPlanetaryDisplays(this._game);
+        this._scene.onAfterStepObservable.add(() => gravGui.updateControls(this._game.gameData.stateData));
+
+        // Start render loop.
+        this._game.doRender();
+        
     }
-    public static createGame(): Game {
+    private _createGame(): Game {
         let scenario = {} as IScenarioData;
         Object.assign(scenario, Data);
         var instanceData = GameData.create(scenario);
         // Create the game using the 'renderCanvas'.
         let game = new Game('renderCanvas', instanceData);
         // Create the scene.
-        var scene = game.createScene();
-        let gravGui = new UI(game, scene);
-        game.initializeGame();
-        gravGui.registerPlanetaryDisplays(game);
-        scene.onAfterStepObservable.add(() => gravGui.updateControls(game.gameData.stateData));
-
-        // Start render loop.
-        game.doRender();
         
         return game;
     }
 }
-new GravityWellGameManager();
+new IndexPage();
 
 
