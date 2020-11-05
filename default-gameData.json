@@ -41,7 +41,7 @@
     "skyBoxScale": 25760,
     "starRadius": 553.8219479218931,
     "planetDensity": 0.00000921,
-    "upperOrbitalRadiiScale": 8.75,
+    "upperOrbitalRadiiScale": 8.5,
     "initialShipPosition": {
         "x": 10666.666666666666,
         "y": 0,

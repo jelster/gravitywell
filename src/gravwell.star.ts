@@ -111,7 +111,7 @@ export class Planet implements IGravityContributor {
         this.CalculateAndSetOrbitalVelocity();
         console.log('planetary params calculated', this);
 
-        var hillSphere = MeshBuilder.CreateSphere("hillSphere", { diameterX: this.hillSphereRadius, diameterY: Math.abs(this.escapeVelocity), diameterZ: this.hillSphereRadius }, this._mesh.getScene());
+        var hillSphere = MeshBuilder.CreateSphere("hillSphere", { diameterX: 2*this.hillSphereRadius, diameterY: 2*this.hillSphereRadius, diameterZ: 2*this.hillSphereRadius }, this._mesh.getScene());
         //hillSphere.rotation.x = Math.PI / 2;
         hillSphere.position = this.position;
        // hillSphere.parent = this._mesh;
