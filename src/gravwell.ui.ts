@@ -19,6 +19,7 @@ export class UI {
 
     public gamePaused: boolean;
     public restartGame: boolean;
+    private _resetButton: Button;
 
 
     public get speedText(): TextBlock {
@@ -91,14 +92,15 @@ export class UI {
         });
         sp.addControl(debugButton);
 
-        var resetButton = Button.CreateSimpleButton("reset", "Restart");
+        this._resetButton = Button.CreateSimpleButton("reset", "Restart");
+        let resetButton = this._resetButton;
         resetButton.adaptWidthToChildren = true;
         resetButton.height = "120px";
         resetButton.onPointerClickObservable.add(() => {
             this.restartGame = true;
             this.gamePaused = true;
 
-            this._planetaryDisplays.forEach(pd => pd.dispose());
+            this._advancedTexture.dispose();//.forEach(pd => pd.dispose());
 
         });
         sp.addControl(resetButton);
@@ -171,14 +173,14 @@ export class UI {
     }
     public updateControls(current: IGameStateData): void {
 
-        this.setSpeedText(current.lastShipVelocity);
-        this.setGeForceText(current.lastShipGeForce);
-
-        if (current.isPaused) {
-            this._pauseButton.textBlock.text = "Resume";
+        if (!this.gamePaused) {
+            this.setSpeedText(current.lastShipVelocity);
+            this.setGeForceText(current.lastShipGeForce);
+            this._pauseButton.textBlock.text = "Pause";
         }
         else {
-            this._pauseButton.textBlock.text = "Pause";
+            
+            this._pauseButton.textBlock.text = "Resume";
         }
     }
 
