@@ -151,7 +151,7 @@ export class UI {
             rect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
             rect.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
             var planetView =
-                "Mass: " + planet.mass.toExponential(4) + " kg\n"
+                "Mass: " + planet.mass.toExponential(3) + " kg\n"
                 + "Radius: " + planet.radius.toFixed(2) + " m\n"
                 + "Orbit: " + planet.orbitalRadius.toFixed(2) + " m\n"
                 + "Period: " + planet.orbitalPeriod.toFixed(2) + "s\n"
@@ -188,7 +188,7 @@ export class UI {
         this.speedText.text = "Speed (m/s): " + this.formatVectorText(value);
     }
     private setGeForceText(value) {
-        this.geText.text = "GForce (N): " + this.formatVectorText(value);
+        this.geText.text = "GForce (accel): " + this.formatVectorText(value);
     }
     private formatVectorText(vector: Vector3): string {
         return vector.length().toFixed(4) + " - { x: " + vector.x.toFixed(4) + " y: " + vector.y.toFixed(4) + " z: " + vector.z.toFixed(4) + " }";

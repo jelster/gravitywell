@@ -22,8 +22,7 @@ export class IndexPage {
         this._renderCanvas.style.width = '100%';
         document.body.appendChild(this._renderCanvas);
         this._game  = new Game(this._renderCanvas, instanceData);
-        // Start render loop.
-        this._game.doRender();
+        
         
     }
 }

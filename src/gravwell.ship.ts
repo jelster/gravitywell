@@ -1,5 +1,4 @@
 import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar, Space, Axis, Quaternion } from '@babylonjs/core';
-import { Matrix2D } from '@babylonjs/gui';
 import { GameData } from './GameData';
 
 export class Ship {

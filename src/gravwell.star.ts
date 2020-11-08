@@ -122,6 +122,8 @@ export class Planet implements IGravityContributor {
         hillSphere.material = Planet._sphereMaterial;
         this._hillSphereMesh = hillSphere;
         this._gameData = opts;
+
+        this._mesh.checkCollisions = true;
     }
 }
 
@@ -189,6 +191,8 @@ export class Star implements IGravityContributor {
         this._light.intensity = 100;
         this._light.parent = this._mesh;
         this._light.range = opts.gameWorldSizeX * 0.95;
+
+        this._mesh.checkCollisions = true;
 
     }
 }

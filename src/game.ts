@@ -7,8 +7,6 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { Ship } from './gravwell.ship';
 import { Star, Planet } from './gravwell.star';
-import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
-import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
 import { GravityManager } from './gravwell.gravitymanager';
 import { GameData } from "./GameData";
 import { UI } from './gravwell.ui';
@@ -159,16 +157,24 @@ export class Game {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         }, true);
+        this._scene = new Scene(this._engine);
 
         this._gameData = gameData;
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
 
+        this._main();
+        
+    }
+
+    private _main(): void {
         this._scene = this.createScene();
         
        
-        this.initializeGame();        
+        this.initializeGame();
+        
+        this.doRender();
     }
 
     private createMiniMapCamera(): void {
@@ -246,9 +252,6 @@ export class Game {
         // this._floor.material = this._gridMat;
     }
 
-
-
-
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
         this._stars.push(star);
@@ -286,6 +289,11 @@ export class Game {
        // trail.freezeNormals();
         trail.isPickable = false;
         this._trailMesh = trail;
+        
+        this._ship.mesh.onCollideObservable.add((ed, es) => {
+            console.log('mesh intersection!',ed.name);
+            this.killShip();
+        });
         
     }
 
@@ -379,9 +387,6 @@ export class Game {
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
 
-
-
-
     createScene(): Scene {
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
@@ -466,25 +471,25 @@ export class Game {
                 //this.updateGridHeightMap();
                 if (alive) {
                     this.handleKeyboardInput();
-                    for (var p = 0; p < this._planets.length; p++) {
-                        let planet = this._planets[p];
-                        if (planet.mesh.intersectsPoint(this._ship.mesh.position)) {
-                            console.log('mesh intersection!', this._ship, planet);
-                            alive = false;
-                            this.killShip();
-                            break;
-                        }
+                    // for (var p = 0; p < this._planets.length; p++) {
+                    //     let planet = this._planets[p];
+                    //     if (planet.mesh.intersectsPoint(this._ship.mesh.position)) {
+                    //         console.log('mesh intersection!', this._ship, planet);
+                    //         alive = false;
+                    //         this.killShip();
+                    //         break;
+                    //     }
 
-                    }
-                    for (var s = 0; s < this._stars.length; s++) {
-                        let star = this._stars[s], sPos = this._ship.position;
-                        if (star.mesh.intersectsPoint(sPos)) {
-                            console.log('mesh intersection!', this._ship, star);
-                            this.killShip();
-                            alive = false;
-                            break;
-                        }
-                    }
+                    // }
+                    // for (var s = 0; s < this._stars.length; s++) {
+                    //     let star = this._stars[s], sPos = this._ship.position;
+                    //     if (star.mesh.intersectsPoint(sPos)) {
+                    //         console.log('mesh intersection!', this._ship, star);
+                    //         this.killShip();
+                    //         alive = false;
+                    //         break;
+                    //     }
+                    // }
 
                 }
             }           
