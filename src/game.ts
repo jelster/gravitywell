@@ -116,13 +116,13 @@ export class Game {
     private _numberOfPlanets: number;
     private _gameData: GameData;
     private _trailMesh: TrailMesh;
-
+    private _playerUi: UI;
     public initializeGame(gameData?: GameData) {
         let instanceData = this._gameData || gameData || GameData.create();
 
         if (!this._scene) {
             this.createScene();
-        }
+        }        
         
         this._gameData = instanceData;
         
@@ -138,19 +138,19 @@ export class Game {
         this.gameWorldSizeY = instanceData.gameWorldSizeY;
      
         this._respawnTimeLimit = instanceData.respawnTimeLimit;
-
-        this.isPaused = true;
+        
         this.resetShip();
         this.createStar();
         this.createPlanets();
         
         this._gravManager.generateDynamicTerrain(this._scene);
- 
-        //this._stars.forEach(star => star.position.y = this._gravManager.computeGravGradientAt(star.position));
-        //this._planets.forEach(planet => planet.position.y = this._gravManager.computeGravGradientAt(planet.position));
 
-        //this._gravManager.gravityMap.mesh.material = this._gridMat;
-
+        this._playerUi = new UI(this._scene);
+        let gravGui = this._playerUi;
+        gravGui.registerPlanetaryDisplays(this);
+        this.isPaused = gravGui.gamePaused = true;
+        gravGui.restartGame = false;
+        this._scene.onAfterStepObservable.add(() => gravGui.updateControls(this.gameData.stateData));
     }
 
     constructor(canvasElement: HTMLCanvasElement, gameData: GameData) {
@@ -168,12 +168,7 @@ export class Game {
         this._scene = this.createScene();
         
        
-        this.initializeGame();
-        let gravGui = new UI(this, this._scene);
-        gravGui.registerPlanetaryDisplays(this);
-        this._scene.onAfterStepObservable.add(() => gravGui.updateControls(this.gameData.stateData));
-
-        
+        this.initializeGame();        
     }
 
     private createMiniMapCamera(): void {
@@ -287,8 +282,8 @@ export class Game {
         trailMat.disableLighting = true;
         
         trail.material = trailMat;
-        trailMat.freeze();
-        trail.freezeNormals();
+        //trailMat.freeze();
+       // trail.freezeNormals();
         trail.isPickable = false;
         this._trailMesh = trail;
         
@@ -433,8 +428,12 @@ export class Game {
         let gameData = this._gameData;
         let ship = this._ship;
         let gameState = gameData.stateData;
-    
-        
+        this.isPaused = this._playerUi.gamePaused;
+
+        if (this._playerUi.restartGame) {
+            this.resetGame();
+            return;
+        }
         if (this.isPaused) {
             return;
         }
