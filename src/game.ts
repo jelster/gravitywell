@@ -118,9 +118,8 @@ export class Game {
     public initializeGame(gameData?: GameData) {
         let instanceData = this._gameData || gameData || GameData.create();
 
-        if (!this._scene) {
-            this.createScene();
-        }        
+        this.createScene();
+                
         
         this._gameData = instanceData;
         
@@ -169,7 +168,7 @@ export class Game {
     }
 
     private _main(): void {
-        this._scene = this.createScene();
+        
         
        
         this.initializeGame();
