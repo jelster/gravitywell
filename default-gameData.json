@@ -1,0 +1,56 @@
+{
+    "gravUnit": 16,
+    "isStarted": false,
+    "lastShipVelocity": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+    },
+    "lastShipGeForce": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+    },
+    "systemScaleFactor": 5,
+    "timeScaleFactor": 1000,
+    "numberOfPlanets": 1,
+    "gameWorldSizeX": 60000,
+    "gameWorldSizeY": 60000,
+    "terrainSubCount": 300,
+    "terrainScaleFactor": 768,
+    "respawnTimeLimit": 4000,
+    "starMass": 1963000000000000000,
+    "starDensity": 0.0000125,
+    "lowerOrbitalRadiiScale": 3,
+    "lowerPlanetaryMassScale": 0.01,
+    "upperPlanetaryMassScale": 0.25,
+    "shipMaxAcceleration": 10,
+    "shipMaxAngularVelocity": 0.15,
+    "miniMapCameraPosition": {
+        "x": 0,
+        "y": 31678.38379715733,
+        "z": 0
+    },
+    "miniMapMaxZ": 63356.76759431466,
+    "flyCamRelativePosition": {
+        "x": 0,
+        "y": 15,
+        "z": -15
+    },
+    "flyCamMaxZ": 11200,
+    "skyBoxScale": 25760,
+    "starRadius": 553.8219479218931,
+    "planetDensity": 0.00000921,
+    "upperOrbitalRadiiScale": 8.5,
+    "initialShipPosition": {
+        "x": 10666.666666666666,
+        "y": 0,
+        "z": 0
+    },
+    "initialStarPosition": {
+        "x": 0,
+        "y": -5567.718271110547,
+        "z": 0
+    },
+    "startTime": "2020-10-16T16: 19: 15.682Z"
+}

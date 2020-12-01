@@ -1,7 +1,8 @@
 {
   "name": "gravwell",
-  "version": "1.0.0",
+  "version": "0.2.1",
   "description": "GravityWell game built using babylonjs",
+  "private": true,
   "main": "game.js",
   "directories": {
     "lib": "lib"
@@ -20,10 +21,12 @@
     "@babylonjs/inspector": "4.1.0",
     "@babylonjs/materials": "4.1.0",
     "@babylonjs/procedural-textures": "4.1.0",
-    "file-loader": "^6.1.0",
-    "ts-loader": "^8.0.4",
-    "typescript": "^4.0.0",
-    "webpack": "^4.44.2",
+    "clean-webpack-plugin": "^3.0.0",
+    "html-webpack-plugin": "^4.5.0",
+    "ts-loader": "^8.0.5",
+    "tslint": "^6.1.3",
+    "typescript": "^4.0.3",
+    "webpack": "^5.0.0",
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {}

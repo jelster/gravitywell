@@ -7,20 +7,25 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { Ship } from './gravwell.ship';
 import { Star, Planet } from './gravwell.star';
-import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
-import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
 import { GravityManager } from './gravwell.gravitymanager';
 import { GameData } from "./GameData";
+import { UI } from './gravwell.ui';
 
 
-//import * as Ship from "gravwell.ship" ;// from 'gravwell.ship';
+/*
+Includes for loading assets - side effects or not
+*/
+const space_nx = require('../textures/Space/space_nx.jpg');
+const space_ny = require('../textures/Space/space_ny.jpg');
+const space_nz = require('../textures/Space/space_nz.jpg');
+const space_px = require('../textures/Space/space_px.jpg');
+const space_py = require('../textures/Space/space_py.jpg');
+const space_pz = require('../textures/Space/space_pz.jpg');
 
-
-export enum GravityMode {
-    DistanceSquared = 1,
-    DistanceCubed = 2
-}
-
+const explosionImage = require('../textures/explosion-3.png');
+/*
+    Load assets above this line
+*/
 
 export class Game {
     toggleDebugLayer(): any {
@@ -53,7 +58,7 @@ export class Game {
         this._gravManager.gravityMap.updateVertex = null;
         this._scene.removeMesh(this._gravManager.gravityMap.mesh, true);
         this._gravManager.gravityMap.mesh.dispose();
-        this.initializeGame(GameData.createDefault());
+        this.initializeGame();
     }
 
     public get gameData(): GameData {
@@ -95,8 +100,13 @@ export class Game {
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
 
-    public GravityWellMode: GravityMode;
-    public isPaused: boolean;
+    public get isPaused(): boolean {
+        return this._gameData.stateData.isPaused;
+    };    
+    public set isPaused(v : boolean) {
+        this._gameData.stateData.isPaused = v;
+    }
+    
 
     private _flyCam: UniversalCamera;
     private _cameraTarget: TransformNode;
@@ -104,53 +114,66 @@ export class Game {
     private _numberOfPlanets: number;
     private _gameData: GameData;
     private _trailMesh: TrailMesh;
-
+    private _playerUi: UI;
     public initializeGame(gameData?: GameData) {
-        if (!this._scene) {
-            this.createScene();
-        }
-        if (gameData) {
-            this._gameData = gameData;
-        }
-        else {
-            gameData = this._gameData || GameData.createDefault();
-        }
+        let instanceData = this._gameData || gameData || GameData.create();
+
+        this.createScene();
+                
         
-        gameData.startTime = new Date();
+        this._gameData = instanceData;
+        
+        this._gameData.stateData.startTime = new Date();
         this._planets = [];//.splice(0, this._planets.length);
         this._stars = [];//.splice(0, this._stars.length);
 
-        this._gravManager = new GravityManager(gameData);
+        this._gravManager = new GravityManager(instanceData);
         
 
-        this._numberOfPlanets = gameData.numberOfPlanets;
-        this.gameWorldSizeX = gameData.gameWorldSizeX;
-        this.gameWorldSizeY = gameData.gameWorldSizeY;
+        this._numberOfPlanets = instanceData.numberOfPlanets;
+        this.gameWorldSizeX = instanceData.gameWorldSizeX;
+        this.gameWorldSizeY = instanceData.gameWorldSizeY;
      
-        this._respawnTimeLimit = gameData.respawnTimeLimit;
-
-        this.isPaused = true;
+        this._respawnTimeLimit = instanceData.respawnTimeLimit;
+        
         this.resetShip();
         this.createStar();
         this.createPlanets();
         
         this._gravManager.generateDynamicTerrain(this._scene);
-        
-        //this._gravManager.gravityMap.mesh.material = this._gridMat;
 
+        this._playerUi = new UI(this._scene);
+        let gravGui = this._playerUi;
+        gravGui.registerPlanetaryDisplays(this);
+        this.isPaused = gravGui.gamePaused = true;
+        gravGui.restartGame = false;
+        this._scene.onAfterStepObservable.add(() => gravGui.updateControls(this.gameData.stateData));
     }
 
-    constructor(canvasElement: string, gameData: GameData) {
-        this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
+    constructor(canvasElement: HTMLCanvasElement, gameData: GameData) {
+        this._canvas = canvasElement;
         this._engine = new Engine(this._canvas, true, {
             deterministicLockstep: true,
             lockstepMaxSteps: 4
         }, true);
+        this._scene = new Scene(this._engine);
 
         this._gameData = gameData;
         this._inputMap = {};
         this._planets = [];
         this._stars = [];
+
+        this._main();
+        
+    }
+
+    private _main(): void {
+        
+        
+       
+        this.initializeGame();
+        
+        this.doRender();
     }
 
     private createMiniMapCamera(): void {
@@ -181,6 +204,7 @@ export class Game {
         flyCam.layerMask = Game.MAIN_RENDER_MASK;
         flyCam.viewport = new Viewport(0, 0, 1,1 );
         flyCam.rotation.x = 0.28;
+        flyCam.fov = 1.6; // ~92deg
         this._flyCam = flyCam;
         this._scene.activeCameras.push(this._flyCam);
         this._scene.cameraToUseForPointers = this._flyCam;
@@ -225,25 +249,22 @@ export class Game {
         // this._floor.layerMask = Game.MAIN_RENDER_MASK;
         // this._floor.billboardMode = Mesh.BILLBOARDMODE_NONE;
         // this._floor.material = this._gridMat;
-        
-
-
-
     }
-
-
-
 
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
         this._stars.push(star);
-        this._gravManager.gravWells.push(star);        
+        this._gravManager.gravWells.push(star);
+        this._gravManager.primaryStar = star;
+       
+        console.log(star);        
     }
 
     private createPlanets(): void {
         for (var i = 0; i < this._numberOfPlanets; i++) {
-            var planet = new Planet(this._gameData);
+            var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
             this._planets.push(planet);
+            
             this._gravManager.gravWells.push(planet);
         }
     }
@@ -263,10 +284,15 @@ export class Game {
         trailMat.disableLighting = true;
         
         trail.material = trailMat;
-        trailMat.freeze();
-        trail.freezeNormals();
+        //trailMat.freeze();
+       // trail.freezeNormals();
         trail.isPickable = false;
         this._trailMesh = trail;
+        
+        this._ship.mesh.onCollideObservable.add((ed, es) => {
+            console.log('mesh intersection!',ed.name);
+            this.killShip();
+        });
         
     }
 
@@ -293,7 +319,7 @@ export class Game {
     private createExplosion(): void {
 
         this._explosionParticle = new ParticleSystem("explosion", 200, this._scene);
-        this._explosionParticle.particleTexture = new Texture("textures/explosion-3.png", this._scene);
+        this._explosionParticle.particleTexture = new Texture(explosionImage, this._scene);
         this._explosionParticle.particleEmitterType = new SphereParticleEmitter(5, 0);
         this._explosionParticle.preventAutoStart = true;
         this._explosionParticle.disposeOnStop = false;
@@ -360,9 +386,6 @@ export class Game {
         this._scene.executeOnceBeforeRender(() => this.resetShip(), this._respawnTimeLimit);
     }
 
-
-
-
     createScene(): Scene {
         this._scene = new Scene(this._engine);
         this._scene.collisionsEnabled = true;
@@ -405,19 +428,31 @@ export class Game {
     }
 
     private updateRunningGameState() {       
+        let gMan = this._gravManager;
+        let gameData = this._gameData;
+        let ship = this._ship;
+        let gameState = gameData.stateData;
+        this.isPaused = this._playerUi.gamePaused;
+
+        if (this._playerUi.restartGame) {
+            this.resetGame();
+            return;
+        }
         if (this.isPaused) {
             return;
         }
-        
-        this._planets.forEach(planet => {
-            planet.movePlanetInOrbit();
-        });
+        gameState.lastUpdate = new Date();
+        gameState.lastShipVelocity = ship.velocity;
+        gameState.lastShipGeForce = ship.geForce;  
+       
         
     //    this.updateGridHeightMap();
-
+        let terrainHeight = gMan.gravityMap.getHeightFromMap(ship.position.x, ship.position.z, { normal: ship.normal});
+        let camAltitude = terrainHeight + gameData.flyCamRelativePosition.y;
+        ship.position.y = camAltitude;
         if (this._ship.isAlive) {
-            this._gravManager.onUpdateShipStep(this._ship);
-            this._ship.onUpdate();
+            gMan.onUpdateShipStep(ship);
+            ship.onUpdate();
         }
         
     }
@@ -427,46 +462,36 @@ export class Game {
         this._engine.runRenderLoop(() => {
             let alive = this._ship.isAlive, 
                 paused = this.isPaused,
-                gD = this._gameData,
-                gMan = this._gravManager;
-            gD.lastUpdate = new Date();
-            gD.lastShipVelocity = this._ship.velocity;
-            gD.lastShipGeForce = this._ship.geForce;   
-            var terrHeight = gMan.gravityMap.getHeightFromMap(this._ship.position.x, this._ship.position.z, { normal: this._ship.normal}) + 4;
-            if (this._ship.position.y <= terrHeight) {
-                this._ship.position.y = terrHeight;
-                this._ship.velocity.y *= -0.1;
-               // console.log('altitude warning', terrHeight, this._ship.normal);
-            }
+                gD = this._gameData;
+           
             if (!paused) {
                 //this.updateShipPositionOverflow();
                 //this.moveCamera();
                 //this.updateGridHeightMap();
                 if (alive) {
                     this.handleKeyboardInput();
-                    for (var p = 0; p < this._planets.length; p++) {
-                        let planet = this._planets[p];
-                        if (planet.mesh.intersectsPoint(this._ship.mesh.position)) {
-                            console.log('mesh intersection!', this._ship, planet);
-                            alive = false;
-                            this.killShip();
-                            break;
-                        }
+                    // for (var p = 0; p < this._planets.length; p++) {
+                    //     let planet = this._planets[p];
+                    //     if (planet.mesh.intersectsPoint(this._ship.mesh.position)) {
+                    //         console.log('mesh intersection!', this._ship, planet);
+                    //         alive = false;
+                    //         this.killShip();
+                    //         break;
+                    //     }
 
-                    }
-                    for (var s = 0; s < this._stars.length; s++) {
-                        let star = this._stars[s], sPos = this._ship.position;
-                        if (star.mesh.intersectsPoint(sPos)) {
-                            console.log('mesh intersection!', this._ship, star);
-                            this.killShip();
-                            alive = false;
-                            break;
-                        }
-                    }
+                    // }
+                    // for (var s = 0; s < this._stars.length; s++) {
+                    //     let star = this._stars[s], sPos = this._ship.position;
+                    //     if (star.mesh.intersectsPoint(sPos)) {
+                    //         console.log('mesh intersection!', this._ship, star);
+                    //         this.killShip();
+                    //         alive = false;
+                    //         break;
+                    //     }
+                    // }
 
                 }
-            }
-           
+            }           
        
             this._scene.render();
 

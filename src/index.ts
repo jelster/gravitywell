@@ -1,40 +1,31 @@
-
+ 
 // TODO: load game data from TBD
 import { Game } from './game';
-import { UI } from './gravwell.ui';
-import { SceneOptimizer, SceneOptimizerOptions } from '@babylonjs/core';
-import { GameData } from './GameData';
+import { GameData, IScenarioData } from './GameData';
+import {version } from '../package.json';
+import * as Data from '../default-gameData.json';
 
-window.addEventListener("DOMContentLoaded", () => {
+export class IndexPage {
+    private _game: Game;
+    private _renderCanvas: HTMLCanvasElement;
 
-   var game = GravityWellGameManager.createGame();
-
-});
-
-export class Point {
-    public x: number;
-    public y: number;
-}
-export class GravityWellGameManager {
-    public static createGame(): Game {
-        var instanceData = GameData.createDefault();
+    constructor() {
+        document.title = 'GravWell - v' + version;
+        let scenario = {} as IScenarioData;
+        Object.assign(scenario, Data);
+        var instanceData = GameData.create(scenario);
         // Create the game using the 'renderCanvas'.
-        let game = new Game('renderCanvas', instanceData);
-        // Create the scene.
-        var scene = game.createScene();
-        let gravGui = new UI(game, scene);
-        game.initializeGame();
-        gravGui.registerPlanetaryDisplays(game);
-        scene.onAfterStepObservable.add(() => gravGui.updateControls(game));
-        var optimizer = SceneOptimizer.OptimizeAsync(scene, SceneOptimizerOptions.HighDegradationAllowed(60));
+
+        this._renderCanvas = document.createElement("canvas");
+        this._renderCanvas.id = 'renderCanvas';
+        this._renderCanvas.style.height = '100%';
+        this._renderCanvas.style.width = '100%';
+        document.body.appendChild(this._renderCanvas);
+        this._game  = new Game(this._renderCanvas, instanceData);
         
-        optimizer.onNewOptimizationAppliedObservable.add((ev) => console.log(ev));
         
-        // Start render loop.
-        game.doRender();
-        
-        return game;
     }
 }
+new IndexPage();
 
 

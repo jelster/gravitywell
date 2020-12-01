@@ -1,4 +1,4 @@
-import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scalar, Space, Axis, Quaternion } from '@babylonjs/core';
 import { GameData } from './GameData';
 
 export class Ship {
@@ -21,16 +21,6 @@ export class Ship {
         this._isAlive = v;
     }
 
-    public get rotation(): number {
-        return this.mesh.rotation.y;
-    }
-    public set rotation(r: number) {
-       
-       // this.mesh.rotation.x = 0;
-        this.mesh.rotation.y = r;
-      //  this.mesh.rotation.z = 0;
-    }
-
     public get position(): Vector3 {
         return this.mesh.position;
     }
@@ -44,11 +34,11 @@ export class Ship {
         this._gameData = opts;
         this.mesh = MeshBuilder.CreateCylinder("ship", { height: 8, diameterTop: 1, diameterBottom: 8, tessellation: 2 }, scene);
         this.geForce = new Vector3();
-        this.mesh.rotation.x = Math.PI / 2;
+        //this.mesh.rotation.x = Math.PI / 2;
         //this.mesh.rotation.z = -Math.PI / 2;
         //this.mesh.rotation.y = Math.PI / 2;
         //set base orientation for mesh
-        this.mesh.bakeCurrentTransformIntoVertices();
+        this.mesh.rotation = new Vector3();
         this.maxAcceleration = opts.shipMaxAcceleration
         this.maxAngularVelocity = opts.shipMaxAngularVelocity;
         this.velocity = new Vector3();
@@ -68,9 +58,10 @@ export class Ship {
 
     public onUpdate() {
         let dTime = this.mesh.getEngine().getDeltaTime()/this._gameData.timeScaleFactor, 
-            dV = this.velocity.scaleToRef(dTime, this.tempVector);        
-       
-        this.rotation += dTime * this.angularVelocity;
+            dV = this.velocity.scale(dTime),
+            dVa = Scalar.NormalizeRadians(dTime * this.angularVelocity);
+
+        this.mesh.rotate(Axis.Y, dVa, Space.LOCAL);
         this.angularVelocity = this.angularVelocity - (dTime * (this.angularVelocity * 0.98));
         this.mesh.moveWithCollisions(dV);        
     }
