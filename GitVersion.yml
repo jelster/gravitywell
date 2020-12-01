@@ -1,0 +1,12 @@
+mode: ContinuousDeployment
+next-version: 0.2.1
+branches: 
+  master:
+    is-release-branch: true
+    is-source-branch-for: [ 'develop']
+    tag: beta
+  develop: 
+    tracks-release-branches: true
+ignore:
+  sha: []
+merge-message-formats: {}
