@@ -1,10 +1,11 @@
-mode: ContinuousDeployment
-next-version: 0.2.1
+next-version: 0.2.2
 branches: 
   master:
+    regex: ^main$
     is-release-branch: true
+    is-mainline: true
     is-source-branch-for: [ 'develop']
-    tag: beta
+    prevent-increment-of-merged-branch-version: true
   develop: 
     tracks-release-branches: true
 ignore:

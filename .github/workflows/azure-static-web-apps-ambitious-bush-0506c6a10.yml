@@ -2,9 +2,15 @@ name: Azure Static Web Apps CI/CD
 
 on:
   push:
+    paths-ignore:
+    - 'docs/**'
+    - 'README.md'
     branches:
       - main
   pull_request:
+    paths-ignore:
+    - 'docs/**'
+    - 'README.md'
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
