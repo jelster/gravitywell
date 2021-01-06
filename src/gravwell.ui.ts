@@ -201,11 +201,26 @@ export class UI {
         mainMenu.height = 0.8;
         mainMenu.width = 0.5;
         mainMenu.thickness = 0;
-        mainMenu.isVisible = false;
         mainMenu.background = 'white';
         const image = new Image("mainmenu", this._mainMenuImg);
         mainMenu.addControl(image);
 
         this._mainMenu = mainMenu;
+        mainMenu.color = "rgba(255,255,255,0.79)";
+        mainMenu.shadowBlur = 3;
+        mainMenu.shadowOffsetX = mainMenu.shadowOffsetY = 10;
+        mainMenu.background = "url(/img/TitleLogo.png) 0 0 extend";
+        mainMenu.zIndex = 10000;
+        
+        let startButton = Button.CreateSimpleButton("startBut", "Start");
+        startButton.width = "150px";
+        startButton.height = "100px";
+        startButton.color = "white";
+        startButton.background = "black";
+        startButton.onPointerClickObservable.add(() => {
+            mainMenu.isVisible = false;
+        });
+        mainMenu.addControl(startButton);
+        this._advancedTexture.addControl(mainMenu);
     }
 }
