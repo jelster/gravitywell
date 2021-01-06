@@ -53,7 +53,7 @@ export class GravityManager {
         this._gameData = opts;
         GravityManager.GRAV_UNIT = opts.gravUnit;
         this.gravWells = new Array<IGravityContributor>();
-        //GravityManager.GRAV_CONST = opts.terrainScaleFactor * GravityManager.GRAV_CONST
+        GravityManager.GRAV_CONST = opts.GRAV_CONST || GravityManager.GRAV_CONST;
         
     }
    

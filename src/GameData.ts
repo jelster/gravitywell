@@ -21,6 +21,7 @@ export interface IScenarioData {
     timeScaleFactor: number;
     shipMaxAngularVelocity: number;
     shipMaxAcceleration: number;
+    GRAV_CONST: number;
 }
 
 export interface IGameStateData {
@@ -45,7 +46,7 @@ export class GameData implements IScenarioData {
     public get gameHypotenuse(): number {
         return Math.sqrt((Math.pow(this.gameWorldSizeX, 2) + Math.pow(this.gameWorldSizeY, 2)));
     }
-
+    public GRAV_CONST: number;
     public numberOfPlanets: number;
     public gameWorldSizeX: number;
     public gameWorldSizeY: number;
@@ -120,6 +121,7 @@ export class GameData implements IScenarioData {
         gameData.upperPlanetaryMassScale = settings.upperPlanetaryMassScale || 0.25;
         gameData.shipMaxAcceleration = settings.shipMaxAcceleration || 50;
         gameData.shipMaxAngularVelocity = settings.shipMaxAngularVelocity || .15;
+        gameData.GRAV_CONST = settings.GRAV_CONST ||  6.67259e-11;
 
         gameData.computeValuesFromSettingsData(settings);
         gameData.stateData = gameState || new GameState();
