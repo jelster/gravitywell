@@ -94,7 +94,7 @@ export class GameData implements IScenarioData {
         this.flyCamMaxZ = scenarioData.gameWorldSizeX / 2;
         this.skyBoxScale = scenarioData.gameWorldSizeX + (0.15 * scenarioData.gameWorldSizeX);
         this.starRadius = (scenarioData.starDensity / scenarioData.systemScaleFactor) * Math.sqrt(scenarioData.starMass);
-        this.planetDensity = (0.00000921 / scenarioData.systemScaleFactor);
+        this.planetDensity = (scenarioData.planetDensity / scenarioData.systemScaleFactor);
         this.upperOrbitalRadiiScale = 0.5 * Math.floor((scenarioData.gameWorldSizeX) / this.starRadius);
 
         this.initialShipPosition = scenarioData.initialShipPosition || new Vector3(scenarioData.gameWorldSizeX / 2.1, 0, 0);

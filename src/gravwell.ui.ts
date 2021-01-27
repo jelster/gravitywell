@@ -130,7 +130,7 @@ export class UI {
         geView.resizeToFit = true;
         header.addControl(geView);
 
-        this._createMainMenu();
+       // this._createMainMenu();
 
 
     }
