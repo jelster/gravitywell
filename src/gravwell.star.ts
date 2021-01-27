@@ -20,6 +20,8 @@ export class Planet implements IGravityContributor {
         sphereMat.alpha = 0.27;
         sphereMat.fogEnabled = false;
         sphereMat.disableLighting = true;
+        Planet._masterMesh.setEnabled(false);
+        
         
     }
 
@@ -102,7 +104,7 @@ export class Planet implements IGravityContributor {
         this.mesh.scaling.setAll(2*this.radius);       
         
         let vSolarEsc = -GravityManager.computeEscapeVelocity(star, this.orbitalRadius);
-        this.position = new Vector3(starPos.x + this.orbitalRadius, this.surfaceGravity * opts.terrainScaleFactor, starPos.z + this.orbitalRadius);
+        this.position = new Vector3(starPos.x + this.orbitalRadius, (vSolarEsc - this.escapeVelocity) * opts.terrainScaleFactor, starPos.z + this.orbitalRadius);
         this.mesh.ellipsoid = new Vector3(1, 1, 1);
         
         this._currTheta = Scalar.RandomRange(0, Scalar.TwoPi);
@@ -171,7 +173,7 @@ export class Star implements IGravityContributor {
         this.gMu = this.mass * GravityManager.GRAV_CONST;
         this.escapeVelocity = -GravityManager.computeEscapeVelocity(this);
         this.surfaceGravity = -(this.gMu / Math.pow(this.radius, 2));
-        starPos.y = this.surfaceGravity * opts.terrainScaleFactor;
+        starPos.y = this.escapeVelocity * opts.terrainScaleFactor;
         
         this._mesh = MeshBuilder.CreateSphere('star', { segments: 16, diameter: 2 * this.radius }, scene);
         this._mesh.position = starPos;

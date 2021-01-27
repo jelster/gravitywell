@@ -53,7 +53,7 @@ export class GravityManager {
         this._gameData = opts;
         GravityManager.GRAV_UNIT = opts.gravUnit;
         this.gravWells = new Array<IGravityContributor>();
-        //GravityManager.GRAV_CONST = opts.terrainScaleFactor * GravityManager.GRAV_CONST
+        GravityManager.GRAV_CONST = opts.GRAV_CONST || GravityManager.GRAV_CONST;
         
     }
    
@@ -157,8 +157,7 @@ export class GravityManager {
             let gE = self.computeGravGradientAt(vertex.worldPosition, forceVector);
             forceVector.normalize();
             vertexColor.set(forceVector.x, forceVector.y, forceVector.z, 1.0);
-            self.gravityMap.mapData[heightMapIdx] = self.applyScalingToHeightMap(gE);
-           // vertexColor.set(forceVector.x/255, forceVector.y/255, forceVector.z/255, 1.0);           
+            self.gravityMap.mapData[heightMapIdx] = self.applyScalingToHeightMap(gE);           
 
         };
         return dynTerr;

@@ -116,7 +116,7 @@ export class Game {
     private _trailMesh: TrailMesh;
     private _playerUi: UI;
     public initializeGame(gameData?: GameData) {
-        let instanceData = this._gameData || gameData || GameData.create();
+        let instanceData = gameData || this._gameData || GameData.create();
 
         this.createScene();
                 
@@ -233,11 +233,11 @@ export class Game {
         let gameData = this._gameData;
        
         this._backgroundTexture = new CubeTexture("textures/Space/space", this._scene);
-        
+        this._backgroundTexture.coordinatesMode = Texture.SKYBOX_MODE;
         this._skybox = this._scene.createDefaultSkybox(this._backgroundTexture, false, gameData.skyBoxScale);
         this._skybox.layerMask = Game.MAIN_RENDER_MASK;        
         this._skybox.receiveShadows = false;
-        this._skybox.infiniteDistance = true;
+        
         // this._floor = MeshBuilder.CreateGround("floor", {
         //     width: gameData.gameWorldSizeX,
         //     height: gameData.gameWorldSizeY,
@@ -254,9 +254,10 @@ export class Game {
     private createStar(): void {  
         var star = new Star(this._scene, this._gameData);
         this._stars.push(star);
+        
         this._gravManager.gravWells.push(star);
         this._gravManager.primaryStar = star;
-       
+        //star.position.y = this._gravManager.applyScalingToHeightMap(this._gravManager.computeGravGradientAt(star.position));
         console.log(star);        
     }
 
@@ -264,7 +265,8 @@ export class Game {
         for (var i = 0; i < this._numberOfPlanets; i++) {
             var planet = new Planet(this._gameData, this._gravManager.primaryStar as Star);
             this._planets.push(planet);
-            
+            //planet.position.y = this._gravManager.applyScalingToHeightMap(this._gravManager.computeGravGradientAt(planet.position));
+
             this._gravManager.gravWells.push(planet);
         }
     }

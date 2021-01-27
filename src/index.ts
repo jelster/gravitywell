@@ -4,6 +4,7 @@ import { Game } from './game';
 import { GameData, IScenarioData } from './GameData';
 import {version } from '../package.json';
 import * as Data from '../default-gameData.json';
+import * as RaftWorld from '../raftWorld-gameData.json';
 
 export class IndexPage {
     private _game: Game;
@@ -11,8 +12,18 @@ export class IndexPage {
 
     constructor() {
         document.title = 'GravWell - v' + version;
+        
+        // TODO: rework the scenario loading, add list, selection capabilities
         let scenario = {} as IScenarioData;
-        Object.assign(scenario, Data);
+        let specifiedScenario = window.location.hash || "default";
+        if (specifiedScenario.toLowerCase().indexOf("raftworld") > 0) {
+            Object.assign(scenario, RaftWorld);
+
+        }
+        else {
+            Object.assign(scenario, Data);
+        }
+        console.log("scenario data loaded", scenario);
         var instanceData = GameData.create(scenario);
         // Create the game using the 'renderCanvas'.
 
